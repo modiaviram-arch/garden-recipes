@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מתכונים מהגינה — רחל ומודי</title>
+<meta name="theme-color" content="#2E5339">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ספר הגינה">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#2E5339;--green2:#3A6B4A;--green3:#5C8A66;--accent:#C8782E;
+  --bg:#F4F6F1;--card:#FFFFFF;--line:#D9E3DA;--ink:#1F2A24;--muted:#6B7A70;--soft:#E9F0E8;
+  --fs:17px;--pad-b:env(safe-area-inset-bottom,0px);--pad-t:env(safe-area-inset-top,0px);
+}
+html[data-theme="dark"]{
+  --bg:#141A16;--card:#1D2620;--line:#2E3B32;--ink:#E8EEE9;--muted:#9AA89E;--soft:#243029;--green:#8DC79A;--green2:#7FB68C;--green3:#5C8A66;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Assistant","Segoe UI",Arial,sans-serif;font-size:var(--fs);line-height:1.5;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.app{min-height:100%;display:flex;flex-direction:column}
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:linear-gradient(160deg,#2E5339,#3A6B4A);color:#fff;padding:calc(10px + var(--pad-t)) 16px 10px}
+.top h1{margin:0;font-size:21px;font-weight:700;display:flex;align-items:center;gap:8px}
+.top h1 small{font-weight:400;font-size:13px;opacity:.85}
+.top .sub{font-size:13px;opacity:.85;margin-top:2px}
+.search{margin-top:10px;display:flex;gap:8px}
+.search input{flex:1;font:inherit;font-size:17px;padding:11px 14px;border:0;border-radius:12px;background:rgba(255,255,255,.95);color:#1F2A24}
+.search input:focus{outline:2px solid #fff}
+.search button{background:rgba(255,255,255,.18);color:#fff;border-radius:12px;padding:0 14px;font-size:18px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chips button{font-size:13px;padding:4px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.5);color:#fff}
+.chips button.on{background:#fff;color:#2E5339;border-color:#fff}
+/* views */
+main{flex:1;padding:12px 14px calc(84px + var(--pad-b));max-width:760px;width:100%;margin:0 auto}
+.view{display:none}.view.on{display:block}
+.sec h2{display:flex;justify-content:space-between;align-items:baseline;font-size:17px;color:var(--green);margin:16px 2px 8px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+.sec h2 .cnt{font-size:12px;color:var(--muted);font-weight:400}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin:8px 0;display:flex;align-items:center;gap:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);cursor:pointer}
+.card:active{background:var(--soft)}
+.card .t{flex:1;min-width:0}
+.card .n{font-weight:700;font-size:17px;color:var(--ink)}
+.card .m{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .fav{font-size:22px;padding:4px;color:#C9A227}
+.card .fav.off{color:var(--line)}
+.season{display:inline-block;font-size:11px;font-weight:600;color:var(--green2);background:var(--soft);border-radius:999px;padding:0 8px;margin-inline-start:6px;vertical-align:middle}
+.empty{text-align:center;color:var(--muted);padding:40px 16px;font-size:16px}
+.empty b{display:block;font-size:40px;margin-bottom:8px}
+.status{font-size:13px;color:var(--muted);margin:6px 2px 0}
+mark{background:#FBF1CF;color:#1F2A24;padding:0 2px;border-radius:3px}
+/* bottom nav */
+nav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:var(--pad-b)}
+nav button{flex:1;padding:8px 4px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;color:var(--muted)}
+nav button .i{font-size:22px;line-height:1}
+nav button.on{color:var(--green);font-weight:700}
+nav button .b{position:absolute;margin-top:-4px;margin-inline-start:28px;background:var(--accent);color:#fff;font-size:10px;border-radius:999px;min-width:17px;padding:1px 5px;font-weight:700}
+/* recipe sheet */
+#sheet{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column;overflow:hidden}
+#sheet.on{display:flex}
+#sheet .bar{background:var(--green3);color:#fff;padding:calc(8px + var(--pad-t)) 10px 8px;display:flex;align-items:center;gap:6px}
+html[data-theme="dark"] #sheet .bar{background:#2E5339}
+#sheet .bar button{color:#fff;font-size:22px;padding:6px 10px;border-radius:10px}
+#sheet .bar button:active{background:rgba(255,255,255,.2)}
+#sheet .bar .ttl{flex:1;font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sheet .body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(24px + var(--pad-b));max-width:760px;width:100%;margin:0 auto}
+.rh{font-size:24px;font-weight:700;color:var(--green);margin:4px 0 2px;line-height:1.25}
+.rm{font-size:13px;color:var(--muted);margin-bottom:12px}
+.blk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0}
+.blk h3{margin:0 0 8px;font-size:15px;color:var(--green2);display:flex;justify-content:space-between;align-items:center}
+.blk h3 button{font-size:12.5px;color:var(--green2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--soft)}
+.ing{list-style:none;margin:0;padding:0}
+.ing li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.ing li:last-child{border-bottom:0}
+.ing .ck{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--green3);display:grid;place-items:center;font-size:15px;color:#fff;margin-top:2px}
+.ing li.on .ck{background:var(--green3)}
+.ing li.on span.x{text-decoration:line-through;color:var(--muted)}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s}
+.steps li{display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);cursor:pointer;counter-increment:s}
+.steps li:last-child{border-bottom:0}
+.steps li::before{content:counter(s);flex:none;width:30px;height:30px;border-radius:50%;background:var(--soft);color:var(--green);font-weight:700;display:grid;place-items:center}
+.steps li.on{opacity:.45}
+.steps li.on::before{background:var(--green3);color:#fff;content:"✓"}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.acts button{padding:12px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:15px}
+.acts button.primary{background:var(--green);color:#fff;border-color:var(--green)}
+html[data-theme="dark"] .acts button.primary{color:#141A16}
+.acts button:active{opacity:.8}
+/* cook mode */
+#sheet.cook .body{font-size:calc(var(--fs) * 1.35);padding-top:8px}
+#sheet.cook .rh{font-size:30px}
+#sheet.cook .acts,#sheet.cook .rm{display:none}
+#sheet.cook .ing .ck{width:30px;height:30px}
+#sheet.cook .steps li::before{width:38px;height:38px}
+#sheet.cook .cookbar{display:flex}
+.cookbar{display:none;position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);margin:0 -16px -24px;padding:10px 16px calc(10px + var(--pad-b));gap:8px;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted)}
+.cookbar button{background:var(--green);color:#fff;border-radius:12px;padding:10px 16px;font-weight:700;font-size:16px}
+html[data-theme="dark"] .cookbar button{color:#141A16}
+/* shopping */
+.shop .blk li{align-items:center}
+.shop .src{font-size:12px;color:var(--muted)}
+.shop textarea{width:100%;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);color:var(--ink);min-height:60px}
+/* settings */
+.set .blk{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.set .blk .l{font-weight:600}
+.set .blk .d{font-size:13px;color:var(--muted);font-weight:400;display:block}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{padding:8px 12px;font-size:14px;border-inline-start:1px solid var(--line)}
+.seg button:first-child{border:0}
+.seg button.on{background:var(--green);color:#fff}
+html[data-theme="dark"] .seg button.on{color:#141A16}
+.help{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0;font-size:15px}
+.help h3{margin:0 0 8px;font-size:17px;color:var(--green)}
+.help ol,.help ul{padding-inline-start:20px;margin:6px 0}
+.help li{margin:4px 0}
+.help .note{background:var(--soft);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
+.toast{position:fixed;bottom:calc(76px + var(--pad-b));left:50%;transform:translateX(-50%);background:#1F2A24;color:#fff;padding:10px 18px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:60;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1}
+.today{background:linear-gradient(135deg,var(--soft),var(--card));border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:4px 0 10px;display:flex;align-items:center;gap:10px}
+.today .t{flex:1}
+.today .k{font-size:12px;color:var(--muted)}
+.today .n{font-weight:700;color:var(--green);font-size:17px}
+.today button{font-size:20px;padding:6px 10px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+@media (min-width:700px){.acts{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>🌿 מתכונים מהגינה <small>רחל ומודי · 82 מתכונים</small></h1>
+    <div class="sub">גרסת אפליקציה 3.11.2026 · עובד גם בלי אינטרנט</div>
+    <div class="search" id="searchRow">
+      <input id="q" type="search" placeholder="חיפוש: מתכון, מרכיב, מספר מכל…" autocomplete="off" enterkeyhint="search">
+      <button id="clr" aria-label="נקה">✕</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <main>
+    <section class="view on" id="v-recipes">
+      <div class="today" id="today"></div>
+      <div class="status" id="st"></div>
+      <div id="list"></div>
+    </section>
+
+    <section class="view" id="v-favs">
+      <div id="favList"></div>
+    </section>
+
+    <section class="view shop" id="v-shop">
+      <div class="blk">
+        <h3>🛒 רשימת קניות <button id="shopClear">נקה הכול</button></h3>
+        <ul class="ing" id="shopList"></ul>
+        <div class="empty" id="shopEmpty" style="padding:20px"><b>🧺</b>הרשימה ריקה. בתוך מתכון, לחצו "הוסף לקניות" או על מרכיב בודד.</div>
+      </div>
+      <div class="blk">
+        <h3>➕ הוספה ידנית</h3>
+        <textarea id="shopAdd" placeholder="פריט אחד בכל שורה…"></textarea>
+        <div class="acts" style="grid-template-columns:1fr 1fr;margin-bottom:0"><button class="primary" id="shopAddBtn">הוסף לרשימה</button><button id="shopCopy">📋 העתק רשימה</button></div>
+      </div>
+    </section>
+
+    <section class="view set" id="v-settings">
+      <div class="blk"><div><span class="l">גודל אותיות</span><span class="d">משפיע על כל האפליקציה</span></div>
+        <div class="seg" id="fsSeg"><button data-fs="15">א</button><button data-fs="17" class="on">א+</button><button data-fs="20">א++</button></div></div>
+      <div class="blk"><div><span class="l">מראה</span><span class="d">בהיר / כהה / לפי הטלפון</span></div>
+        <div class="seg" id="thSeg"><button data-th="light">בהיר</button><button data-th="dark">כהה</button><button data-th="auto" class="on">אוטו׳</button></div></div>
+      <div class="blk"><div><span class="l">הצג מספרי מכלים</span><span class="d">הפניות כמו (5.3) בתוך המרכיבים</span></div>
+        <div class="seg" id="binSeg"><button data-bin="1" class="on">כן</button><button data-bin="0">לא</button></div></div>
+
+      <div class="help">
+        <h3>📲 איך להפוך את זה לאפליקציה בטלפון</h3>
+        <p style="margin:0 0 6px">הדף הזה הוא אפליקציית-ווב: כל 82 המתכונים נמצאים בתוכו, ולכן הוא עובד גם במטבח בלי קליטה. כדי שיופיע כאייקון במסך הבית של ה-Galaxy:</p>
+        <ol>
+          <li><b>פתחו את הקובץ בדפדפן.</b> אם קיבלתם אותו כקובץ (garden_recipes_app_…html): שמרו בתיקיית ההורדות ופתחו מאפליקציית "הקבצים שלי" → ההורדות → לחיצה על הקובץ → פתיחה ב-Chrome או ב-Samsung Internet.</li>
+          <li><b>ב-Chrome:</b> תפריט ⋮ (למעלה) → "הוסף למסך הבית" (או "התקן אפליקציה") → "הוסף".</li>
+          <li><b>ב-Samsung Internet:</b> תפריט ≡ (למטה) → "הוסף דף ל-" → "מסך הבית".</li>
+          <li>מעכשיו האייקון 🌿 במסך הבית פותח את ספר המתכונים ישירות, כמו אפליקציה.</li>
+        </ol>
+        <div class="note">
+          <b>שתי דרכים להחזיק את האפליקציה — ומה ההבדל:</b><br>
+          • <b>הקובץ בטלפון</b> — עובד תמיד, גם בלי אינטרנט, ובלי התחברות. החיסרון: כשיתווספו מתכונים לספר צריך להחליף את הקובץ בגרסה החדשה (התאריך מופיע בכותרת ובשם הקובץ, כדי שלא יתבלבלו גרסאות).<br>
+          • <b>הקישור ב-claude.ai</b> — תמיד הגרסה העדכנית ביותר, אבל דורש אינטרנט והתחברות לחשבון, וכמה כפתורים (שיתוף לוואטסאפ) עובדים שם רק כ"העתקה".<br>
+          המועדפים, רשימת הקניות והסימונים נשמרים בדפדפן שבטלפון, בנפרד לכל אחת משתי הדרכים.
+        </div>
+        <div class="note"><b>מה אין כאן (בכוונה):</b> אין חשבון, אין ענן ואין סנכרון בין מכשירים — כך הכול נשאר פרטי ומהיר. כשתרצו גרסה חדשה עם מתכוני העונה הבאה, פשוט בקשו ממני "עדכן את האפליקציה" ותקבלו קובץ חדש עם תאריך.</div>
+      </div>
+
+      <div class="help">
+        <h3>🧑‍🍳 טיפים לשימוש</h3>
+        <ul>
+          <li><b>מצב בישול</b> מגדיל את האותיות ומונע מהמסך לכבות (בגרסת הקובץ ובטלפון בלבד). לחיצה על שלב מסמנת אותו כבוצע.</li>
+          <li><b>לחיצה על מרכיב</b> מסמנת אותו כ"יש לי"; "הוסף לקניות" שולח את כל מה שלא סומן לרשימת הקניות.</li>
+          <li><b>החיפוש</b> מוצא גם לפי מרכיב ("מנגולד", "לימון") וגם לפי מספר מכל ("4.1", "5.3").</li>
+          <li><b>⭐ מועדפים</b> — לחיצה על הכוכב ברשימה או בתוך המתכון.</li>
+          <li><b>"מה לבשל היום"</b> למעלה — הצעה אקראית מהעונה הנוכחית; 🔄 להצעה אחרת.</li>
+        </ul>
+      </div>
+      <div class="status" style="text-align:center;margin-top:14px">ספר הגינה של רחל ומודי · 82 מתכונים · גרסה 1.11.2026</div>
+    </section>
+  </main>
+
+  <nav>
+    <button data-v="recipes" class="on"><span class="i">📖</span>מתכונים</button>
+    <button data-v="favs"><span class="i">⭐</span>מועדפים</button>
+    <button data-v="shop"><span class="i">🛒</span>קניות<span class="b" id="shopBadge" hidden>0</span></button>
+    <button data-v="settings"><span class="i">⚙️</span>הגדרות</button>
+  </nav>
+</div>
+
+<div id="sheet">
+  <div class="bar">
+    <button id="shBack" aria-label="חזרה">→</button>
+    <div class="ttl" id="shTtl"></div>
+    <button id="shFav" aria-label="מועדף">☆</button>
+    <button id="shCook" aria-label="מצב בישול">👩‍🍳</button>
+  </div>
+  <div class="body" id="shBody"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+window.RECIPES=[{"section": "תבלינים ומשקאות", "name": "פסטו בזיליקום", "ingredients": ["2 כוסות עלי בזיליקום טריים", "⅓ כוס צנוברים (או אגוזי מלך)", "2 שיני שום", "½ כוס שמן זית", "½ כוס פרמזן מגורר", "¼ כפית מלח", "מעט מיץ לימון"], "steps": ["קולים קלות את הצנוברים במחבת יבשה עד הזהבה.", "טוחנים במעבד מזון בזיליקום, שום, צנוברים ומלח.", "מוסיפים שמן זית בזרם דק תוך כדי טחינה.", "מקפלים פנימה פרמזן ומיץ לימון. שומרים בצנצנת עם שכבת שמן מעל, במקרר עד שבוע."], "season": "קיץ 2026"}, {"section": "תבלינים ומשקאות", "name": "תה נענע / זוטה לבנה", "ingredients": ["חופן ענפי נענע או זוטה לבנה טריים", "1 כוס מים רותחים", "לימון ודבש לפי הטעם"], "steps": ["שוטפים ומועכים קלות את העלים.", "יוצקים מים רותחים ומכסים ל-5 דקות.", "מסננים ומוסיפים לימון או דבש."], "season": "קיץ 2026"}, {"section": "תבלינים ומשקאות", "name": "חליטת היביסקוס (קרקדה)", "ingredients": ["1 כף גביעי היביסקוס מיובשים", "1 כוס מים רותחים", "דבש או סוכר לפי הטעם"], "steps": ["חולטים 5–7 דקות ומסננים.", "ממתיקים לפי הטעם.", "להגשה קרה: מצננים ומוסיפים קרח ופלח לימון."], "season": "קיץ 2026"}, {"section": "תבלינים ומשקאות", "name": "חמאת עשבים", "ingredients": ["100 ג' חמאה רכה", "1 כף רוזמרין/טימין/מרווה קצוצים", "1 שן שום כתושה", "קורט מלח"], "steps": ["מערבבים את כל המרכיבים.", "מגלגלים בנייר אפייה לגליל ומקררים.", "פורסים על לחם חם, ירקות בתנור או דג."], "season": "קיץ 2026"}, {"section": "תבלינים ומשקאות", "name": "שמן זית מתובל", "ingredients": ["1 בקבוק שמן זית", "2–3 ענפי רוזמרין או טימין", "אופציונלי: שן שום, פלפל חריף"], "steps": ["מכניסים ענפים יבשים ונקיים לבקבוק.", "משהים במקום חשוך כשבוע.", "משתמשים לסלטים ולבישול."], "season": "קיץ 2026"}, {"section": "תבלינים ומשקאות", "name": "תערובת תיבול ביתית", "ingredients": ["חלקים שווים טימין, רוזמרין ומרווה מיובשים", "מעט מלח גס"], "steps": ["כותשים יחד במכתש או במטחנה.", "מאחסנים בצנצנת אטומה.", "לתיבול בשר, תפוחי אדמה וירקות."], "season": "קיץ 2026"}, {"section": "תבלינים ומשקאות", "name": "אבקת רוזלה — תבלין חמוץ בנוסח סומק (תגלית של יואב)", "ingredients": ["גביעי רוזלה (היביסקוס עב-גביע) ממכל 4.1, אדומים ובשרניים", "מלח גס לפי הטעם (לא חובה)"], "steps": ["מפרידים את הגביע האדום מהתרמיל הירוק שבמרכזו; התרמיל אינו נכנס לאבקה.", "מייבשים בצל מאוורר כשבוע, או בתנור בחום הנמוך ביותר עם דלת פתוחה מעט, עד שהגביעים פריכים ונשברים.", "טוחנים במטחנת תבלינים לאבקה דקה, ומוסיפים קורט מלח אם רוצים.", "שומרים בצנצנת אטומה במקום חשוך. משתמשים כמו בסומק — על סלטים, ביצים, עוף, אורז ולבנה. התגלית של יואב, מטעימה."], "season": "חורף 2026/2027"}, {"section": "תבלינים ומשקאות", "name": "זעתר רוזלה", "ingredients": ["3 כפות עלי זעתר יבשים ומפוררים (5.6, 5.8)", "1½ כפות אבקת רוזלה", "2 כפות שומשום קלוי", "½ כפית מלח"], "steps": ["מערבבים את כל החומרים בקערה.", "שומרים בצנצנת אטומה עד כחודש.", "מגישים כמו זעתר רגיל — עם שמן זית ולחם, על לבנה או על פיתה לפני אפייה. הרוזלה תופסת את מקום הסומק ונותנת צבע אדום עמוק."], "season": "חורף 2026/2027"}, {"section": "תבלינים ומשקאות", "name": "בצל ברוזלה", "ingredients": ["1 בצל סגול פרוס לטבעות דקות", "1 כפית אבקת רוזלה", "½ כפית מלח", "1 כף שמן זית", "מעט פטרוזיליה קצוצה (לא חובה)"], "steps": ["משפשפים את טבעות הבצל עם המלח ומשהים 10 דקות, עד שהן מתרככות.", "מוסיפים אבקת רוזלה ושמן זית ומערבבים.", "משהים עוד רבע שעה, עד שהבצל מקבל צבע ורוד. מגישים לצד בשר על האש, בפיתה או על חומוס, כמו בצל בסומק."], "season": "חורף 2026/2027"}, {"section": "פירות", "name": "לימונדה ביתית", "ingredients": ["מיץ מ-4 לימונים (כ-¾ כוס)", "1 ליטר מים קרים", "3–4 כפות סוכר או דבש", "ענפי נענע", "קרח"], "steps": ["ממיסים סוכר במעט מים חמים.", "מערבבים עם מיץ הלימון והמים הקרים.", "מוסיפים נענע וקרח ומגישים."], "season": "קיץ 2026"}, {"section": "פירות", "name": "לימון כבוש", "ingredients": ["6 לימונים", "כ-½ כוס מלח גס", "מיץ לימון נוסף לכיסוי", "אופציונלי: עלה דפנה, פלפל"], "steps": ["חורצים כל לימון לצלב כמעט עד הסוף.", "ממלאים במלח גס ודוחסים בצנצנת.", "מוסיפים מיץ לימון שיכסה לגמרי.", "סוגרים ומשהים 3–4 שבועות, הופכים מדי יום-יומיים. משתמשים בקליפה בלבד."], "season": "קיץ 2026"}, {"section": "פירות", "name": "ריבת תאנים", "ingredients": ["1 ק\"ג תאנים", "600 ג' סוכר", "מיץ מלימון אחד", "אופציונלי: מקל וניל"], "steps": ["חותכים תאנים, מערבבים עם סוכר ולימון ומשהים כשעה.", "מבשלים על אש בינונית-נמוכה כ-40 דקות עד סמיכות.", "יוצקים חם לצנצנות מעוקרות וסוגרים."], "season": "קיץ 2026"}, {"section": "פירות", "name": "גרגרי רימון", "ingredients": ["1 רימון", "סלט / גבינה לבנה / חומוס לבחירה"], "steps": ["חוצים ומחלצים גרגרים (נוח מתחת למים).", "מפזרים על המנה, או סוחטים למיץ טרי."], "season": "קיץ 2026"}, {"section": "פירות", "name": "קינוח תות עץ", "ingredients": ["2 כוסות תותי עץ", "1 כוס יוגורט", "1–2 כפות דבש"], "steps": ["טרי: מערבבים הכול ומגישים.", "רוטב: מבשלים את התותים עם הדבש כ-5 דקות ויוצקים על פנקייק או גלידה."], "season": "קיץ 2026"}, {"section": "פירות", "name": "סלט מלון ואבטיח", "ingredients": ["2 כוסות קוביות מלון", "2 כוסות קוביות אבטיח", "עלי נענע", "מיץ מחצי לימון או ליים", "אופציונלי: גבינת פטה"], "steps": ["מערבבים בעדינות.", "מצננים לפני הגשה; אפשר לפזר פטה."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "סלט ישראלי", "ingredients": ["3 עגבניות", "2 מלפפונים", "½ בצל", "חופן פטרוזיליה", "2 כפות שמן זית", "מיץ לימון, מלח ופלפל"], "steps": ["קוצצים את הירקות דק לקוביות.", "מתבלים בשמן זית, לימון, מלח ופלפל ומגישים טרי."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "באבא גנוש", "ingredients": ["2 חצילים גדולים", "3 כפות טחינה גולמית", "1 שן שום", "מיץ מחצי לימון", "מלח, שמן זית"], "steps": ["שורפים את החצילים בתנור או על אש עד ריכוך מלא.", "קולפים ומועכים את הבשר.", "מוסיפים טחינה, שום, לימון ומלח ומערבבים.", "מזלפים שמן זית לפני ההגשה."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "חביתת קישואים", "ingredients": ["2 קישואים מגוררים", "2 ביצים", "3 כפות קמח", "בזיליקום קצוץ", "מלח ופלפל", "שמן לטיגון"], "steps": ["סוחטים היטב נוזלים מהקישואים.", "מערבבים את כל המרכיבים לבלילה.", "מטגנים כפות מהבלילה במחבת משומנת עד הזהבה משני הצדדים."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "מרק דלעת", "ingredients": ["1 ק\"ג דלעת", "1 בצל", "1 גזר", "3 כוסות מים או מרק", "½ כוס שמנת או חלב קוקוס", "מלח, אגוז מוסקט"], "steps": ["מאדים בצל, מוסיפים דלעת, גזר ומים.", "מבשלים עד שהירקות רכים.", "טוחנים חלק, מוסיפים שמנת ותבלינים ומחממים."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "תירס", "ingredients": ["4 קלחי תירס", "חמאה", "מלח"], "steps": ["מבושל: מבשלים במים רותחים 8–10 דקות.", "בתנור: עוטפים בנייר כסף עם חמאה ואופים ב-200°C כ-25 דקות.", "מתבלים במלח וחמאת עשבים."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "שעועית ירוקה בשום", "ingredients": ["400 ג' שעועית ירוקה", "2 שיני שום", "2 כפות שמן זית", "מלח ופלפל", "אופציונלי: שקדים פרוסים"], "steps": ["חולטים את השעועית 3–4 דקות ומעבירים למי קרח.", "מקפיצים עם שום בשמן זית 2–3 דקות.", "מתבלים ומפזרים שקדים."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "רטטוי", "ingredients": ["2 עגבניות", "1 חציל", "1 קישוא", "1 פלפל", "1 בצל", "2 שיני שום", "שמן זית, עשבי תיבול, מלח"], "steps": ["חותכים את הירקות לקוביות או פרוסות.", "מקפיצים בצל ושום, מוסיפים את שאר הירקות.", "מבשלים על אש נמוכה 25–30 דקות (או אופים) ומתבלים."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "פלפלים קלויים", "ingredients": ["4 פלפלים", "2 שיני שום", "שמן זית, מלח", "אופציונלי: חומץ"], "steps": ["צולים שלמים בתנור 220°C עד השחמה, הופכים באמצע.", "מכניסים לשקית סגורה ל-10 דקות (מקל על הקילוף).", "קולפים, פורסים ומתבלים בשום, שמן זית ומלח."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "פלפלים חריפים: שימור בהקפאה", "ingredients": ["פלפלים צהובים חריפים מהגינה", "כפפות חד-פעמיות", "שקיות הקפאה", "טוש לסימון"], "steps": ["שוטפים, מייבשים היטב ומסירים עוקצים. עובדים עם כפפות.", "פורסים חלק לטבעות וחלק לרצועות, כל צורה בשקית נפרדת.", "מוציאים אוויר, מסמנים תאריך וחריפות, ומקפיאים שטוח כדי שאפשר יהיה לשבור מנה קפואה.", "משתמשים ישר מהמקפיא לבישול, לסחוג, לשמן ולשקשוקה. מחזיק כשנה."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "סחוג חריף", "ingredients": ["10–12 פלפלים חריפים (טריים או קפואים)", "6 שיני שום", "צרור כוסברה", "צרור פטרוזיליה", "כפית כמון", "½ כפית הל טחון", "מלח, 3–4 כפות שמן זית"], "steps": ["טוחנים במעבד מזון פלפלים ושום.", "מוסיפים עשבים ותבלינים וטוחנים למרקם גס.", "מתבלים במלח ושמן, מעבירים לצנצנת ומכסים בשכבת שמן. במקרר כשבועיים, או מקפיאים בתבנית קרח."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "שמן פלפלים חריף", "ingredients": ["1 כוס שמן זית", "5–6 פלפלים חריפים פרוסים (ניתן קפואים, מופשרים ומיובשים)", "2 שיני שום", "ענף רוזמרין (לא חובה)"], "steps": ["מחממים את השמן עם הפלפלים והשום על אש נמוכה מאוד כ-10 דקות, בלי לטגן.", "מצננים, מסננים לבקבוק נקי ויבש.", "שומרים במקרר ומשתמשים תוך כשבועיים, על פיצה, פסטה, ביצים וחומוס."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "שקשוקה חריפה", "ingredients": ["4–5 עגבניות או קופסת עגבניות מרוסקות", "1 בצל", "2 שיני שום", "3–4 טבעות פלפל חריף קפוא", "1 פלפל אדום מתוק", "כפית פפריקה, ½ כפית כמון", "4 ביצים, מלח, שמן זית"], "steps": ["מאדים בצל, שום ופלפלים בשמן זית, מוסיפים את הטבעות החריפות ישר מהמקפיא.", "מוסיפים עגבניות ותבלינים ומבשלים 10–15 דקות לרוטב סמיך.", "עושים גומות, שוברים ביצים, מכסים ומבשלים 5–6 דקות. מגישים עם לחם."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "תרד תאילנדי מוקפץ (קנגקונג)", "ingredients": ["צרור גדול תרד תאילנדי", "4 שיני שום פרוסות", "1 פלפל חריף", "2 כפות רוטב סויה", "1 כף רוטב צדפות (או עוד סויה)", "1 כפית סוכר", "2 כפות שמן"], "steps": ["קוצצים לחתיכות של 5 ס\"מ ומפרידים גבעולים מעלים.", "מחממים שמן עד עשן, מקפיצים שום וצ'ילי 30 שניות, מוסיפים גבעולים לדקה.", "מוסיפים עלים ורטבים ומקפיצים עוד דקה–שתיים. מגישים מיד עם אורז."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "גבעולי תרד תאילנדי מוקפצים", "ingredients": ["גבעולים מצרור תרד תאילנדי", "2 שיני שום", "1 כף רוטב סויה", "1 כפית שמן שומשום", "שומשום קלוי"], "steps": ["חותכים את הגבעולים החלולים לאורך 4 ס\"מ.", "מקפיצים עם שום על אש גבוהה 2–3 דקות, שיישארו פריכים.", "מסיימים בסויה, שמן שומשום ושומשום. טעים גם קר כסלט."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "מרק תרד תאילנדי וג'ינג'ר", "ingredients": ["2 כוסות עלי תרד תאילנדי", "1 בצל, 2 שיני שום", "פרוסת ג'ינג'ר טרי", "5 כוסות ציר", "1 כף רוטב דגים או סויה", "מיץ מחצי ליים"], "steps": ["מאדים בצל, שום וג'ינג'ר, מוסיפים ציר ומביאים לרתיחה.", "מכניסים את התרד ל-2 דקות בלבד.", "מתבלים ברוטב ובליים. אפשר להוסיף אטריות אורז או טופו."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "ביצים בתרד תאילנדי", "ingredients": ["2 כוסות תרד תאילנדי קצוץ", "3 ביצים", "1 בצל ירוק", "1 שן שום", "1 כפית רוטב סויה", "שמן"], "steps": ["מקפיצים שום, בצל ירוק ותרד דקה עד שקמל.", "טורפים ביצים עם סויה, יוצקים על התרד ומערבבים בעדינות עד שהביצים נקרשות.", "מגישים עם אורז או על פרוסת לחם."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "תרד תאילנדי בחלב קוקוס", "ingredients": ["צרור תרד תאילנדי", "1 פחית חלב קוקוס", "1 כף ממרח קארי ירוק או אדום", "2 שיני שום", "מיץ ליים, מלח"], "steps": ["מקפיצים שום וממרח קארי דקה.", "מוסיפים חלב קוקוס ומביאים לרתיחה עדינה.", "מוסיפים גבעולים ל-2 דקות ואז עלים לדקה. מסיימים בליים ומגישים עם אורז."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "תרד תאילנדי: ייבוש והקפאה", "ingredients": ["תרד תאילנדי בכמות גדולה", "קערת מי קרח", "שקיות הקפאה", "צנצנת אטומה"], "steps": ["הקפאה: חולטים דקה, מעבירים למי קרח, סוחטים ומקפיאים במנות. טוב למרקים ולמוקפצים.", "גבעולים מקפיאים טריים, חתוכים, בלי חליטה, כדי לשמור על פריכות.", "ייבוש: העלים בלבד, במייבש ב-45–50°C או בתנור בחום נמוך עם דלת פתוחה, עד שמתפוררים. מפוררים למרקים.", "נקטף טוב בגבעול צעיר. קטיף תכוף מעודד צימוח חדש."], "season": "קיץ 2026"}, {"section": "ירקות", "name": "עלי מנגולד ממולאים", "ingredients": ["15–20 עלי מנגולד גדולים", "1 כוס אורז פרסי, שטוף", "1 בצל קצוץ דק", "חופן פטרוזיליה ונענע קצוצות", "3 כפות שמן זית", "מיץ מ-2 לימונים", "מלח, פלפל, כפית בהרט"], "steps": ["מורידים את הגבעול העבה וחולטים את העלים דקה במים רותחים עד שהם רכים.", "מערבבים אורז, בצל, עשבים, שמן ותבלינים; שמים כף מילוי בבסיס כל עלה, מקפלים צדדים ומגלגלים.", "מסדרים צפוף בסיר על מצע של גבעולים קצוצים, מוסיפים מים עד לגובה הממולאים ואת מיץ הלימון.", "מכסים בצלחת הפוכה ומבשלים על אש קטנה 40–45 דקות. טעים חם או בטמפרטורת החדר."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "קציצות מנגולד", "ingredients": ["צרור גדול מנגולד (כ-500 גרם)", "2 ביצים", "½ כוס פירורי לחם", "½ כוס גבינה צהובה או פרמזן מגוררת", "2 בצל ירוק קצוץ", "מלח, פלפל, קורט אגוז מוסקט", "שמן לטיגון"], "steps": ["חולטים את העלים 2 דקות, מקררים וסוחטים היטב מכל המים — זה הסוד.", "קוצצים דק ומערבבים עם שאר החומרים לבלילה שמחזיקה צורה.", "מטגנים קציצות שטוחות בשמן לא עמוק, 3 דקות מכל צד, עד הזהבה. מגישים עם יוגורט ולימון."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "פשטידת מנגולד ופטה", "ingredients": ["צרור מנגולד (עלים וגבעולים)", "1 בצל", "4 ביצים", "200 גרם פטה מפוררת", "1 גביע שמנת חמוצה או יוגורט", "3 כפות קמח", "מלח, פלפל"], "steps": ["מאדים בצל וגבעולים קצוצים בשמן זית, מוסיפים את העלים הקצוצים עד שהם קמלים, ומצננים מעט.", "טורפים ביצים, שמנת, קמח ופטה ומערבבים עם המנגולד.", "יוצקים לתבנית משומנת ואופים ב-180°C כ-35 דקות עד הזהבה."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "מרק עדשים ומנגולד", "ingredients": ["1 כוס עדשים חומות", "1 בצל, 1 גזר, 2 שיני שום", "5–6 עלי מנגולד קצוצים", "כפית כמון", "מיץ מלימון אחד", "6 כוסות מים או ציר", "מלח, פלפל, שמן זית"], "steps": ["מטגנים בצל, גזר ושום בשמן זית, מוסיפים כמון.", "מוסיפים עדשים ומים ומבשלים 30 דקות עד ריכוך.", "מכניסים את המנגולד ל-5 דקות אחרונות, מתבלים ומסיימים במיץ לימון."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "שקשוקה ירוקה", "ingredients": ["צרור מנגולד קצוץ", "3 בצל ירוק", "2 שיני שום", "4 ביצים", "50 גרם פטה (לא חובה)", "שמן זית, מלח, פלפל, צ'ילי לפי הטעם"], "steps": ["מאדים שום ובצל ירוק בשמן זית, מוסיפים מנגולד ומבשלים עד שקמל ומתייבש מעט.", "עושים גומות ושוברים לתוכן את הביצים.", "מכסים ומבשלים 5–6 דקות, מפוררים פטה מעל. מגישים עם לחם."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "מנגולד מוקפץ בשום ולימון", "ingredients": ["צרור מנגולד, עלים וגבעולים בנפרד", "3 שיני שום פרוסות", "3 כפות שמן זית", "צ'ילי לפי הטעם", "מיץ מחצי לימון", "מלח"], "steps": ["קוצצים את הגבעולים הצהובים ומקפיצים אותם 3–4 דקות בשמן עם השום.", "מוסיפים את העלים הקצוצים ומקפיצים 2 דקות עד שקמלים.", "מסיימים במלח, צ'ילי ולימון. תוספת מצוינת לדג, אורז או ביצה."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "חמוצי גבעולי מנגולד", "ingredients": ["גבעולים מצרור מנגולד, חתוכים למקלות", "1 כוס חומץ", "1 כוס מים", "1 כף סוכר", "1 כף מלח", "שן שום ועלה דפנה"], "steps": ["מסדרים את הגבעולים בצנצנת נקייה עם השום והדפנה.", "מרתיחים חומץ, מים, סוכר ומלח ויוצקים חם על הגבעולים.", "מקררים, סוגרים ושומרים במקרר. מוכן אחרי יומיים, מחזיק כשבועיים."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "שימור מנגולד: ייבוש והקפאה", "ingredients": ["עלי מנגולד בכמות גדולה", "קערת מי קרח (להקפאה)", "שקיות הקפאה או צנצנת אטומה", "שמן זית ומלח (לצ'יפס)"], "steps": ["הקפאה (מומלץ): חולטים 2 דקות, מעבירים למי קרח, סוחטים חזק ומקפיאים בכדורים בגודל מנה — ישר לפשטידה, מרק או קציצות.", "ייבוש: מורידים גבעולים, מייבשים במייבש ב-50°C או בתנור בחום הנמוך ביותר עם דלת פתוחה מעט, עד שהעלים מתפוררים. שומרים בצנצנת ומפוררים למרקים, או טוחנים לאבקה ירוקה.", "צ'יפס: מורחים את העלים בשמן ומלח ואופים ב-120°C כ-15–20 דקות, בהשגחה — הם עדינים מקייל ונשרפים מהר.", "טיפ קטיף: קוטפים עלים חיצוניים מהבסיס ומשאירים את המרכז — הצמח ימשיך לתת כל החורף."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "סלט חסה ועשבים בוויניגרט לימון", "ingredients": ["ראש חסה (או 3–4 חופני עלים)", "חופן נענע ופטרוזיליה", "2 בצל ירוק פרוס", "3 כפות שמן זית", "מיץ מחצי לימון", "1 כפית דבש, ½ כפית חרדל", "מלח ופלפל"], "steps": ["שוטפים, מייבשים היטב (מייבש חסה או מגבת) וקורעים ביד.", "טורפים בצנצנת שמן, לימון, דבש, חרדל ומלח.", "מערבבים ממש לפני ההגשה, שהעלים לא יקמלו."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "עטיפות חסה", "ingredients": ["8–10 עלי חסה גדולים ושלמים", "2 כוסות מילוי לבחירה: עוף/טופו מוקפץ, אורז, עדשים", "גזר ומלפפון בגפרורים", "בצל ירוק", "רוטב: 2 כפות סויה, 1 כף טחינה, מיץ ליים"], "steps": ["מפרידים עלים שלמים, שוטפים ומייבשים.", "ממלאים כל עלה בכף מילוי וירקות.", "מזלפים רוטב, מגלגלים ואוכלים ביד."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "חסה מוקפצת בשום ורוטב צדפות", "ingredients": ["ראש חסה רומית או אייסברג, חתוך לרבעים או לעלים גסים", "3 שיני שום פרוסות", "1 כף רוטב צדפות (או סויה)", "1 כפית רוטב סויה", "½ כפית סוכר", "1 כף שמן", "אופציונלי: פלפל חריף, שמן שומשום"], "steps": ["שוטפים ומייבשים היטב. מים על המחבת יגרמו לחסה להתבשל במקום להיצרב.", "מחממים שמן עד עשן ומקפיצים שום 20 שניות.", "מוסיפים חסה ומקפיצים 1–2 דקות בלבד, עד שהשוליים קמלים והלב נשאר פריך.", "מוסיפים את הרטבים והסוכר, מערבבים ומגישים מיד עם אורז. כך מנצלים יפה חסה שהתחילה לעלות בשדה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "מרק חסה צרפתי עם כרישה", "ingredients": ["2 ראשי חסה עגולה (גם עלים חיצוניים)", "1 גבעול כרישה, החלק הלבן והירוק הבהיר", "1 תפוח אדמה בינוני בקוביות", "2 כפות חמאה", "4 כוסות ציר ירקות או עוף", "¼ כוס שמנת מתוקה (לא חובה)", "מלח, פלפל לבן, קורט אגוז מוסקט"], "steps": ["מאדים את הכרישה בחמאה 8–10 דקות על אש נמוכה, בלי להשחים.", "מוסיפים תפוח אדמה וציר ומבשלים 15 דקות, עד שהוא רך.", "מוסיפים את החסה הקצוצה ל-3–4 דקות בלבד, כדי שהצבע יישאר ירוק.", "טוחנים חלק, מוסיפים שמנת ומתבלים. מגישים חם עם קרוטונים או פרוסת לחם קלוי — כך נוצלו החסות העגולות שפינו מקום לשום."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "מרק חסה ואפונה", "ingredients": ["ראש חסה (אפשר עלים חיצוניים שהתחילו להתעייף)", "1 בצל", "2 כוסות אפונה (גם קפואה)", "4 כוסות ציר", "2 כפות חמאה או שמן זית", "מלח, פלפל, נענע"], "steps": ["מאדים בצל בחמאה, מוסיפים ציר ואפונה ומבשלים 10 דקות.", "מוסיפים חסה קצוצה ל-3 דקות.", "טוחנים חלק, מתבלים ומגישים עם עלי נענע. דרך טובה לנצל חסה שעלתה בשדה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "בק צ'וי מוקפץ בשום וג'ינג'ר", "ingredients": ["4–6 ראשי בק צ'וי קטנים, חצויים לאורך", "3 שיני שום פרוסות", "1 כפית ג'ינג'ר מגורר", "2 כפות רוטב סויה", "1 כפית שמן שומשום", "2 כפות שמן"], "steps": ["שוטפים היטב בין העלים — שם מתחבא חול.", "מקפיצים שום וג'ינג'ר 30 שניות, מניחים את הבק צ'וי עם החתך למטה לשתי דקות.", "מוסיפים סויה ו-2 כפות מים, מכסים לדקה, ומסיימים בשמן שומשום."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "מרק אטריות עם בק צ'וי", "ingredients": ["4 כוסות ציר", "2 פרוסות ג'ינג'ר, 2 שיני שום", "100 גרם אטריות אורז או ראמן", "2 ראשי בק צ'וי, עלים וגבעולים בנפרד", "1 כף סויה, מיץ ליים", "ביצה רכה או טופו (לא חובה)", "בצל ירוק"], "steps": ["מרתיחים ציר עם ג'ינג'ר ושום 10 דקות.", "מבשלים את האטריות בציר; מוסיפים גבעולים לדקתיים ועלים לדקה.", "מתבלים בסויה וליים, מגישים עם ביצה ובצל ירוק."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "בק צ'וי צלוי על הגריל", "ingredients": ["4 ראשי בק צ'וי, חצויים", "2 כפות שמן", "1 כף סויה, 1 כפית דבש", "שומשום קלוי"], "steps": ["מורחים את החצאים בשמן.", "צולים במחבת פסים או בגריל 2–3 דקות מכל צד, עד שהשוליים מתחרכים.", "מזלפים סויה ודבש ומפזרים שומשום."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "עלי סלק מוקפצים עם שום", "ingredients": ["עלים וגבעולים מצרור סלק", "2 שיני שום", "2 כפות שמן זית", "מיץ לימון, מלח", "אופציונלי: צימוקים וצנוברים"], "steps": ["קוצצים גבעולים דק ומקפיצים 3 דקות עם השום.", "מוסיפים את העלים הקצוצים עד שקמלים, 2 דקות.", "מתבלים במלח ולימון; צימוקים וצנוברים הופכים את זה למנה מתוקה-מלוחה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "סלט סלק ועליו עם יוגורט", "ingredients": ["2–3 סלקים מבושלים, בקוביות", "עלי הסלק, חלוטים דקה וקצוצים", "1 כוס יוגורט עבה", "1 שן שום כתושה", "שמן זית, מלח, אגוזי מלך"], "steps": ["מערבבים יוגורט עם שום ומלח ומורחים על צלחת.", "מסדרים מעל קוביות סלק ועלים מתובלים בשמן זית.", "מפזרים אגוזי מלך קלויים. כל הצמח נאכל — שורש ועלה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "בורקס / מאפה עלי סלק וגבינה", "ingredients": ["2 כוסות עלי סלק (או מנגולד) חלוטים, סחוטים וקצוצים", "150 גרם גבינה בולגרית", "1 ביצה", "1 חבילת בצק עלים", "שומשום"], "steps": ["מערבבים עלים, גבינה וחצי מהביצה.", "חותכים בצק לריבועים, ממלאים ומקפלים למשולשים.", "מורחים בשאר הביצה, מפזרים שומשום ואופים ב-200°C כ-25 דקות."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "עלי חרדל מאודים בשום וצ'ילי", "ingredients": ["צרור עלי חרדל", "3 שיני שום", "1 פלפל חריף (או טבעות קפואות)", "2 כפות שמן זית", "מיץ לימון, מלח"], "steps": ["מורידים גבעולים קשים וקוצצים גס.", "מקפיצים שום וצ'ילי, מוסיפים עלים ו-3 כפות מים ומכסים 4–5 דקות.", "מתבלים בלימון ומלח. החום מרכך את החריפות של העלה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "עלי חרדל כבושים מהירים", "ingredients": ["צרור עלי חרדל", "1 כף מלח", "½ כוס חומץ אורז או לבן", "1 כף סוכר", "שן שום, פלפל חריף"], "steps": ["משפשפים את העלים במלח ומשהים שעה; סוחטים.", "מרתיחים חומץ וסוכר, מצננים ויוצקים על העלים עם השום והצ'ילי בצנצנת.", "במקרר יומיים לפני אכילה. מצוין לצד אורז, נודלס או בתוך כריך."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "סלט עלי חרדל צעירים", "ingredients": ["2 חופני עלי חרדל צעירים", "חופן חסה", "1 תפוח פרוס דק", "פטה או גבינת עיזים", "שמן זית, דבש, חומץ בלסמי"], "steps": ["קוטפים עלים צעירים בלבד — הגדולים חריפים מדי לסלט.", "מערבבים עם החסה והתפוח.", "מתבלים בשמן, דבש וחומץ ומפוררים גבינה. המתוק מאזן את החריפות."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "פנקייק בצל ירוק", "ingredients": ["1 כוס קמח", "¾ כוס מים", "קורט מלח", "1 צרור בצל ירוק קצוץ", "שמן לטיגון", "לטבילה: סויה, חומץ, שמן שומשום"], "steps": ["מערבבים קמח, מים ומלח לבלילה חלקה ומוסיפים את הבצל.", "יוצקים שכבה דקה למחבת משומנת ומטגנים 3 דקות מכל צד עד פריכות.", "חותכים למשולשים ומגישים עם רוטב טבילה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "שמן בצל ירוק וג'ינג'ר", "ingredients": ["צרור בצל ירוק קצוץ דק", "2 כפות ג'ינג'ר מגורר", "1 כפית מלח", "½ כוס שמן ניטרלי"], "steps": ["מניחים בצל, ג'ינג'ר ומלח בקערה עמידת חום.", "מחממים את השמן עד שמתחיל לעשן ויוצקים עליהם — זה ירחש.", "מצננים ושומרים במקרר עד שבוע. מעל אורז, ביצים, דג או עוף."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "חביתת בצל ירוק", "ingredients": ["3 ביצים", "3 בצל ירוק קצוץ", "1 כף חלב או מים", "מלח, פלפל", "1 כפית חמאה"], "steps": ["טורפים ביצים עם חלב, מלח ופלפל.", "מאדים את הבצל הירוק בחמאה דקה.", "יוצקים את הביצים, מקפלים כשכמעט נקרשות ומגישים."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "קציצות כרישה (קפטיקאס דה פראסה)", "ingredients": ["3 גבעולי כרישה", "1 תפוח אדמה מבושל ומעוך", "2 ביצים", "3 כפות פירורי לחם או מצה", "מלח, פלפל", "שמן לטיגון", "מיץ לימון להגשה"], "steps": ["חותכים כרישה לטבעות, שוטפים היטב ומבשלים במים 15 דקות עד רכות. סוחטים חזק.", "קוצצים ומערבבים עם תפוח האדמה, ביצים ופירורים.", "מטגנים קציצות שטוחות עד הזהבה ומזלפים לימון. מסורת ספרדית לחגים."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "מרק כרישה ותפוחי אדמה", "ingredients": ["3 גבעולי כרישה (החלק הלבן והירוק הבהיר)", "3 תפוחי אדמה בקוביות", "2 כפות חמאה", "5 כוסות ציר או מים", "½ כוס שמנת (לא חובה)", "מלח, פלפל לבן"], "steps": ["מאדים כרישה בחמאה 10 דקות על אש נמוכה, בלי להשחים.", "מוסיפים תפוחי אדמה וציר ומבשלים 20 דקות.", "טוחנים, מוסיפים שמנת ומתבלים. מגישים עם עירית או בצל ירוק."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "כרישה צלויה בתנור", "ingredients": ["3–4 גבעולי כרישה, חצויים לאורך", "3 כפות שמן זית", "טימין טרי", "2 כפות פרמזן מגורר", "מלח ופלפל"], "steps": ["שוטפים היטב בין השכבות ומסדרים בתבנית.", "מזלפים שמן, טימין ומלח, מכסים בנייר כסף ואופים ב-200°C כ-25 דקות.", "מסירים כיסוי, מפזרים פרמזן ואופים עוד 10 דקות עד הזהבה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "פשטידת ירוקי הגינה", "ingredients": ["4 כוסות עלים מעורבים: מנגולד, עלי סלק, בק צ'וי, חרדל", "1 כרישה פרוסה", "4 ביצים", "200 גרם גבינה לבנה או ריקוטה", "100 גרם גבינה צהובה מגוררת", "מלח, פלפל, אגוז מוסקט"], "steps": ["מאדים את הכרישה, מוסיפים את העלים הקצוצים עד שקמלים וסוחטים נוזלים.", "מערבבים עם ביצים וגבינות ומתבלים.", "אופים בתבנית משומנת ב-180°C כ-35 דקות. הדרך לגמור כל מה שנקטף בבת אחת."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "מרק ירוק של הגינה", "ingredients": ["1 כרישה", "2 תפוחי אדמה", "4 כוסות עלים מעורבים (מנגולד, סלק, חסה, בק צ'וי)", "6 כוסות ציר", "חופן פטרוזיליה", "מיץ לימון, מלח, שמן זית"], "steps": ["מאדים כרישה, מוסיפים תפוחי אדמה וציר ומבשלים 20 דקות.", "מוסיפים את העלים והפטרוזיליה ל-5 דקות.", "טוחנים, מתבלים בלימון ומלח ומזלפים שמן זית."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "שקשוקת עלים חורפית", "ingredients": ["1 כרישה פרוסה", "3 בצל ירוק", "4 כוסות עלי חרדל, סלק ובק צ'וי קצוצים", "2 שיני שום", "4 ביצים", "כפית כמון, צ'ילי", "יוגורט להגשה"], "steps": ["מאדים כרישה, בצל ירוק ושום בשמן זית.", "מוסיפים עלים וכמון ומבשלים עד שקמלו.", "שוברים ביצים, מכסים 5–6 דקות ומגישים עם כף יוגורט."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "קטיף ושימור עלי גינה", "ingredients": ["סכין או מספריים נקיים", "מגבת נייר", "קופסה או שקית עם חורים", "קערת מי קרח"], "steps": ["קוטפים בבוקר, כשהעלים מלאי מים. מחסה, בק צ'וי וחרדל — עלים חיצוניים בלבד, והמרכז ממשיך לגדול.", "שוטפים, מייבשים היטב ושומרים במקרר עטופים במגבת נייר — מחזיק 5–7 ימים.", "בצל ירוק: חותכים 3 ס\"מ מעל השורש והוא צומח שוב. כרישה שוקעת נשמרת במקרר שבועיים.", "עודפים של בק צ'וי, סלק וחרדל: חולטים דקה, מי קרח, סוחטים ומקפיאים במנות. חסה לא מקפיאים."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "תבלינים ומשקאות", "name": "לברק בעשבי תיבול מהגינה", "ingredients": ["2 לברקים שלמים (כ-400 גרם כל אחד), מנוקים", "3 ענפי רוזמרין", "4–5 ענפי טימין", "חופן עלי מרווה", "חופן פטרוזיליה קצוצה", "1 לימון מהגינה פרוס דק, ועוד מיץ מחצי לימון להגשה", "3 שיני שום פרוסות", "3–4 כפות שמן זית", "מלח גס ופלפל שחור"], "steps": ["מחממים תנור ל-220°C. חורצים 3 חתכים אלכסוניים בכל צד של הדג, ומשפשפים בפנים ובחוץ בשמן זית, מלח ופלפל.", "ממלאים את הבטן ברוזמרין, טימין, מרווה, פרוסות לימון ושום, ותוחבים ענף עשבים קטן גם לכל חתך.", "מסדרים בתבנית על מצע של פרוסות לימון ועוד כמה ענפי עשבים, מזלפים שמן זית ואופים 18–22 דקות, עד שהבשר ליד העצם לבן ונפרד בקלות במזלג.", "מגישים עם סחיטת לימון, פטרוזיליה ומעט שמן זית. על הגריל: אותו מילוי, 6–7 דקות מכל צד ברשת משומנת. הולך יפה עם מנגולד מוקפץ בשום ולימון."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "מוקפץ העלים האסיאתי", "ingredients": ["6 כוסות עלים מעורבים מהגינה: בק צ'וי, עלי חרדל, מנגולד, עלי סלק (מה שיש בשדה)", "3 בצל ירוק, חתוך לקטעים של 3 ס\"מ", "4 שיני שום פרוסות", "1 כף ג'ינג'ר מגורר", "1 פלפל חריף פרוס (או 2–3 טבעות קפואות)", "2 כפות רוטב סויה", "1 כף רוטב צדפות (או כפית דבש)", "1 כפית שמן שומשום", "2 כפות שמן לטיגון, שומשום קלוי לפיזור"], "steps": ["מפרידים את הגבעולים העבים (בק צ'וי, מנגולד) מהעלים וחותכים לרצועות; שוטפים ומייבשים היטב — עלים רטובים יתבשלו במקום להיצרב.", "מחממים ווק או מחבת רחבה עד שהשמן מעשן, ומקפיצים שום, ג'ינג'ר וצ'ילי 20–30 שניות.", "מוסיפים גבעולים ובצל ירוק לדקה–שתיים, ואז את העלים: חרדל קודם (הוא צריך דקה יותר), אחריו השאר. מוסיפים סויה וצדפות ומקפיצים 1–2 דקות בלבד, עד שהעלים קמלים והגבעולים עוד פריכים.", "מסיימים בשמן שומשום ושומשום, ומגישים מיד עם אורז. ביצה רכה או קוביות טופו מעל הופכים את זה לארוחה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "תבלינים ומשקאות", "name": "תפוחי אדמה צלויים ברוזמרין ולימון", "ingredients": ["1 ק\"ג תפוחי אדמה קטנים או בינוניים, לא קלופים, חצויים או ברבעים", "4 כפות שמן זית", "3 ענפי רוזמרין, עלים קצוצים גס", "4 ענפי טימין", "5 שיני שום לא קלופות, מעוכות קלות", "1 לימון מהגינה: הקליפה המגוררת ומיץ מחצי", "1 כפית מלח גס, פלפל שחור", "אופציונלי: קורט פפריקה מעושנת, פטרוזיליה קצוצה להגשה"], "steps": ["מחממים תנור ל-220°C. מבשלים את תפוחי האדמה במים רותחים עם מלח 8 דקות בלבד, מסננים ומנערים במסננת עד שהשוליים מתחספסים — זה מה שנותן את הפריכות.", "מערבבים בתבנית עם שמן זית, רוזמרין, טימין, שום, מלח ופלפל, ומפזרים בשכבה אחת עם החתך למטה.", "צולים 35–40 דקות, הופכים פעם אחת באמצע, עד שהם זהובים ופריכים מבחוץ ורכים מבפנים.", "מוציאים, מגררים מעל את קליפת הלימון, סוחטים מיץ ומפזרים פטרוזיליה. מגישים חם לצד הלברק בעשבי תיבול ומוקפץ העלים — יחד זו ארוחה שלמה מהגינה."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "סלט חסה, עגבניות ונענע", "ingredients": ["ראש חסה מהגינה, שטוף ומיובש היטב", "3 עגבניות, חתוכות גס", "2 מלפפונים, פרוסים עבה", "חופן עלי נענע מהגינה, קרועים ביד", "3 כפות שמן זית", "מיץ מחצי לימון", "מלח גס"], "steps": ["קורעים את החסה ביד לחתיכות גדולות ומניחים בקערה רחבה.", "מוסיפים עגבניות ומלפפונים, חתוכים גדול יחסית כדי שיישארו עם ביס.", "ממש לפני ההגשה מוסיפים את הנענע, מזלפים שמן זית ולימון, ממליחים ומערבבים בעדינות. בלי דבש וחרדל — התיבול הפשוט לא מתחרה בדג.", "הסלט הקר לצד הלברק, תפוחי האדמה הצלויים ומוקפץ העלים — ארוחת שבת מהגינה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "סלט חסה, צנונית ורימון", "ingredients": ["ראש חסה רומית (5.6), עלים קרועים ביד", "8–10 צנוניות (5.2) פרוסות דק", "גרגרים מחצי רימון (2.2)", "2 בצל ירוק (5.5), חופן עלי נענע (5.7)", "3 כפות שמן זית", "מיץ מחצי לימון (1)", "כפית סילאן או דבש, מלח"], "steps": ["מערבבים בקערה את החסה, הצנונית, הבצל הירוק, הנענע והרימון.", "טורפים שמן, לימון, סילאן ומלח.", "יוצקים רגע לפני ההגשה, כדי שהחסה לא תקמול. הצנוניות הקטנות שמדללים מהשורה החדשה טובות כאן בדיוק."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "עלי חרדל מוקפצים בשום ולימון", "ingredients": ["2 חופנים גדולים עלי חרדל (5.3), אדומים וירוקים", "3 שיני שום פרוסות", "2 כפות שמן זית", "מיץ מרבע לימון (1)", "מלח"], "steps": ["מקפיצים את השום בשמן חצי דקה, בלי להשחים.", "מוסיפים את העלים ומקפיצים 1–2 דקות, עד שקמלו.", "מסיימים בלימון ומלח. עלי החרדל חריפים יותר מתרד, והבישול הקצר מרכך אותם. לצד דאל, אורז או ביצה."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "תבלינים ומשקאות", "name": "דאל עדשים כתומות עם עלי קארי", "ingredients": ["1 כוס עדשים כתומות שטופות, 4 כוסות מים", "½ כפית כורכום, מלח", "לטדקה: 2 כפות שמן או גהי, כפית זרעי חרדל או כמון", "10–12 עלי קארי טריים (6.5)", "2 שיני שום פרוסות, 2–3 טבעות פלפל חריף קפוא", "מיץ מחצי לימון (1)"], "steps": ["מבשלים עדשים, מים וכורכום כ-20 דקות, עד שהעדשים מתפרקות למרק סמיך. ממליחים.", "במחבת קטנה מחממים שמן, מוסיפים את הזרעים עד שהם מתחילים לקפוץ, ואז עלי קארי, שום ופלפל לחצי דקה — העלים מתפצפצים ומשחררים ריח.", "יוצקים את השמן המתובל על הדאל, מסיימים בלימון ומגישים עם אורז. עלי הקארי נאכלים או נדחפים לצד — לפי הטעם."], "season": "חורף 2026/2027"}, {"section": "תבלינים ומשקאות", "name": "עוף צלוי ברוזמרין, מרווה ולימון", "ingredients": ["עוף שלם או 8 כרעיים", "2 ענפי רוזמרין, 6–8 עלי מרווה (5.8), כמה ענפי זעתר (5.6, 5.8)", "לימון (1) חתוך לרבעים, ראש שום חצוי", "3 כפות שמן זית, מלח ופלפל", "חמאת עשבים מספר המתכונים, לדחוף מתחת לעור"], "steps": ["מורחים חמאת עשבים מתחת לעור, ומשפשפים את העוף בשמן, מלח ופלפל.", "מסדרים בתבנית על מצע של העשבים, רבעי הלימון והשום.", "צולים ב-200°C, כשעה ורבע לעוף שלם או 45 דקות לכרעיים, עד הזהבה. סוחטים מעל את הלימון הצלוי ומגישים עם תפוחי אדמה ברוזמרין."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "סלט קולרבי, נענע ולימון", "ingredients": ["2 פקעות קולרבי (4.5), קלופות", "חופן עלי נענע (5.7) קרועים", "2 בצל ירוק (5.5) פרוס דק", "3 כפות שמן זית, מיץ מחצי לימון (1)", "כפית דבש, מלח ופלפל", "לא חובה: גרגרי רימון (2.2) או שקדים קלויים"], "steps": ["פורסים את הקולרבי לגפרורים דקים או מגררים גס — הפקעת מתוקה ופריכה כמו ברוקולי גולמי.", "מערבבים עם הנענע והבצל הירוק, ומתבלים בשמן, לימון, דבש ומלח.", "משהים 10 דקות לפני ההגשה. הקולרבי הקטן ב-4.5 (6–8 ס\"מ) הוא בדיוק בגודל הנכון — גדול יותר והוא מתעצה."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "קולרבי צלוי בתנור עם זעתר", "ingredients": ["2–3 פקעות קולרבי (4.5), קלופות וחתוכות לפלחים עבים", "3 כפות שמן זית", "2 כפות זעתר טרי קצוץ (5.6, 5.8) או כף זעתר רוזלה", "2 שיני שום מעוכות", "מלח גס, פלפל", "להגשה: יוגורט ולימון"], "steps": ["מערבבים את הפלחים עם שמן, שום, זעתר ומלח ומפזרים בשכבה אחת בתבנית.", "צולים ב-220°C כ-25 דקות, הופכים באמצע, עד שהשוליים זהובים והמרכז רך.", "מגישים על יוגורט עם סחיטת לימון. גם העלים הצעירים של הקולרבי נאכלים — מוקפצים כמו עלי סלק."], "season": "חורף 2026/2027"}, {"section": "פירות", "name": "מיץ בוקר: אשכולית ורימון", "ingredients": ["2 אשכוליות (2.1) — הכתומות ביותר שעל העץ", "גרגרים מרימון אחד (2.2)", "כפית דבש, אם האשכולית עוד ירוקה", "קרח"], "steps": ["סוחטים את האשכוליות במסחטת הדרים.", "טוחנים את גרגרי הרימון בבלנדר בפולסים קצרים ומסננים — הגרעינים נשארים במסננת.", "מערבבים את שני המיצים, ממתיקים מעט אם צריך ושותים מיד. האשכולית של סוף אוקטובר מלאת מיץ אבל חמוצה; הרימון מרכך אותה."], "season": "חורף 2026/2027"}, {"section": "פירות", "name": "סלט אשכולית, שומר ועלי סלרי", "ingredients": ["2 אשכוליות (2.1), מפולחות בלי קרומים", "פקעת שומר (מהחנות, או העלים הצעירים של השומר ב-5.4) פרוסה דק", "חופן עלי סלרי (5.4) ונענע (5.7)", "2 כפות שמן זית, קורט מלח גס", "לא חובה: זיתים שחורים או פטה"], "steps": ["מפלחים את האשכולית מעל קערה כדי לשמור את המיץ.", "מערבבים עם השומר והעשבים, ומתבלים בשמן, במיץ שנאסף ובמלח.", "מגישים קר. סלט חורף פשוט לצד דג או עוף — המרירות העדינה של האשכולית הירוקה עובדת כאן לטובה."], "season": "חורף 2026/2027"}, {"section": "פירות", "name": "מולסת רימונים ביתית", "ingredients": ["מיץ מ-6–8 רימונים (2.2), כ-4 כוסות — גם מפירות סדוקים או עם כתם, אחרי ניקוי", "½ כוס סוכר", "מיץ מחצי לימון (1)"], "steps": ["מחלצים גרגרים (נוח מתחת למים), טוחנים בבלנדר בפולסים ומסננים.", "מבשלים את המיץ עם הסוכר והלימון על אש נמוכה, בלי מכסה, כשעה ורבע, עד שהוא מסמיך לסירופ שמצפה כף — מצטמצם לכרבע.", "מצננים ושומרים בבקבוק במקרר חודשים. לסלטים, לעוף צלוי ולחצילים. דרך טובה לנצל את הרימונים שנסדקו בגשם."], "season": "חורף 2026/2027"}, {"section": "תבלינים ומשקאות", "name": "פסטו נענע ופטרוזיליה", "ingredients": ["2 כוסות עלי נענע (5.7) — מהגיזום", "1 כוס פטרוזיליה (5.6)", "⅓ כוס שקדים או צנוברים קלויים", "1 שן שום, ½ כוס שמן זית", "מיץ מחצי לימון (1), מלח", "לא חובה: ¼ כוס פרמזן"], "steps": ["טוחנים עשבים, שקדים, שום ומלח במעבד מזון.", "מוסיפים שמן בזרם דק, ואז לימון ופרמזן.", "שומרים בצנצנת עם שכבת שמן מעל, או מקפיאים בתבנית קרח. מעל דג, כבש, ירקות צלויים או בכריך — כך הנענע שגלשה על הרצפה הופכת למלאי לחורף."], "season": "חורף 2026/2027"}, {"section": "תבלינים ומשקאות", "name": "פסטה בחמאת מרווה חומה", "ingredients": ["400 גרם פסטה (רביולי דלעת, ניוקי או פפרדלה)", "80 גרם חמאה", "12–15 עלי מרווה (5.8) שלמים", "קליפת לימון (1) מגוררת", "פרמזן מגורר, מלח ופלפל"], "steps": ["מבשלים את הפסטה ושומרים כוס ממי הבישול.", "ממיסים חמאה במחבת רחבה על אש בינונית עד שהיא מקציפה ומתחילה להשחים ולהריח אגוזי; מוסיפים את עלי המרווה לדקה, עד שהם פריכים.", "מוסיפים את הפסטה עם מעט ממי הבישול, מנערים, ומסיימים בקליפת לימון ופרמזן. המרווה של 5.8 בשיא עכשיו — זו המנה שלה."], "season": "חורף 2026/2027"}, {"section": "ירקות", "name": "סלט גזרים צעירים וצנוניות מהדילול", "ingredients": ["הגזרים הקטנים שהוצאו בדילול (4.3), שטופים היטב, עם העלים הצעירים", "הצנוניות הקטנות מהדילול (5.2)", "חופן עלי חרדל צעירים או מיזונה (5.3)", "2 כפות שמן זית, מיץ מרבע לימון (1)", "כפית חומץ, מלח גס", "לא חובה: כפית זרעי כמון קלויים"], "steps": ["חותכים את הגזרים הצעירים לאורך (הקטנים נשארים שלמים) ואת הצנוניות לחצאים.", "מערבבים עם העלים ומתבלים בשמן, לימון, חומץ ומלח.", "אוכלים מיד. הדילול השני של הגזר (דצמבר) נותן גזרים בגודל אצבע — אז זה סלט של ממש."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}, {"section": "ירקות", "name": "טבולה של סלרי עלים ופטרוזיליה", "ingredients": ["2 כוסות עלי סלרי (5.4) קצוצים דק, עם הגבעולים הדקים", "2 כוסות פטרוזיליה (5.6) קצוצה דק", "חופן נענע (5.7)", "½ כוס בורגול דק, מושרה במים 15 דקות וסחוט", "2 עגבניות בקוביות קטנות, 2 בצל ירוק (5.5)", "4 כפות שמן זית, מיץ מלימון (1), מלח"], "steps": ["קוצצים את כל העשבים דק בסכין, לא במעבד.", "מערבבים עם הבורגול, העגבניות והבצל הירוק.", "מתבלים בנדיבות בלימון, שמן ומלח ומגישים אחרי רבע שעה. הסלרי העלים נותן טבולה ריחנית יותר מהרגיל."], "season": "חורף 2026/2027", "subsection": "עלי גינה"}];
+</script>
+<script>
+(function(){
+'use strict';
+const R=window.RECIPES, SECTIONS=['תבלינים ומשקאות','פירות','ירקות'], SEC_ICON={'תבלינים ומשקאות':'🌿','פירות':'🍋','ירקות':'🥬'};
+const SEASONS=[...new Set(R.map(r=>r.season))];
+const CURRENT_SEASON=SEASONS[SEASONS.length-1];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+// ---- storage (best effort)
+const store={get(k,d){try{const v=localStorage.getItem('gr_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('gr_'+k,JSON.stringify(v))}catch(e){}}};
+let favs=new Set(store.get('favs',[])), shop=store.get('shop',[]), checked=store.get('checked',{}), seasonFilter=store.get('season',null), showBins=store.get('bins',1);
+// ---- helpers
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s).toLowerCase().replace(/[\u0591-\u05C7]/g,'').replace(/[״"']/g,'');
+const stripBins=s=>showBins?s:s.replace(/\s*\((?:מכל\s*)?\d+(?:\.\d+)?(?:\s*[,ו\-–]\s*\d+(?:\.\d+)?)*\)/g,'').replace(/\s*ממכל\s+\d+(?:\.\d+)?/g,'');
+let toastT;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800)};
+function hl(txt,words){let h=esc(txt);if(!words.length)return h;words.forEach(w=>{if(!w)return;const re=new RegExp('('+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');h=h.replace(re,'<mark>$1</mark>')});return h}
+function recipeText(r){return r.name+'\n\nמרכיבים:\n'+r.ingredients.map(i=>'• '+stripBins(i)).join('\n')+'\n\nהכנה:\n'+r.steps.map((s,i)=>(i+1)+'. '+s).join('\n')+'\n\n— ספר הגינה של רחל ומודי'}
+async function copyText(t){try{await navigator.clipboard.writeText(t);toast('הועתק ✓');return true}catch(e){try{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity=0;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('הועתק ✓');return true}catch(e2){toast('לא ניתן להעתיק כאן');return false}}}
+async function shareText(title,t){if(navigator.share){try{await navigator.share({title,text:t});return}catch(e){if(e&&e.name==='AbortError')return}}copyText(t)}
+// ---- chips
+const chips=$('#chips');chips.innerHTML=SEASONS.map(s=>`<button data-s="${esc(s)}">${esc(s)}</button>`).join('')+`<button data-s="__fav">⭐ מועדפים</button>`;
+function syncChips(){$$('#chips button').forEach(b=>b.classList.toggle('on',b.dataset.s===seasonFilter))}
+chips.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;seasonFilter=seasonFilter===b.dataset.s?null:b.dataset.s;store.set('season',seasonFilter);syncChips();renderList()});
+syncChips();
+// ---- list
+const q=$('#q');
+function matches(r,words){const hay=norm(r.name+' '+r.ingredients.join(' ')+' '+r.steps.join(' '));return words.every(w=>hay.includes(w))}
+function cardHTML(i,r,words){return `<div class="card" data-i="${i}"><div class="t"><div class="n">${hl(r.name,words)}<span class="season">${esc(r.season)}</span></div><div class="m">${hl(stripBins(r.ingredients.slice(0,4).join(' · ')),words)}</div></div><button class="fav ${favs.has(i)?'':'off'}" data-fav="${i}" aria-label="מועדף">${favs.has(i)?'★':'☆'}</button></div>`}
+function renderList(){
+  const words=norm(q.value).split(/\s+/).filter(Boolean);
+  let shown=0, html='';
+  SECTIONS.forEach(sec=>{
+    const items=[];
+    R.forEach((r,i)=>{if(r.section!==sec)return;if(seasonFilter==='__fav'&&!favs.has(i))return;if(seasonFilter&&seasonFilter!=='__fav'&&r.season!==seasonFilter)return;if(words.length&&!matches(r,words))return;items.push(cardHTML(i,r,words))});
+    if(items.length){shown+=items.length;html+=`<div class="sec"><h2><span>${SEC_ICON[sec]} ${esc(sec)}</span><span class="cnt">${items.length} מתכונים</span></h2>${items.join('')}</div>`}
+  });
+  $('#list').innerHTML=html||`<div class="empty"><b>🔍</b>לא נמצא מתכון מתאים</div>`;
+  $('#st').textContent=(words.length||seasonFilter)?`מוצגים ${shown} מתוך ${R.length} מתכונים`:'';
+}
+q.addEventListener('input',renderList);$('#clr').addEventListener('click',()=>{q.value='';renderList();q.blur()});
+function renderFavs(){const ids=[...favs].filter(i=>R[i]);$('#favList').innerHTML=ids.length?`<div class="sec"><h2><span>⭐ המועדפים שלנו</span><span class="cnt">${ids.length}</span></h2>${ids.map(i=>cardHTML(i,R[i],[])).join('')}</div>`:`<div class="empty"><b>⭐</b>עדיין אין מועדפים.<br>לחצו על הכוכב ליד מתכון כדי להוסיף.</div>`}
+document.addEventListener('click',e=>{
+  const f=e.target.closest('[data-fav]');if(f){e.stopPropagation();toggleFav(+f.dataset.fav);return}
+  const c=e.target.closest('.card');if(c){openRecipe(+c.dataset.i)}
+});
+function toggleFav(i){if(favs.has(i)){favs.delete(i);toast('הוסר מהמועדפים')}else{favs.add(i);toast('נוסף למועדפים ⭐')}store.set('favs',[...favs]);renderList();renderFavs();if(cur===i)syncSheetFav()}
+// ---- "today"
+function pickToday(){const pool=R.map((r,i)=>i).filter(i=>R[i].season===CURRENT_SEASON);const d=new Date();let seed=d.getFullYear()*1000+d.getMonth()*50+d.getDate()+todayOffset;const i=pool[Math.abs(seed*2654435761)%pool.length];$('#today').innerHTML=`<div class="t"><div class="k">מה לבשל היום · ${esc(CURRENT_SEASON)}</div><div class="n" data-open="${i}">${esc(R[i].name)}</div></div><button id="reroll" aria-label="הצעה אחרת">🔄</button>`;$('#today .n').onclick=()=>openRecipe(i);$('#reroll').onclick=()=>{todayOffset++;pickToday()}}
+let todayOffset=0;pickToday();
+// ---- nav
+$$('nav button').forEach(b=>b.addEventListener('click',()=>{const v=b.dataset.v;$$('nav button').forEach(x=>x.classList.toggle('on',x===b));$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));$('#searchRow').style.display=$('#chips').style.display=(v==='recipes')?'':'none';if(v==='favs')renderFavs();if(v==='shop')renderShop();window.scrollTo(0,0)}));
+// ---- recipe sheet
+let cur=null, wake=null;
+const sheet=$('#sheet');
+function openRecipe(i){cur=i;const r=R[i];const ck=checked[i]||{ing:[],st:[]};
+  $('#shTtl').textContent=r.name;syncSheetFav();
+  $('#shBody').innerHTML=`<div class="rh">${esc(r.name)}</div><div class="rm">${SEC_ICON[r.section]} ${esc(r.section)} · ${esc(r.season)}</div>
+  <div class="acts"><button class="primary" data-a="cook">👩‍🍳 מצב בישול</button><button data-a="shop">🛒 הוסף לקניות</button><button data-a="share">📤 שלח בוואטסאפ</button><button data-a="copy">📋 העתק</button></div>
+  <div class="blk"><h3>מרכיבים <button data-a="resetIng">אפס סימונים</button></h3><ul class="ing">${r.ingredients.map((x,k)=>`<li data-k="${k}" class="${ck.ing.includes(k)?'on':''}"><span class="ck">✓</span><span class="x">${esc(stripBins(x))}</span></li>`).join('')}</ul></div>
+  <div class="blk"><h3>הכנה <button data-a="resetSt">אפס שלבים</button></h3><ol class="steps">${r.steps.map((x,k)=>`<li data-k="${k}" class="${ck.st.includes(k)?'on':''}">${esc(x)}</li>`).join('')}</ol></div>
+  <div class="cookbar"><span>המסך יישאר דלוק בזמן הבישול</span><button data-a="cookOff">סיום בישול</button></div>`;
+  sheet.classList.add('on');sheet.classList.remove('cook');$('#shBody').scrollTop=0;document.body.style.overflow='hidden';
+}
+function syncSheetFav(){$('#shFav').textContent=favs.has(cur)?'★':'☆';$('#shFav').style.color=favs.has(cur)?'#F2C94C':'#fff'}
+function closeSheetRaw(){sheet.classList.remove('on','cook');document.body.style.overflow='';releaseWake();cur=null}
+function closeSheet(){const back=history.state&&history.state.r;closeSheetRaw();if(back){try{history.back()}catch(e){}}}
+$('#shBack').onclick=closeSheet;$('#shFav').onclick=()=>toggleFav(cur);$('#shCook').onclick=()=>toggleCook();
+function saveChecked(){store.set('checked',checked)}
+$('#shBody').addEventListener('click',e=>{
+  const a=e.target.closest('[data-a]');const r=R[cur];
+  if(a){const act=a.dataset.a;
+    if(act==='cook')toggleCook(true);else if(act==='cookOff')toggleCook(false);
+    else if(act==='copy')copyText(recipeText(r));
+    else if(act==='share')shareText(r.name,recipeText(r));
+    else if(act==='shop'){const ck=(checked[cur]||{ing:[]}).ing;let n=0;r.ingredients.forEach((x,k)=>{if(ck.includes(k))return;const t=stripBins(x);if(!shop.some(s=>s.t===t)){shop.push({t,src:r.name,done:false});n++}});store.set('shop',shop);badge();toast(n?`נוספו ${n} פריטים לרשימת הקניות`:'הכול כבר ברשימה')}
+    else if(act==='resetIng'){checked[cur]={...(checked[cur]||{st:[]}),ing:[]};saveChecked();openRecipe(cur)}
+    else if(act==='resetSt'){checked[cur]={...(checked[cur]||{ing:[]}),st:[]};saveChecked();openRecipe(cur)}
+    return}
+  const li=e.target.closest('li[data-k]');if(!li)return;const k=+li.dataset.k;const isIng=li.parentElement.classList.contains('ing');
+  checked[cur]=checked[cur]||{ing:[],st:[]};const arr=checked[cur][isIng?'ing':'st'];const p=arr.indexOf(k);if(p>=0)arr.splice(p,1);else arr.push(k);saveChecked();li.classList.toggle('on');
+});
+async function requestWake(){try{if('wakeLock'in navigator){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>{wake=null})}}catch(e){}}
+function releaseWake(){try{wake&&wake.release()}catch(e){}wake=null}
+function toggleCook(on){if(on===undefined)on=!sheet.classList.contains('cook');sheet.classList.toggle('cook',on);if(on){requestWake();toast('מצב בישול: אותיות גדולות, המסך לא יכבה')}else releaseWake();$('#shBody').scrollTop=0}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sheet.classList.contains('cook'))requestWake()});
+// ---- shopping
+function badge(){const n=shop.filter(s=>!s.done).length;const b=$('#shopBadge');b.hidden=!n;b.textContent=n}
+function renderShop(){const ul=$('#shopList');ul.innerHTML=shop.map((s,i)=>`<li data-si="${i}" class="${s.done?'on':''}"><span class="ck">✓</span><span class="x" style="flex:1">${esc(s.t)}${s.src?`<span class="src"> · ${esc(s.src)}</span>`:''}</span><button data-del="${i}" style="color:var(--muted);font-size:18px;padding:0 6px">🗑</button></li>`).join('');$('#shopEmpty').style.display=shop.length?'none':'';badge()}
+$('#shopList').addEventListener('click',e=>{const d=e.target.closest('[data-del]');if(d){shop.splice(+d.dataset.del,1);store.set('shop',shop);renderShop();return}const li=e.target.closest('li[data-si]');if(!li)return;shop[+li.dataset.si].done=!shop[+li.dataset.si].done;store.set('shop',shop);renderShop()});
+$('#shopClear').onclick=()=>{if(!shop.length)return;shop=[];store.set('shop',shop);renderShop();toast('הרשימה נוקתה')};
+$('#shopAddBtn').onclick=()=>{const ta=$('#shopAdd');ta.value.split('\n').map(s=>s.trim()).filter(Boolean).forEach(t=>shop.push({t,src:'',done:false}));ta.value='';store.set('shop',shop);renderShop()};
+$('#shopCopy').onclick=()=>copyText('רשימת קניות — ספר הגינה\n'+shop.map(s=>(s.done?'✓ ':'☐ ')+s.t).join('\n'));
+badge();
+// ---- settings
+const fs=store.get('fs',17);document.documentElement.style.setProperty('--fs',fs+'px');$$('#fsSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.fs===fs));
+$('#fsSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.documentElement.style.setProperty('--fs',b.dataset.fs+'px');store.set('fs',+b.dataset.fs);$$('#fsSeg button').forEach(x=>x.classList.toggle('on',x===b))});
+const mq=window.matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(t){document.documentElement.dataset.theme=t==='auto'?(mq.matches?'dark':'light'):t;$$('#thSeg button').forEach(x=>x.classList.toggle('on',x.dataset.th===t));document.querySelector('meta[name=theme-color]').content=document.documentElement.dataset.theme==='dark'?'#141A16':'#2E5339'}
+let theme=store.get('theme','auto');applyTheme(theme);mq.addEventListener&&mq.addEventListener('change',()=>theme==='auto'&&applyTheme('auto'));
+$('#thSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;theme=b.dataset.th;store.set('theme',theme);applyTheme(theme)});
+$$('#binSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.bin===showBins));
+$('#binSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;showBins=+b.dataset.bin;store.set('bins',showBins);$$('#binSeg button').forEach(x=>x.classList.toggle('on',x===b));renderList()});
+// ---- back button closes sheet (Android)
+window.addEventListener('popstate',()=>{if(sheet.classList.contains('on'))closeSheetRaw()});
+const _open=openRecipe;openRecipe=function(i){if(!sheet.classList.contains('on')){try{history.pushState({r:1},'')}catch(e){}}_open(i)};
+renderList();
+})();
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"))}</script>
+</body>
+</html>
