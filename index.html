@@ -264,11 +264,11 @@ function renderList(){
   let shown=0, html='';
   SECTIONS.forEach(sec=>{
     const items=[];
-    R.forEach((r,i)=>{if(r.section!==sec)return;if(seasonFilter==='__fav'&&!favs.has(i))return;if(seasonFilter&&seasonFilter!=='__fav'&&r.season!==seasonFilter)return;if(words.length&&!matches(r,words))return;items.push(cardHTML(i,r,words))});
+    R.forEach((r,i)=>{if(r.section!==sec)return;if(words.length){if(!matches(r,words))return}else{if(seasonFilter==='__fav'&&!favs.has(i))return;if(seasonFilter&&seasonFilter!=='__fav'&&r.season!==seasonFilter)return}items.push(cardHTML(i,r,words))});
     if(items.length){shown+=items.length;html+=`<div class="sec"><h2><span>${SEC_ICON[sec]} ${esc(sec)}</span><span class="cnt">${items.length} מתכונים</span></h2>${items.join('')}</div>`}
   });
   $('#list').innerHTML=html||`<div class="empty"><b>🔍</b>לא נמצא מתכון מתאים</div>`;
-  $('#st').textContent=(words.length||seasonFilter)?`מוצגים ${shown} מתוך ${R.length} מתכונים`:'';
+  $('#st').textContent=words.length?`מוצגים ${shown} מתוך ${R.length} מתכונים · החיפוש מתעלם מסינון העונה`:seasonFilter?`מוצגים ${shown} מתוך ${R.length} מתכונים`:'';
 }
 q.addEventListener('input',renderList);$('#clr').addEventListener('click',()=>{q.value='';renderList();q.blur()});
 function renderFavs(){const ids=[...favs].filter(i=>R[i]);$('#favList').innerHTML=ids.length?`<div class="sec"><h2><span>⭐ המועדפים שלנו</span><span class="cnt">${ids.length}</span></h2>${ids.map(i=>cardHTML(i,R[i],[])).join('')}</div>`:`<div class="empty"><b>⭐</b>עדיין אין מועדפים.<br>לחצו על הכוכב ליד מתכון כדי להוסיף.</div>`}
