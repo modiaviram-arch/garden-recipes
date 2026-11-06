@@ -35,7 +35,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--blue2)}
 .quick{margin-top:10px;display:flex;gap:6px}
 .quick input{flex:1;font-size:17px;padding:11px 12px;border:0;border-radius:12px;background:rgba(255,255,255,.96);color:#1C2430}
 .quick button{background:rgba(255,255,255,.2);color:#fff;border-radius:12px;min-width:46px;font-size:20px}
-.quick button.rec{background:#C0392B;animation:pulse 1s infinite}
+.rec,.quick button.rec{background:#C0392B;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.6}}
 .hint{font-size:12.5px;opacity:.9;margin-top:6px;min-height:16px}
 main{flex:1;padding:10px 12px calc(84px + var(--pad-b));max-width:760px;width:100%;margin:0 auto}
@@ -274,6 +274,7 @@ function taskCard(it,opts={}){
   if(it.list){const l=lists.find(x=>x.id===it.list);if(l)meta.push(l.name);}
   if(it.repeat)meta.push(repeatLabel(it.repeat));
   if(it.checklist&&it.checklist.length)meta.push(it.checklist.filter(c=>c.done).length+'/'+it.checklist.length+' פריטים');
+  if(it.parentTitle)meta.push('↪ '+it.parentTitle);
   if(it.note)meta.push(it.note.slice(0,60));
   return `<div class="card ${stuck?'stuck':''}" data-id="${it.id}">
     <button class="circle ${it.status==='done'?'done':''}" data-act="done">${it.status==='done'?'✓':''}</button>
@@ -367,7 +368,7 @@ function renderMore(){
   <h2>💾 גיבוי</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.2 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.3 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
 }
@@ -380,8 +381,17 @@ async function render(){
 async function complete(it){
   it.status='done';it.doneAt=Date.now();await save(it);
   if(it.repeat){const nd=nextOccurrence(it,today());const nx=newItem({title:it.title,note:it.note,time:it.time,list:it.list,source:it.source,repeat:it.repeat,date:nd});await save(nx);}
-  if(it.repeat&&it.repeat.followUp&&it.repeat.followUp.title){const fd=skipDay(addDays(today(),it.repeat.followUp.offset||1),it.repeat);await save(newItem({title:it.repeat.followUp.title,date:fd,source:it.source}));}
   toast('בוצע ✓');
+  if(it.type==='task')openFollowUp(it);
+}
+/* follow-up: no pre-written content — the user adds it now, typed or spoken */
+function openFollowUp(parent){
+  openSheet(`<h3>בוצע ✓ ${esc(parent.title)}</h3><div class="small" style="margin-bottom:10px">יש משימת המשך? התוכן נוסף עכשיו — בהקלדה או בקול.</div>
+    <div class="btns"><button class="btn p" id="fuType">⌨️ הקלד המשך</button><button class="btn p" id="fuVoice">🎤 אמור את ההמשך</button><button class="btn" id="fuNo">אין המשך</button></div>`);
+  const mk=()=>newItem({title:'',date:skipDay(addDays(today(),1),parent.repeat),list:parent.list,source:'manual',parentId:parent.id,parentTitle:parent.title});
+  document.getElementById('fuNo').onclick=()=>{closeSheet();render();};
+  document.getElementById('fuType').onclick=()=>{openEdit(mk(),true);};
+  document.getElementById('fuVoice').onclick=()=>{const it=mk();it.source='voice';openEdit(it,true);setTimeout(()=>{const b=document.getElementById('eMic');if(b)b.click();},250);};
 }
 async function trash(it){const prev=it.status;it.status='trash';it.deletedAt=Date.now();await save(it);toast('הועבר לסל','בטל',async()=>{it.status=prev==='trash'?'open':prev;it.deletedAt=null;await save(it);await render();toast('שוחזר');});}
 document.querySelector('main').addEventListener('click',async e=>{
@@ -463,7 +473,8 @@ function openEdit(it,isNew=false){
   const listOpts='<option value="">— ללא רשימה —</option>'+lists.map(l=>`<option value="${l.id}" ${it.list===l.id?'selected':''}>${esc(l.name)}</option>`).join('');
   const repUnit=rep.unit||'';
   openSheet(`<h3>${isNew?'משימה חדשה':'עריכה'} ${SRC[it.source]||''}</h3>
-    <label class="lbl">כותרת</label><input id="eTitle" value="${esc(it.title)}">
+    ${it.parentTitle?'<div class="small">↪ המשך ל: '+esc(it.parentTitle)+'</div>':''}
+    <label class="lbl">כותרת</label><div class="row" style="margin:0"><input id="eTitle" value="${esc(it.title)}" placeholder="מה לעשות?"><button class="btn" id="eMic" style="flex:0 0 auto;font-size:20px" title="הקלטה">🎤</button></div>
     ${it.raw&&it.raw!==it.title?'<div class="small">נאמר: '+esc(it.raw)+'</div>':''}
     <div class="chips"><button data-type="task" class="${it.type==='task'?'on':''}">משימה</button><button data-type="cond" class="${it.type==='cond'?'on':''}">תזכורת מותנית</button><button data-type="topic" class="${it.type==='topic'?'on':''}">תזכורת לנושא</button></div>
     <div id="condRow" style="${it.type==='cond'?'':'display:none'}"><label class="lbl">תנאי (השאלה שתישאל ביום היעד)</label><input id="eCond" value="${esc(it.condition||'')}" placeholder="אם ארגיש חלש"><label class="lbl">עד תאריך (חלון, לא חובה)</label><input id="eWin" type="date" value="${it.windowEnd||''}"></div>
@@ -474,7 +485,6 @@ function openEdit(it,isNew=false){
     <div class="row"><select id="eRepU"><option value="" ${!repUnit?'selected':''}>ללא</option><option value="day" ${repUnit==='day'?'selected':''}>כל X ימים</option><option value="week" ${repUnit==='week'?'selected':''}>שבועי (ימים)</option><option value="month" ${repUnit==='month'?'selected':''}>כל חודש</option></select><input id="eRepN" type="number" min="1" value="${rep.every||1}" style="max-width:80px"></div>
     <div class="chips" id="wdays" style="${repUnit==='week'?'':'display:none'}">${DAYS.map((d,i)=>`<button data-wd="${i}" class="${(rep.weekdays||[]).includes(i)?'on':''}">${d}</button>`).join('')}</div>
     <div class="row"><label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="eSkip" style="width:22px" ${rep.skipSat===false?'':'checked'}> לא בשבת</label></div>
-    <div class="row"><div><label class="lbl">משימת-המשך (לא חובה)</label><input id="eFU" value="${esc((rep.followUp||{}).title||'')}" placeholder="קיפול כביסה"></div><div style="max-width:110px"><label class="lbl">כעבור ימים</label><input id="eFUd" type="number" min="0" value="${(rep.followUp||{}).offset??1}"></div></div>
     <label class="lbl">הערה</label><textarea id="eNote" rows="2">${esc(it.note||'')}</textarea>
     ${it.url?'<div class="small"><a href="'+esc(it.url)+'" target="_blank">פתח מקור ↗</a></div>':''}
     <hr>
@@ -483,10 +493,16 @@ function openEdit(it,isNew=false){
     <div id="ocrMsg" class="small"></div>
     ${it.photo?'<img class="thumb" src="'+it.photo+'">':''}
     <hr>
-    <div class="btns"><button class="btn p" id="eSave">שמור</button>${it.time?'<button class="btn" id="eCal">⏰ תזכורת ביומן Google</button>':''}${!isNew&&it.status==='open'?'<button class="btn o" id="eDone">בוצע</button>':''}${!isNew?'<button class="btn d" id="eTrash">מחק</button>':''}<button class="btn" id="eCancel">ביטול</button></div>`);
+    <div class="btns"><button class="btn p" id="eSave">שמור</button>${it.time?'<button class="btn" id="eCal">⏰ תזכורת ביומן Google</button>':''}${!isNew&&it.status==='open'?'<button class="btn o" id="eDone">בוצע</button><button class="btn" id="eFollow">↪ משימת המשך</button>':''}${!isNew?'<button class="btn d" id="eTrash">מחק</button>':''}<button class="btn" id="eCancel">ביטול</button></div>`);
   const $=id=>document.getElementById(id);
   sheet.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{sheet.querySelectorAll('[data-type]').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('condRow').style.display=b.dataset.type==='cond'?'':'none';});
   sheet.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{$('eDate').value=b.dataset.d==='x'?'':addDays(today(),+b.dataset.d);});
+  $('eMic').onclick=()=>{if(!SR){toast('זיהוי דיבור לא זמין כאן');return;}if(recOn){rec.stop();return;}rec=new SR();rec.lang='he-IL';rec.interimResults=true;let fin='';
+    rec.onstart=()=>{recOn=true;$('eMic').classList.add('rec');$('eMic').textContent='⏹';};
+    rec.onresult=e=>{let t='';for(const r of e.results){t+=r[0].transcript;if(r.isFinal)fin=t;}$('eTitle').value=t;};
+    rec.onerror=e=>toast('שגיאת הקלטה: '+e.error);
+    rec.onend=()=>{recOn=false;$('eMic').classList.remove('rec');$('eMic').textContent='🎤';const t=(fin||$('eTitle').value).trim();if(!t)return;const p=parseHebrew(t);$('eTitle').value=p.title||t;it.raw=t;if(p.date)$('eDate').value=p.date;if(p.time)$('eTime').value=p.time;if(p.condition){$('eCond').value=p.condition;sheet.querySelector('[data-type=cond]').click();}};
+    rec.start();};
   $('eRepU').onchange=()=>{$('wdays').style.display=$('eRepU').value==='week'?'':'none';};
   sheet.querySelectorAll('[data-wd]').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
   $('addChk').onclick=()=>{$('chk').insertAdjacentHTML('beforeend',chkRow({t:'',done:false},$('chk').children.length));$('chk').lastElementChild.querySelector('input[type=text]').focus();};
@@ -501,14 +517,15 @@ function openEdit(it,isNew=false){
     it.condition=it.type==='cond'?$('eCond').value.trim():'';it.windowEnd=it.type==='cond'?($('eWin').value||null):null;
     it.date=$('eDate').value||null;it.time=$('eTime').value||null;it.list=$('eList').value||null;it.note=$('eNote').value.trim();
     const u=$('eRepU').value;
-    if(u){it.repeat={every:+$('eRepN').value||1,unit:u,weekdays:[...sheet.querySelectorAll('[data-wd].on')].map(b=>+b.dataset.wd),skipSat:$('eSkip').checked};const fu=$('eFU').value.trim();if(fu)it.repeat.followUp={title:fu,offset:+$('eFUd').value||1};if(!it.date)it.date=today();}else it.repeat=null;
+    if(u){it.repeat={every:+$('eRepN').value||1,unit:u,weekdays:[...sheet.querySelectorAll('[data-wd].on')].map(b=>+b.dataset.wd),skipSat:$('eSkip').checked};if(!it.date)it.date=today();}else it.repeat=null;
     const rows=[...$('chk').querySelectorAll('.check')].map(r=>({t:r.querySelector('input[type=text]').value.trim(),done:r.querySelector('input[type=checkbox]').checked})).filter(c=>c.t);
     it.checklist=rows.length?rows:null;
     if(it.type==='task'&&!it.date&&!it.list)it.date=today();
     if(it.type!=='task'&&!it.date)it.date=today();
   };
   $('eSave').onclick=async()=>{collect();await save(it);closeSheet();toast('נשמר');render();};
-  if($('eDone'))$('eDone').onclick=async()=>{collect();await complete(it);closeSheet();render();};
+  if($('eDone'))$('eDone').onclick=async()=>{collect();it.status='done';it.doneAt=Date.now();await save(it);if(it.repeat){const nd=nextOccurrence(it,today());await save(newItem({title:it.title,note:it.note,time:it.time,list:it.list,source:it.source,repeat:it.repeat,date:nd}));}closeSheet();render();openFollowUp(it);};
+  if($('eFollow'))$('eFollow').onclick=()=>{collect();save(it);openFollowUp(it);};
   if($('eTrash'))$('eTrash').onclick=async()=>{await trash(it);closeSheet();render();};
   if($('eCal'))$('eCal').onclick=()=>{collect();const d=it.date.replace(/-/g,''),t=it.time.replace(':','');const end=pad((+it.time.slice(0,2)+1)%24)+it.time.slice(3);const u='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('⏰ '+it.title)+'&dates='+d+'T'+t+'00/'+d+'T'+end.replace(':','')+'00&details='+encodeURIComponent('תזכורת מ-My Doing');window.open(u,'_blank');};
   $('eCancel').onclick=closeSheet;
