@@ -102,7 +102,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 <body>
 <div class="app">
   <header class="top">
-    <h1><span>My Doing</span><small id="dateLine"></small></h1>
+    <h1><span>My Doing</span><span style="display:flex;align-items:center;gap:10px"><small id="dateLine"></small><button id="exitBtn" title="יציאה" style="font-size:14px;font-weight:600;background:rgba(255,255,255,.2);border-radius:10px;padding:4px 10px">יציאה ⏻</button></span></h1>
     <div class="quick">
       <input id="quick" placeholder="הוספה מהירה… (למשל: מחר ב-10 להתקשר לדני)" autocomplete="off" enterkeyhint="done">
       <button id="micBtn" title="הקלטה קולית">🎤</button>
@@ -372,7 +372,7 @@ function renderMore(){
   <h2>💾 גיבוי</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.5.2 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.6 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
 }
@@ -626,6 +626,13 @@ function handleShare(){
   openEdit(it,true);return true;
 }
 
+/* ===================== Exit ===================== */
+document.getElementById('exitBtn').onclick=()=>{
+  closeSheet();
+  try{window.close();}catch(e){}
+  // a PWA opened from the home screen can't always close itself — guide the user if we're still here
+  setTimeout(()=>{if(!document.hidden)toast('לחץ על "חזרה" או "בית" בטלפון כדי לסגור — הכול כבר שמור');},400);
+};
 /* ===================== Boot ===================== */
 (async function(){
   await openDB();await load();
