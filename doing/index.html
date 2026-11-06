@@ -157,7 +157,7 @@ const dow=s=>new Date(s+'T00:00:00').getDay(); // 0=Sun..6=Sat
 const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 function fmtDate(s){if(!s)return '';const t=today();if(s===t)return 'היום';if(s===addDays(t,1))return 'מחר';if(s===addDays(t,-1))return 'אתמול';const d=new Date(s+'T00:00:00');return 'יום '+DAYS[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(d.getFullYear()!==new Date().getFullYear()?'.'+d.getFullYear():'');}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let toastT;function toast(m,actLabel,actFn){const t=document.getElementById('toast');t.textContent=m;if(actLabel){const b=document.createElement('button');b.textContent=actLabel;b.onclick=async()=>{t.classList.remove('on');await actFn();};t.appendChild(b);}t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),actLabel?6000:2200);}
+let toastT;function toast(m,actLabel,actFn){const t=document.getElementById('toast');t.textContent=m;if(actLabel){const b=document.createElement('button');b.textContent=actLabel;b.onclick=async()=>{t.classList.remove('on');await actFn();};t.appendChild(b);}t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),actLabel?(m.includes('גרסה חדשה')?120000:6000):2200);}
 const SRC={manual:'',voice:'🎤',share:'💬',email:'📧',calendar:'📅',delivery:'📦',ticktick:'📥',claude:'🤖'};
 
 /* ===================== State ===================== */
@@ -708,7 +708,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.9';
+const APP_VER='0.9.1';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
