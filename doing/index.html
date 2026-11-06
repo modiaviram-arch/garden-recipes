@@ -85,7 +85,9 @@ h2 .cnt{font-size:12px;color:var(--muted);font-weight:400}
 .thumb{max-width:100%;border-radius:10px;margin-top:6px}
 .sec-toggle{width:100%;text-align:right;padding:8px 2px;color:var(--muted);font-size:14px}
 details summary{cursor:pointer;color:var(--blue);font-weight:600;padding:6px 2px}
-.toast{position:fixed;bottom:calc(70px + var(--pad-b));left:50%;transform:translateX(-50%);background:#1C2430;color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;bottom:calc(70px + var(--pad-b));left:50%;transform:translateX(-50%);background:#1C2430;color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:14px}
+.toast.on{pointer-events:auto}
+.toast button{color:#FFD166;font-weight:700;font-size:15px;padding:4px 6px;background:none;border:0}
 .toast.on{opacity:1}
 .small{font-size:13px;color:var(--muted)}
 .src{font-size:14px;margin-inline-start:4px}
@@ -152,7 +154,7 @@ const dow=s=>new Date(s+'T00:00:00').getDay(); // 0=Sun..6=Sat
 const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 function fmtDate(s){if(!s)return '';const t=today();if(s===t)return 'היום';if(s===addDays(t,1))return 'מחר';if(s===addDays(t,-1))return 'אתמול';const d=new Date(s+'T00:00:00');return 'יום '+DAYS[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(d.getFullYear()!==new Date().getFullYear()?'.'+d.getFullYear():'');}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let toastT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200);}
+let toastT;function toast(m,actLabel,actFn){const t=document.getElementById('toast');t.textContent=m;if(actLabel){const b=document.createElement('button');b.textContent=actLabel;b.onclick=async()=>{t.classList.remove('on');await actFn();};t.appendChild(b);}t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),actLabel?6000:2200);}
 const SRC={manual:'',voice:'🎤',share:'💬',email:'📧',calendar:'📅',delivery:'📦',ticktick:'📥',claude:'🤖'};
 
 /* ===================== State ===================== */
@@ -365,7 +367,7 @@ function renderMore(){
   <h2>💾 גיבוי</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.1 · 5.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.2 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
 }
@@ -381,7 +383,7 @@ async function complete(it){
   if(it.repeat&&it.repeat.followUp&&it.repeat.followUp.title){const fd=skipDay(addDays(today(),it.repeat.followUp.offset||1),it.repeat);await save(newItem({title:it.repeat.followUp.title,date:fd,source:it.source}));}
   toast('בוצע ✓');
 }
-async function trash(it){it.status='trash';it.deletedAt=Date.now();await save(it);toast('הועבר לסל');}
+async function trash(it){const prev=it.status;it.status='trash';it.deletedAt=Date.now();await save(it);toast('הועבר לסל','בטל',async()=>{it.status=prev==='trash'?'open':prev;it.deletedAt=null;await save(it);await render();toast('שוחזר');});}
 document.querySelector('main').addEventListener('click',async e=>{
   const b=e.target.closest('[data-act],[data-lact],[data-set]');if(!b)return;
   if(b.dataset.set){settings[b.dataset.set]=b.dataset.val==='1';await saveSettings();render();return;}
@@ -402,7 +404,7 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'done': if(it.status==='done'){it.status='open';it.doneAt=null;await save(it);}else await complete(it);break;
     case 'edit': openEdit(it);return;
     case 'trash': await trash(it);break;
-    case 'restore': it.status='open';it.deletedAt=null;await save(it);break;
+    case 'restore': it.status='open';it.deletedAt=null;await save(it);toast('שוחזר');break;
     case 'purge': await DB.del(it.id);items=items.filter(x=>x.id!==it.id);break;
     case 'reopen': it.status='open';it.doneAt=null;await save(it);break;
     case 'snooze7': it.date=addDays(today(),7);it.rollovers=0;await save(it);break;
