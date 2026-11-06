@@ -166,7 +166,8 @@ const DEFAULT_LISTS=[{id:'ideas',name:'רעיונות'},{id:'calls',name:'שיח
 async function load(){
   items=await DB.all();
   lists=(await DB.kget('lists'))||DEFAULT_LISTS.slice();
-  settings=Object.assign({skipSat:true,model:'claude-haiku-5-5',apiKey:''},(await DB.kget('settings'))||{});
+  settings=Object.assign({skipSat:true,model:'claude-sonnet-5-5',apiKey:''},(await DB.kget('settings'))||{});
+  if(settings.model==='claude-haiku-5-5'){settings.model='claude-sonnet-5-5';await DB.kset('settings',settings);} // 0.6.3: Haiku misses Hebrew handwriting
 }
 const saveLists=()=>DB.kset('lists',lists);
 const saveSettings=()=>DB.kset('settings',settings);
@@ -366,7 +367,7 @@ function renderMore(){
     <label class="lbl">מפתח Claude API לזיהוי רשימת קניות מצולמת (נשמר בטלפון בלבד)</label>
     <input id="apiKey" type="password" placeholder="sk-ant-…" value="${esc(settings.apiKey||'')}">
     <label class="lbl">מודל</label>
-    <input id="model" value="${esc(settings.model||'claude-haiku-5-5')}">
+    <input id="model" value="${esc(settings.model||'claude-sonnet-5-5')}">
     <div class="btns"><button class="btn p" id="saveSettings">שמור הגדרות</button></div>
   </div>
   <h2>💾 גיבוי</h2>
@@ -588,7 +589,7 @@ async function ocrList(dataUrl){
   if(!navigator.onLine)throw new Error('אין רשת — הצילום נשמר. לחץ "פענח רשימה" כשיש חיבור.');
   const b64=dataUrl.split(',')[1];
   const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':settings.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:settings.model||'claude-haiku-5-5',max_tokens:4000,system:'You read handwritten Hebrew shopping lists. Output ONLY a JSON array, no prose, no markdown fences. Each element: {"t":"item with quantity if written","done":false}. A line struck through = "done":true. Unreadable line → "t":"לא קריא".',messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:'זו רשימת קניות בכתב יד בעברית. החזר אך ורק JSON: מערך של אובייקטים {"t":"שם הפריט עם כמות אם כתובה","done":true/false}. פריט שמחוק בקו (קו חוצה עליו) = done:true (כבר נקנה); פריט לא מחוק = done:false. פריט אחד לכל שורה, לפי סדר השורות מלמעלה למטה. אם שורה לא קריאה בכלל, כתוב "לא קריא". בלי טקסט נוסף.'}]}]})});
+    body:JSON.stringify({model:settings.model||'claude-sonnet-5-5',max_tokens:4000,system:'You read handwritten Hebrew shopping lists. Output ONLY a JSON array, no prose, no markdown fences. Each element: {"t":"item with quantity if written","done":false}. A line struck through = "done":true. Unreadable line → "t":"לא קריא".',messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:'זו רשימת קניות בכתב יד בעברית. החזר אך ורק JSON: מערך של אובייקטים {"t":"שם הפריט עם כמות אם כתובה","done":true/false}. פריט שמחוק בקו (קו חוצה עליו) = done:true (כבר נקנה); פריט לא מחוק = done:false. פריט אחד לכל שורה, לפי סדר השורות מלמעלה למטה. אם שורה לא קריאה בכלל, כתוב "לא קריא". בלי טקסט נוסף.'}]}]})});
   if(res.status===401)throw new Error('מפתח API לא תקין (401). בדוק ב"עוד → הגדרות".');
   if(!res.ok){let d='';try{d=(await res.json()).error?.message||'';}catch(e){}throw new Error('שגיאת API ('+res.status+')'+(d?': '+d.slice(0,160):''));}
   const j=await res.json();const txt=(j.content||[]).map(c=>c.text||'').join('').trim();
@@ -614,7 +615,7 @@ async function ocrList(dataUrl){
 /* ===================== Export / import / settings ===================== */
 document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='exportBtn'){const data={exported:new Date().toISOString(),items,lists,settings:{skipSat:settings.skipSat},imported:await DB.kget('imported')};const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-doing-'+today()+'.json';a.click();}
-  if(e.target.id==='saveSettings'){settings.apiKey=document.getElementById('apiKey').value.trim();settings.model=document.getElementById('model').value.trim()||'claude-haiku-5-5';await saveSettings();toast('נשמר');}
+  if(e.target.id==='saveSettings'){settings.apiKey=document.getElementById('apiKey').value.trim();settings.model=document.getElementById('model').value.trim()||'claude-sonnet-5-5';await saveSettings();toast('נשמר');}
   if(e.target.id==='pullBtn'){await pullInbox();render();}
 });
 document.querySelector('main').addEventListener('change',async e=>{
