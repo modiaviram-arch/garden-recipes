@@ -1,4 +1,4 @@
-const CACHE = 'my-doing-v0.6.4-2026-11-06';
+const CACHE = 'my-doing-v0.7-2026-11-06';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -11,7 +11,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return; // API calls, fonts: straight to network
   // inbox.json: network first, never cached
-  if (url.pathname.endsWith('/inbox.json')) {
+  if (url.pathname.endsWith('/inbox.json') || url.pathname.endsWith('/version.txt')) {
     e.respondWith(fetch(e.request).catch(() => new Response('{"tasks":[]}', {headers: {'content-type': 'application/json'}})));
     return;
   }

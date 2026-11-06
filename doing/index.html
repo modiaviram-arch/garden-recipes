@@ -371,9 +371,9 @@ function renderMore(){
     <div class="btns"><button class="btn p" id="saveSettings">שמור הגדרות</button></div>
   </div>
   <h2>💾 גיבוי</h2>
-  <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button></div>
+  <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.6.4 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
 }
@@ -617,6 +617,7 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='exportBtn'){const data={exported:new Date().toISOString(),items,lists,settings:{skipSat:settings.skipSat},imported:await DB.kget('imported')};const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-doing-'+today()+'.json';a.click();}
   if(e.target.id==='saveSettings'){settings.apiKey=document.getElementById('apiKey').value.trim();settings.model=document.getElementById('model').value.trim()||'claude-sonnet-5-5';await saveSettings();toast('נשמר');}
   if(e.target.id==='pullBtn'){await pullInbox();render();}
+  if(e.target.id==='updBtn'){checkUpdate(true);}
 });
 document.querySelector('main').addEventListener('change',async e=>{
   if(e.target.id==='importFile'){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());for(const it of (d.items||[]))await save(it);if(d.lists){lists=d.lists;await saveLists();}if(d.imported)await DB.kset('imported',d.imported);toast('יובאו '+(d.items||[]).length+' פריטים');render();}catch(err){toast('קובץ לא תקין');}}
@@ -632,6 +633,14 @@ function handleShare(){
   openEdit(it,true);return true;
 }
 
+/* ===================== Update check ===================== */
+const APP_VER='0.7';
+async function checkUpdate(manual){
+  try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
+    if(v&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
+    else if(manual)toast('מעודכן — גרסה '+APP_VER);
+  }catch(e){if(manual)toast('אין רשת');}
+}
 /* ===================== Exit ===================== */
 document.getElementById('exitBtn').onclick=()=>{
   closeSheet();
@@ -646,9 +655,9 @@ document.getElementById('exitBtn').onclick=()=>{
   await maintenance();
   await render();
   const shared=handleShare();
-  await pullInbox();await maintenance();await render();
+  await pullInbox();await maintenance();await render();checkUpdate(false);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){await maintenance();await pullInbox();await render();}});
+  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){await maintenance();await pullInbox();await render();checkUpdate(false);}});
 })();
 </script>
 </body>
