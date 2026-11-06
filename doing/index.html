@@ -372,7 +372,7 @@ function renderMore(){
   <h2>💾 גיבוי</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.5 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.5.1 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
 }
@@ -590,7 +590,7 @@ async function ocrList(dataUrl){
   const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':settings.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
     body:JSON.stringify({model:settings.model||'claude-haiku-5-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:'זו רשימת קניות בכתב יד בעברית. החזר אך ורק JSON: מערך של אובייקטים {"t":"שם הפריט עם כמות אם כתובה","done":true/false}. פריט שמחוק בקו (קו חוצה עליו) = done:true (כבר נקנה); פריט לא מחוק = done:false. פריט אחד לכל שורה, לפי סדר השורות מלמעלה למטה. אם שורה לא קריאה בכלל, כתוב "לא קריא". בלי טקסט נוסף.'}]}]})});
   if(res.status===401)throw new Error('מפתח API לא תקין (401). בדוק ב"עוד → הגדרות".');
-  if(!res.ok){throw new Error('שגיאת API ('+res.status+')');}
+  if(!res.ok){let d='';try{d=(await res.json()).error?.message||'';}catch(e){}throw new Error('שגיאת API ('+res.status+')'+(d?': '+d.slice(0,160):''));}
   const j=await res.json();const txt=(j.content||[]).map(c=>c.text||'').join('');
   const m=txt.match(/\[[\s\S]*\]/);if(!m)return [];
   try{return JSON.parse(m[0]).map(x=>typeof x==='string'?{t:x,done:false}:{t:String(x.t||x.item||''),done:!!x.done}).filter(c=>c.t);}catch(e){return [];}
