@@ -280,6 +280,19 @@ function openContactSheet(c,done){
   if($('cDel'))$('cDel').onclick=async()=>{contacts=contacts.filter(x=>x.id!==c.id);await saveContacts();closeSheet();render();};
   $('cCancel').onclick=closeSheet;
 }
+function openContactActions(it,c){
+  openSheet(`<h3>📲 ${esc(c.name)}</h3><div class="small" style="margin-bottom:8px">${esc(it.title)}</div>
+    <button class="btn o" id="caWa" style="display:block;width:100%;text-align:right;padding:14px;font-size:18px;margin:6px 0">💬 שלח הודעת וואטסאפ</button>
+    <button class="btn" id="caCall" style="display:block;width:100%;text-align:right;padding:14px;font-size:18px;margin:6px 0">📞 התקשר</button>
+    <button class="btn" id="caNav" style="display:block;width:100%;text-align:right;padding:14px;font-size:18px;margin:6px 0">🚗 ${c.address?'נווט ב-Waze':'נווט — אין כתובת, הוסף'}</button>
+    <div class="btns" style="margin-top:10px"><button class="btn" id="caEdit">✏️ ערוך איש קשר</button><button class="btn" id="caCancel">סגור</button></div>`);
+  const $=id=>document.getElementById(id);
+  $('caWa').onclick=()=>openWhatsApp(it,c);
+  $('caCall').onclick=()=>{location.href='tel:+'+c.phone;};
+  $('caNav').onclick=()=>{if(c.address)window.open(wazeUrl(c.address),'_blank');else openContactSheet(c,()=>openContactActions(it,c));};
+  $('caEdit').onclick=()=>openContactSheet(c,()=>openContactActions(it,c));
+  $('caCancel').onclick=closeSheet;
+}
 function openWhatsApp(it,c){
   const msg=draftMessage(it,c);
   openSheet(`<h3>💬 הודעה ל${esc(c.name)}</h3><div class="small" style="margin-bottom:6px">הטיוטה נוצרה מהמשימה — אפשר לתקן בהקלדה או בקול. וואטסאפ ייפתח עם ההודעה מוכנה; השליחה בנגיעה שלך.</div>
@@ -346,7 +359,7 @@ let view='today';
 function show(v){view=v;document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
 
-function contactBtns(it){if(it.status!=='open'||it.type!=='task')return '';const {c,name}=contactFor(it);if(c)return '<div class="btns"><button class="btn o" data-act="wa">💬 שלח ל'+esc(c.name)+' בוואטסאפ</button>'+(c.address?'<button class="btn" data-act="waze">🚗 נווט ב-Waze</button>':'')+'</div>';if(name)return '<div class="btns"><button class="btn" data-act="pick">👤 בחר איש קשר: '+esc(name)+'</button></div>';return '';}
+function contactBtns(it){if(it.status!=='open'||it.type!=='task')return '';const {c,name}=contactFor(it);if(c)return '<div class="btns"><button class="btn o" data-act="contact">📲 '+esc(c.name)+': וואטסאפ · טלפון'+(c.address?' · Waze':'')+'</button></div>';if(name)return '<div class="btns"><button class="btn" data-act="pick">👤 בחר איש קשר: '+esc(name)+'</button></div>';return '';}
 function taskCard(it,opts={}){
   const src=SRC[it.source]||'';
   const stuck=it.type==='task'&&(it.rollovers||0)>=3;
@@ -513,8 +526,9 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'condNo': it.status='closed';it.doneAt=Date.now();await save(it);toast('נרשם ביומן: לא נדרש');break;
     case 'toTask': it.type='task';it.date=today();await save(it);break;
     case 'wa': {const {c}=contactFor(it);if(c)openWhatsApp(it,c);return;}
+    case 'contact': {const {c}=contactFor(it);if(c)openContactActions(it,c);return;}
     case 'waze': {const {c}=contactFor(it);if(c&&c.address)window.open(wazeUrl(c.address),'_blank');return;}
-    case 'pick': {const {name}=contactFor(it);pickContact(name,async c=>{it.contact=c.id;await save(it);render();});return;}
+    case 'pick': {const {name}=contactFor(it);pickContact(name,async c=>{it.contact=c.id;await save(it);render();toast('נבחר איש קשר: '+c.name);openContactActions(it,c);});return;}
   }
   render();
 });
@@ -596,7 +610,7 @@ function openEdit(it,isNew=false){
     rec.onerror=e=>toast('שגיאת הקלטה: '+e.error);
     rec.onend=()=>{recOn=false;$('eMic').classList.remove('rec');$('eMic').textContent='🎤';const t=(fin||$('eTitle').value).trim();if(!t)return;const p=parseHebrew(t);$('eTitle').value=p.title||t;it.raw=t;if(p.date)$('eDate').value=p.date;if(p.time)$('eTime').value=p.time;if(p.condition){$('eCond').value=p.condition;sheet.querySelector('[data-type=cond]').click();}};
     rec.start();};
-  $('eNewContact').onclick=()=>{collect();pickContact(detectName(it.title)||'',async c=>{it.contact=c.id;await save(it);openEdit(it,isNew);});};
+  $('eNewContact').onclick=()=>{collect();pickContact(detectName(it.title)||'',async c=>{it.contact=c.id;await save(it);toast('נבחר איש קשר: '+c.name);openEdit(it,isNew);});};
   $('eRepU').onchange=()=>{$('wdays').style.display=$('eRepU').value==='week'?'':'none';};
   sheet.querySelectorAll('[data-wd]').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
   $('addChk').onclick=()=>{$('chk').insertAdjacentHTML('beforeend',chkRow({t:'',done:false},$('chk').children.length));$('chk').lastElementChild.querySelector('input[type=text]').focus();};
@@ -721,7 +735,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.9.2';
+const APP_VER='0.10';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
