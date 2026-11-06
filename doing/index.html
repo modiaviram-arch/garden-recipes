@@ -372,7 +372,7 @@ function renderMore(){
   <h2>💾 גיבוי</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.6.1 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.6.2 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
 }
@@ -608,7 +608,7 @@ async function ocrList(dataUrl){
   const lines=txt.replace(/```[a-z]*/g,'').split('\n').map(s=>s.replace(/^[\s\-\*•·\d\.\)\]"'\[,]+|[\s"',\]]+$/g,'').trim()).filter(s=>s&&!/^(json|רשימה|רשימת קניות)[:：]?$/i.test(s));
   const out=lines.map(s=>{const done=/~~|\(מחוק\)|\(נקנה\)|✓/.test(s);return {t:s.replace(/~~|\(מחוק\)|\(נקנה\)|✓/g,'').trim(),done};}).filter(c=>c.t&&c.t.length<80);
   if(out.length)return out;
-  throw new Error('לא זוהו פריטים. תשובת המודל: '+(txt.slice(0,400)||'(ריקה)'));
+  throw new Error('לא זוהו פריטים. תשובת המודל: '+(txt.slice(0,400)||'(ריקה) · stop='+(j.stop_reason||'?')+' · raw='+JSON.stringify(j).slice(0,500)));
 }
 
 /* ===================== Export / import / settings ===================== */
