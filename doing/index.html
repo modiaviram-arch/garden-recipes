@@ -283,7 +283,7 @@ function taskCard(it,opts={}){
     <button class="circle ${it.status==='done'?'done':''}" data-act="done">${it.status==='done'?'✓':''}</button>
     <div class="t" data-act="edit"><div class="n">${esc(it.title)}<span class="src">${src}</span>${stuck?'<span class="badge warn">תקועה ×'+it.rollovers+'</span>':''}${(it.rollovers||0)>0&&!stuck?'<span class="badge">מאתמול</span>':''}</div>
     ${meta.length?'<div class="m">'+esc(meta.join(' · '))+'</div>':''}
-    ${it.checklist&&it.checklist.length?'<div class="btns"><button class="btn" data-act="checklist">🛒 רשימה '+it.checklist.filter(c=>c.done).length+'/'+it.checklist.length+'</button></div>':''}
+    ${it.checklist&&it.checklist.length?'<div class="btns"><button class="btn" data-act="checklist">🛒 רשימה '+it.checklist.filter(c=>c.done).length+'/'+it.checklist.length+'</button></div>':(it.photo?'<div class="btns"><button class="btn p" data-act="decode">🔍 פענח רשימה מהצילום</button></div>':'')}
     ${stuck?'<div class="btns"><button class="btn" data-act="snooze7">דחה שבוע</button><button class="btn" data-act="tolist">לרשימה</button><button class="btn d" data-act="trash">מחק</button></div>':''}
     </div>
     <button class="x" data-act="trash" title="מחק">✕</button></div>`;
@@ -372,7 +372,7 @@ function renderMore(){
   <h2>💾 גיבוי</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.4 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה 0.5 · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
 }
@@ -418,6 +418,7 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'done': if(it.status==='done'){it.status='open';it.doneAt=null;await save(it);}else await complete(it);break;
     case 'edit': openEdit(it);return;
     case 'checklist': openChecklist(it);return;
+    case 'decode': openEdit(it);setTimeout(()=>{const b=document.getElementById('decodeBtn');if(b)b.click();},150);return;
     case 'trash': await trash(it);break;
     case 'restore': it.status='open';it.deletedAt=null;await save(it);toast('שוחזר');break;
     case 'purge': await DB.del(it.id);items=items.filter(x=>x.id!==it.id);break;
@@ -496,7 +497,7 @@ function openEdit(it,isNew=false){
     <div class="listhead"><label class="lbl" style="margin:0">רשימת סימון / רשימת קניות</label><label class="btn" style="font-size:13px">📷 צלם רשימה<input type="file" id="photoIn" accept="image/*" capture="environment" style="display:none"></label><button class="btn" id="addChk" style="font-size:13px">+ פריט</button></div>
     <div id="chk">${(it.checklist||[]).map((c,i)=>chkRow(c,i)).join('')}</div>
     <div id="ocrMsg" class="small"></div>
-    ${it.photo?'<img class="thumb" src="'+it.photo+'">':''}
+    <div id="photoBox">${it.photo?'<div class="btns"><button class="btn p" id="decodeBtn">🔍 פענח רשימה מהצילום</button><button class="btn" id="photoRm">הסר צילום</button></div><img class="thumb" src="'+it.photo+'">':''}</div>
     <hr>
     <div class="btns"><button class="btn p" id="eSave">שמור</button>${it.time?'<button class="btn" id="eCal">⏰ תזכורת ביומן Google</button>':''}${!isNew&&it.status==='open'?'<button class="btn o" id="eDone">בוצע</button><button class="btn" id="eFollow">↪ משימת המשך</button>':''}${!isNew?'<button class="btn d" id="eTrash">מחק</button>':''}<button class="btn" id="eCancel">ביטול</button></div>`);
   const $=id=>document.getElementById(id);
@@ -513,9 +514,19 @@ function openEdit(it,isNew=false){
   $('addChk').onclick=()=>{$('chk').insertAdjacentHTML('beforeend',chkRow({t:'',done:false},$('chk').children.length));$('chk').lastElementChild.querySelector('input[type=text]').focus();};
   $('chk').addEventListener('click',e=>{if(e.target.dataset.rm!==undefined)e.target.closest('.check').remove();});
   $('chk').addEventListener('change',e=>{if(e.target.type==='checkbox')e.target.closest('.check').classList.toggle('done',e.target.checked);});
-  $('photoIn').onchange=async e=>{const f=e.target.files[0];if(!f)return;const data=await shrink(f);it.photo=data;$('ocrMsg').textContent='מזהה כתב יד…';
-    try{const list=await ocrList(data);if(list&&list.length){for(const t of list)$('chk').insertAdjacentHTML('beforeend',chkRow({t,done:false}));$('ocrMsg').textContent='זוהו '+list.length+' פריטים — אפשר לתקן.';}else $('ocrMsg').textContent='לא זוהו פריטים. הצילום נשמר; אפשר להוסיף ידנית או לשתף את הצילום ל-Claude.';}
-    catch(err){$('ocrMsg').textContent=err.message;}};
+  /* decode: runs on capture, and on demand via the "פענח רשימה" button (e.g. after the API key was added later) */
+  const decode=async()=>{if(!it.photo)return;const btn=$('decodeBtn');if(btn){btn.disabled=true;btn.textContent='מזהה כתב יד…';}$('ocrMsg').textContent='מזהה כתב יד… (כמה שניות)';
+    try{const list=await ocrList(it.photo);
+      const have=new Set([...$('chk').querySelectorAll('input[type=text]')].map(x=>x.value.trim()));
+      let n=0,d=0;for(const c of list){if(have.has(c.t))continue;$('chk').insertAdjacentHTML('beforeend',chkRow(c));n++;if(c.done)d++;}
+      $('ocrMsg').textContent=list.length?('זוהו '+list.length+' פריטים'+(d?' ('+d+' מחוקים בצילום סומנו כנקנו)':'')+(n<list.length?', '+(list.length-n)+' כבר היו ברשימה':'')+' — אפשר לתקן ואז "שמור".'):'לא זוהו פריטים. הצילום נשמר; אפשר להוסיף ידנית או לשתף את הצילום ל-Claude.';}
+    catch(err){$('ocrMsg').textContent=err.message;}
+    finally{if(btn){btn.disabled=false;btn.textContent='🔍 פענח רשימה מהצילום';}}};
+  const wirePhoto=()=>{const b=$('decodeBtn');if(b)b.onclick=decode;const r=$('photoRm');if(r)r.onclick=()=>{it.photo=null;$('photoBox').innerHTML='';$('ocrMsg').textContent='';};};
+  wirePhoto();
+  $('photoIn').onchange=async e=>{const f=e.target.files[0];if(!f)return;it.photo=await shrink(f);
+    $('photoBox').innerHTML='<div class="btns"><button class="btn p" id="decodeBtn">🔍 פענח רשימה מהצילום</button><button class="btn" id="photoRm">הסר צילום</button></div><img class="thumb" src="'+it.photo+'">';wirePhoto();
+    await decode();};
   const collect=()=>{
     it.title=$('eTitle').value.trim()||it.title||'(ללא כותרת)';
     it.type=sheet.querySelector('[data-type].on').dataset.type;
@@ -573,14 +584,16 @@ function openListRemind(l){
 /* ===================== Photo → list (Claude API) ===================== */
 function shrink(file){return new Promise(res=>{const img=new Image();img.onload=()=>{const max=1400;let w=img.width,h=img.height;const s=Math.min(1,max/Math.max(w,h));w=Math.round(w*s);h=Math.round(h*s);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);res(c.toDataURL('image/jpeg',.82));};img.src=URL.createObjectURL(file);});}
 async function ocrList(dataUrl){
-  if(!settings.apiKey)throw new Error('אין מפתח API. הצילום נשמר — הוסף פריטים ידנית, או הגדר מפתח ב"עוד → הגדרות".');
+  if(!settings.apiKey)throw new Error('אין מפתח API — הצילום נשמר. הגדר מפתח ב"עוד → הגדרות" ולחץ שוב "פענח רשימה", או הוסף פריטים ידנית.');
+  if(!navigator.onLine)throw new Error('אין רשת — הצילום נשמר. לחץ "פענח רשימה" כשיש חיבור.');
   const b64=dataUrl.split(',')[1];
   const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':settings.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:settings.model||'claude-haiku-5-5',max_tokens:800,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:'זו רשימת קניות בכתב יד בעברית. החזר אך ורק JSON: מערך של מחרוזות, פריט אחד לכל שורה, כולל כמות אם כתובה. בלי טקסט נוסף.'}]}]})});
+    body:JSON.stringify({model:settings.model||'claude-haiku-5-5',max_tokens:1000,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:'זו רשימת קניות בכתב יד בעברית. החזר אך ורק JSON: מערך של אובייקטים {"t":"שם הפריט עם כמות אם כתובה","done":true/false}. פריט שמחוק בקו (קו חוצה עליו) = done:true (כבר נקנה); פריט לא מחוק = done:false. פריט אחד לכל שורה, לפי סדר השורות מלמעלה למטה. אם שורה לא קריאה בכלל, כתוב "לא קריא". בלי טקסט נוסף.'}]}]})});
+  if(res.status===401)throw new Error('מפתח API לא תקין (401). בדוק ב"עוד → הגדרות".');
   if(!res.ok){throw new Error('שגיאת API ('+res.status+')');}
   const j=await res.json();const txt=(j.content||[]).map(c=>c.text||'').join('');
   const m=txt.match(/\[[\s\S]*\]/);if(!m)return [];
-  try{return JSON.parse(m[0]).map(String).filter(Boolean);}catch(e){return [];}
+  try{return JSON.parse(m[0]).map(x=>typeof x==='string'?{t:x,done:false}:{t:String(x.t||x.item||''),done:!!x.done}).filter(c=>c.t);}catch(e){return [];}
 }
 
 /* ===================== Export / import / settings ===================== */
