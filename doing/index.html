@@ -247,11 +247,24 @@ function draftMessage(it,c){const name=c.name;
   if(/^ל[א-ת]/.test(t))return 'היי '+first+', אפשר '+t+'?'+(meeting?' מתי נוח לך?':'');
   return 'היי '+first+', בקשר ל'+t.replace(/^ה/,'')+'.'+(meeting?' מתי נוח לך?':'');
 }
+async function pickFromPhone(name,done){
+  if(!(navigator.contacts&&navigator.contacts.select)){openContactSheet({name:name||''},done);return;}
+  try{const r=await navigator.contacts.select(['name','tel','address'],{multiple:false});if(r&&r[0]){const pn=(r[0].name?.[0]||'').trim();const c={id:uid(),name:(name||pn).trim(),phone:normPhone(r[0].tel?.[0]||''),aliases:pn&&pn!==(name||pn)?[pn]:[],address:addrStr(r[0].address?.[0])};if(!c.phone){toast('לאיש הקשר אין מספר');return;}contacts.push(c);await saveContacts();toast('נשמר: '+c.name);done&&done(c);}}
+  catch(e){openContactSheet({name:name||''},done);}
+}
 async function pickContact(name,done){
-  if(navigator.contacts&&navigator.contacts.select){
-    try{const r=await navigator.contacts.select(['name','tel','address'],{multiple:false});if(r&&r[0]){const c={id:uid(),name:(name||r[0].name?.[0]||'').trim(),phone:normPhone(r[0].tel?.[0]||''),aliases:r[0].name?.[0]&&r[0].name[0]!==name?[r[0].name[0]]:[],address:addrStr(r[0].address?.[0])};if(!c.phone){toast('לאיש הקשר אין מספר');return;}contacts.push(c);await saveContacts();toast('נשמר: '+c.name);done&&done(c);return;}return;}catch(e){/* cancelled or unsupported → manual */}
+  // 1) existing contacts first (so a different spelling in the task is linked as an alias)
+  if(contacts.length){
+    openSheet(`<h3>👤 מי זה ${esc(name||'')}?</h3><div class="small" style="margin-bottom:8px">בחר מאנשי הקשר שכבר שמורים, או הוסף חדש.</div>
+      <div id="pickList">${contacts.map(c=>`<button class="btn" data-pc="${c.id}" style="display:block;width:100%;text-align:right;margin:4px 0">${esc(c.name)}${c.aliases&&c.aliases.length?' <span class="small">('+esc(c.aliases.join(', '))+')</span>':''}</button>`).join('')}</div>
+      <div class="btns" style="margin-top:10px"><button class="btn p" id="pcPhone">📇 מאנשי הקשר של הטלפון</button><button class="btn" id="pcType">⌨️ הקלד חדש</button><button class="btn" id="pcCancel">ביטול</button></div>`);
+    sheet.querySelectorAll('[data-pc]').forEach(b=>b.onclick=async()=>{const c=contacts.find(x=>x.id===b.dataset.pc);if(name&&c.name!==name&&!(c.aliases||[]).includes(name)){c.aliases=[...(c.aliases||[]),name];await saveContacts();}closeSheet();done&&done(c);});
+    document.getElementById('pcPhone').onclick=()=>{closeSheet();pickFromPhone(name,done);};
+    document.getElementById('pcType').onclick=()=>{openContactSheet({name:name||''},done);};
+    document.getElementById('pcCancel').onclick=closeSheet;
+    return;
   }
-  openContactSheet({name:name||''},done);
+  pickFromPhone(name,done);
 }
 function openContactSheet(c,done){
   const isNew=!c.id;
@@ -708,7 +721,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.9.1';
+const APP_VER='0.9.2';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
