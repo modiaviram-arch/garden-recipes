@@ -321,10 +321,20 @@ function openContactSheet(c,done){
     <label class="lbl">מספר וואטסאפ</label><input id="cPhone" type="tel" dir="ltr" value="${esc(c.phone?'+'+c.phone:'')}" placeholder="050-1234567">
     <label class="lbl">שמות נוספים (מופרדים בפסיק)</label><input id="cAl" value="${esc((c.aliases||[]).join(', '))}" placeholder="בטי, ביאטריס כהן">
     <label class="lbl">כתובת (לניווט ב-Waze)</label><input id="cAddr" value="${esc(c.address||'')}" placeholder="הרצל 12, רמת השרון">
-    <div class="btns" style="margin-top:10px"><button class="btn p" id="cSave">שמור</button>${navigator.contacts?'<button class="btn" id="cPick">📇 מאנשי הקשר</button>':''}${!isNew?'<button class="btn d" id="cDel">מחק</button>':''}<button class="btn" id="cCancel">ביטול</button></div>`);
+    <label class="lbl">📋 או הדבק כאן vCard / טקסט של איש קשר (שם, מספר, כתובת) — השדות יתמלאו לבד</label>
+    <div class="row" style="margin:0;align-items:flex-start"><textarea id="cVcf" rows="3" dir="auto" placeholder="BEGIN:VCARD … END:VCARD  או: באטריס 052-8530677 גבעת אמנון ותמר 7"></textarea><button class="btn" id="cPaste" style="flex:0 0 auto">הדבק</button></div>
+    <div class="btns" style="margin-top:10px"><button class="btn p" id="cSave">שמור</button>${!isNew?'<button class="btn d" id="cDel">מחק</button>':''}<button class="btn" id="cCancel">ביטול</button></div>`);
   const $=id=>document.getElementById(id);
   $('cSave').onclick=async()=>{const n=$('cName').value.trim(),ph=normPhone($('cPhone').value);if(!n||!ph){toast('צריך שם ומספר');return;}c.name=n;c.phone=ph;c.aliases=$('cAl').value.split(',').map(x=>x.trim()).filter(Boolean);c.address=$('cAddr').value.trim();if(isNew){c.id=uid();contacts.push(c);}await saveContacts();closeSheet();render();done&&done(c);};
-  if($('cPick'))$('cPick').onclick=async()=>{try{const r=await navigator.contacts.select(['name','tel','address'],{multiple:false});if(r&&r[0]){if(!$('cName').value.trim())$('cName').value=r[0].name?.[0]||'';$('cPhone').value=r[0].tel?.[0]||'';const a=addrStr(r[0].address?.[0]);if(a&&!$('cAddr').value.trim())$('cAddr').value=a;}}catch(e){toast('בחירת אנשי קשר לא זמינה כאן — הקלד מספר');}};
+  const applyText=txt=>{txt=(txt||'').trim();if(!txt)return;let v=null;
+    if(/BEGIN:VCARD/i.test(txt))v=parseVCard(txt);
+    else{const m=txt.match(/(\+?\d[\d\s\-()]{7,}\d)/);const d=m?normPhone(m[1]):'';const rest=txt.replace(m?m[1]:'','');const lines=rest.split(/\n|,/).map(x=>x.trim()).filter(Boolean);v={name:lines[0]||'',phones:validPhone(d)?[d]:[],address:lines.slice(1).join(', ')};}
+    if(v.name&&!$('cName').value.trim())$('cName').value=v.name;else if(v.name&&v.name!==$('cName').value.trim()){const al=$('cAl').value.trim();if(!al.split(',').map(x=>x.trim()).includes(v.name))$('cAl').value=al?al+', '+v.name:v.name;}
+    if(v.phones&&v.phones[0])$('cPhone').value='+'+v.phones[0];
+    if(v.address&&!$('cAddr').value.trim())$('cAddr').value=v.address;
+    toast(v.phones&&v.phones[0]?'השדות מולאו — בדוק ושמור':'לא נמצא מספר בטקסט — הקלד אותו');};
+  $('cPaste').onclick=async()=>{let t='';try{t=await navigator.clipboard.readText();}catch(e){}if(!t){t=$('cVcf').value;if(!t){toast('אין טקסט בלוח — הדבק לתיבה ולחץ שוב');return;}}else $('cVcf').value=t;applyText(t);};
+  $('cVcf').addEventListener('input',()=>{const t=$('cVcf').value;if(/END:VCARD/i.test(t)||t.length>12)applyText(t);});
   if($('cDel'))$('cDel').onclick=async()=>{contacts=contacts.filter(x=>x.id!==c.id);await saveContacts();closeSheet();render();};
   $('cCancel').onclick=closeSheet;
 }
@@ -820,7 +830,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.13.1';
+const APP_VER='0.14';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
