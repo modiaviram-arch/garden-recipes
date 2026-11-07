@@ -157,6 +157,9 @@ const dow=s=>new Date(s+'T00:00:00').getDay(); // 0=Sun..6=Sat
 const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 function fmtDate(s){if(!s)return '';const t=today();if(s===t)return 'היום';if(s===addDays(t,1))return 'מחר';if(s===addDays(t,-1))return 'אתמול';const d=new Date(s+'T00:00:00');return 'יום '+DAYS[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+(d.getFullYear()!==new Date().getFullYear()?'.'+d.getFullYear():'');}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+window.addEventListener('error',e=>{try{logErr('JS: '+(e.message||e));}catch(_){}});
+window.addEventListener('unhandledrejection',e=>{try{logErr('Promise: '+(e.reason&&(e.reason.message||e.reason)));}catch(_){}});
+function logErr(m){const L=JSON.parse(localStorage.getItem('errlog')||'[]');L.unshift(new Date().toLocaleTimeString('he-IL')+' '+m);localStorage.setItem('errlog',JSON.stringify(L.slice(0,20)));toast('שגיאה: '+m);}
 let toastT;function toast(m,actLabel,actFn){const t=document.getElementById('toast');t.textContent=m;if(actLabel){const b=document.createElement('button');b.textContent=actLabel;b.onclick=async()=>{t.classList.remove('on');await actFn();};t.appendChild(b);}t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),actLabel?(m.includes('גרסה חדשה')?120000:6000):2200);}
 const SRC={manual:'',voice:'🎤',share:'💬',email:'📧',calendar:'📅',delivery:'📦',ticktick:'📥',claude:'🤖'};
 
@@ -257,8 +260,9 @@ async function pickFromPhone(name,done){
   let r;
   try{r=await navigator.contacts.select(props,{multiple:false});}
   catch(e){toast('בחירת אנשי קשר נכשלה ('+(e&&e.message||e)+') — הקלד ידנית');openContactSheet({name:name||''},done);return;}
-  if(!r||!r[0]){toast('לא נבחר איש קשר');return;}
+  if(!r||!r[0]){toast('לא נבחר איש קשר (הבוחר חזר ריק)');return;}
   const raw=r[0];
+  try{localStorage.setItem('lastpick',JSON.stringify({name:raw.name,tel:raw.tel,address:raw.address&&raw.address.map?raw.address.map(a=>({line:a.addressLine,city:a.city,toJSON:typeof a.toJSON})):raw.address}));}catch(_){}
   const pn=one(raw.name).trim();
   const tel=one(raw.tel);
   const addr=Array.isArray(raw.address)?addrStr(raw.address[0]):(typeof raw.address==='string'?raw.address:'');
@@ -268,7 +272,8 @@ async function pickFromPhone(name,done){
     toast('מהטלפון התקבל: '+(pn||'(בלי שם)')+' / '+(tel||'(בלי מספר)')+' — השלם ידנית');
     openContactSheet({name:c.name,phone:tel,aliases:c.aliases,address:c.address},done);return;
   }
-  contacts.push(c);await saveContacts();toast('נשמר: '+c.name+' '+c.phone);done&&done(c);
+  try{contacts.push(c);await saveContacts();toast('נשמר: '+c.name+' '+c.phone);}catch(e){logErr('שמירת איש קשר: '+(e&&e.message||e));return;}
+  try{done&&await done(c);}catch(e){logErr('אחרי בחירת איש קשר: '+(e&&e.message||e));}
 }
 async function pickContact(name,done){
   // 1) existing contacts first (so a different spelling in the task is linked as an alias)
@@ -489,7 +494,7 @@ function renderMore(){
   <h2>📇 אנשי קשר <button class="btn" data-cact="new" style="font-size:12px">+ איש קשר</button></h2>
   ${contacts.length?contacts.map(c=>`<div class="card" data-cid="${c.id}"><div class="t" data-cact="edit"><div class="n">${esc(c.name)}</div><div class="m"><span dir="ltr">+${esc(c.phone)}</span>${c.aliases&&c.aliases.length?' · '+esc(c.aliases.join(', ')):''}${c.address?' · 🚗 '+esc(c.address):''}</div></div></div>`).join(''):'<div class="small" style="padding:4px 8px">עדיין אין. כשתכתוב משימה "עם ביאטריס" — האפליקציה תציע לבחור איש קשר.</div>'}
   <h2>💾 גיבוי</h2>
-  <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button></div>
+  <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
   <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
@@ -552,7 +557,7 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'wa': {const {c}=contactFor(it);if(c)openWhatsApp(it,c);return;}
     case 'contact': {const {c}=contactFor(it);if(c)openContactActions(it,c);return;}
     case 'waze': {const {c}=contactFor(it);if(c&&c.address)window.open(wazeUrl(c.address),'_blank');return;}
-    case 'pick': {const {name}=contactFor(it);pickContact(name,async c=>{it.contact=c.id;await save(it);render();toast('נבחר איש קשר: '+c.name);openContactActions(it,c);});return;}
+    case 'pick': {const {name}=contactFor(it);pickContact(name,async c=>{try{it.contact=c.id;await save(it);await render();}catch(e){logErr('קישור משימה לאיש קשר: '+(e&&e.message||e));}openContactActions(it,c);});return;}
   }
   render();
 });
@@ -743,6 +748,7 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='saveSettings'){settings.apiKey=document.getElementById('apiKey').value.trim();settings.model=document.getElementById('model').value.trim()||'claude-sonnet-5-5';await saveSettings();toast('נשמר');}
   if(e.target.id==='pullBtn'){await pullInbox();render();}
   if(e.target.id==='updBtn'){checkUpdate(true);}
+  if(e.target.id==='errBtn'){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';openSheet('<h3>יומן שגיאות</h3><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
 });
 document.querySelector('main').addEventListener('change',async e=>{
   if(e.target.id==='importFile'){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());for(const it of (d.items||[]))await save(it);if(d.lists){lists=d.lists;await saveLists();}if(d.contacts){contacts=d.contacts;await saveContacts();}if(d.imported)await DB.kset('imported',d.imported);toast('יובאו '+(d.items||[]).length+' פריטים');render();}catch(err){toast('קובץ לא תקין');}}
@@ -759,7 +765,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.12.1';
+const APP_VER='0.12.2';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
