@@ -235,6 +235,8 @@ function scanContacts(title){const t=' '+(title||'')+' ';for(const c of contacts
 function contactFor(it){if(it.contact){const c=contacts.find(x=>x.id===it.contact);if(c)return {c,name:c.name};}const c=scanContacts(it.title);if(c)return {c,name:c.name};const name=detectName(it.title||'');return {c:null,name};}
 function addrStr(a){if(!a)return '';return [a.addressLine?.join(' '),a.city].filter(Boolean).join(', ')||a.toJSON?.()?.addressLine?.join(' ')||'';}
 function wazeUrl(addr){return 'https://waze.com/ul?q='+encodeURIComponent(addr)+'&navigate=yes';}
+function validPhone(p){return /^\d{10,15}$/.test(p||'');}
+function waUrl(c,m){return 'https://wa.me/'+c.phone+(m?'?text='+encodeURIComponent(m):'');}
 function normPhone(p){let d=String(p||'').replace(/[^\d+]/g,'');if(d.startsWith('+'))d=d.slice(1);if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0'))d='972'+d.slice(1);return d;}
 function draftMessage(it,c){const name=c.name;
   let t=(' '+(it.title||'')+' ').replace(NAME_RE,' ');
@@ -281,14 +283,15 @@ function openContactSheet(c,done){
   $('cCancel').onclick=closeSheet;
 }
 function openContactActions(it,c){
-  openSheet(`<h3>📲 ${esc(c.name)}</h3><div class="small" style="margin-bottom:8px">${esc(it.title)}</div>
+  const ok=validPhone(c.phone);
+  openSheet(`<h3>📲 ${esc(c.name)}</h3><div class="small" style="margin-bottom:2px"><span dir="ltr">+${esc(c.phone||'')}</span>${c.address?' · 🚗 '+esc(c.address):''}</div>${ok?'':'<div class="small" style="color:#c0392b;margin-bottom:6px">⚠ המספר לא תקין — לחץ "ערוך איש קשר" ותקן (למשל 054-1234567)</div>'}<div class="small" style="margin-bottom:8px">${esc(it.title)}</div>
     <button class="btn o" id="caWa" style="display:block;width:100%;text-align:right;padding:14px;font-size:18px;margin:6px 0">💬 שלח הודעת וואטסאפ</button>
     <button class="btn" id="caCall" style="display:block;width:100%;text-align:right;padding:14px;font-size:18px;margin:6px 0">📞 התקשר</button>
     <button class="btn" id="caNav" style="display:block;width:100%;text-align:right;padding:14px;font-size:18px;margin:6px 0">🚗 ${c.address?'נווט ב-Waze':'נווט — אין כתובת, הוסף'}</button>
     <div class="btns" style="margin-top:10px"><button class="btn" id="caEdit">✏️ ערוך איש קשר</button><button class="btn" id="caCancel">סגור</button></div>`);
   const $=id=>document.getElementById(id);
-  $('caWa').onclick=()=>openWhatsApp(it,c);
-  $('caCall').onclick=()=>{location.href='tel:+'+c.phone;};
+  $('caWa').onclick=()=>{if(!ok){openContactSheet(c,()=>openContactActions(it,c));return;}openWhatsApp(it,c);};
+  $('caCall').onclick=()=>{if(!ok){openContactSheet(c,()=>openContactActions(it,c));return;}location.href='tel:+'+c.phone;};
   $('caNav').onclick=()=>{if(c.address)window.open(wazeUrl(c.address),'_blank');else openContactSheet(c,()=>openContactActions(it,c));};
   $('caEdit').onclick=()=>openContactSheet(c,()=>openContactActions(it,c));
   $('caCancel').onclick=closeSheet;
@@ -305,7 +308,7 @@ function openWhatsApp(it,c){
   $('waCall').onclick=()=>{location.href='tel:+'+c.phone;};
   if($('waNav'))$('waNav').onclick=()=>window.open(wazeUrl(c.address),'_blank');
   $('waCancel').onclick=closeSheet;
-  $('waSend').onclick=()=>{const m=$('waMsg').value.trim();window.open('https://wa.me/'+c.phone+(m?'?text='+encodeURIComponent(m):''),'_blank');it.note=(it.note?it.note+'\n':'')+'💬 נשלח ל'+c.name+' '+fmtDate(today());save(it);
+  $('waSend').onclick=()=>{const m=$('waMsg').value.trim();if(!validPhone(c.phone)){toast('לאיש הקשר אין מספר תקין — ערוך אותו');openContactSheet(c,()=>openWhatsApp(it,c));return;}const w=window.open(waUrl(c,m),'_blank');if(!w)location.href=waUrl(c,m);it.note=(it.note?it.note+'\n':'')+'💬 נשלח ל'+c.name+' '+fmtDate(today());save(it);
     openSheet(`<h3>נשלח ל${esc(c.name)}?</h3><div class="btns"><button class="btn o" id="waDone">בוצע ✓</button><button class="btn" id="waFollow">↪ משימת המשך (לחכות לתשובה)</button><button class="btn" id="waKeep">השאר פתוח</button></div>`);
     document.getElementById('waDone').onclick=async()=>{closeSheet();await complete(it);render();};
     document.getElementById('waFollow').onclick=()=>{openFollowUp(it);};
@@ -735,7 +738,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.10.1';
+const APP_VER='0.11';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
