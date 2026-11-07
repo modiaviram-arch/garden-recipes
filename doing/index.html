@@ -282,22 +282,35 @@ async function pickFromPhone(name,done){
   try{contacts.push(c);await saveContacts();toast('נשמר: '+c.name+' '+c.phone);}catch(e){logErr('שמירת איש קשר: '+(e&&e.message||e));return;}
   try{done&&await done(c);}catch(e){logErr('אחרי בחירת איש קשר: '+(e&&e.message||e));}
 }
+function shareInstructions(name,done){
+  // remember which task asked, so the shared contact gets linked to it when the app reopens
+  const it=window.__pickItem||null;localStorage.setItem('pendingContactLink',JSON.stringify({name:name||'',itemId:it?it.id:null,at:Date.now()}));
+  openSheet(`<h3>📤 שיתוף איש קשר אל My Doing</h3><ol class="small" style="padding-inline-start:18px;line-height:1.7">
+    <li>פתח את אפליקציית <b>אנשי הקשר</b> בטלפון ומצא את <b>${esc(name||'האדם')}</b>.</li>
+    <li>לחץ <b>שתף</b> (⋮ או כפתור השיתוף) ובחר <b>כקובץ / vCard</b> אם נשאל.</li>
+    <li>ברשימת היעדים בחר <b>My Doing</b>.</li></ol>
+    <div class="small">האפליקציה תיפתח עם הפרטים מוכנים — אשר ושמור. ${name?'המשימה "'+esc(name)+'" תקושר אוטומטית.':''}</div>
+    <div class="btns" style="margin-top:10px"><button class="btn" id="siClose">הבנתי</button></div>`);
+  document.getElementById('siClose').onclick=closeSheet;
+}
 async function pickContact(name,done){
   // 1) existing contacts first (so a different spelling in the task is linked as an alias)
   if(contacts.length){
     openSheet(`<h3>👤 מי זה ${esc(name||'')}?</h3><div class="small" style="margin-bottom:8px">בחר מאנשי הקשר שכבר שמורים, או הוסף חדש.</div>
       <div id="pickList">${contacts.map(c=>`<button class="btn" data-pc="${c.id}" style="display:block;width:100%;text-align:right;margin:4px 0">${esc(c.name)}${c.aliases&&c.aliases.length?' <span class="small">('+esc(c.aliases.join(', '))+')</span>':''}</button>`).join('')}</div>
-      <div class="btns" style="margin-top:10px"><button class="btn p" id="pcPhone">📇 מאנשי הקשר של הטלפון</button><button class="btn" id="pcType">⌨️ הקלד חדש</button><button class="btn" id="pcCancel">ביטול</button></div>`);
+      <div class="btns" style="margin-top:10px"><button class="btn p" id="pcShare">📤 שתף מאפליקציית אנשי הקשר</button>${navigator.contacts&&navigator.contacts.select?'<button class="btn" id="pcPhone">📇 בוחר הטלפון</button>':''}<button class="btn" id="pcType">⌨️ הקלד חדש</button><button class="btn" id="pcCancel">ביטול</button></div>`);
+    document.getElementById('pcShare').onclick=()=>shareInstructions(name,done);
     sheet.querySelectorAll('[data-pc]').forEach(b=>b.onclick=async()=>{const c=contacts.find(x=>x.id===b.dataset.pc);if(name&&c.name!==name&&!(c.aliases||[]).includes(name)){c.aliases=[...(c.aliases||[]),name];await saveContacts();}closeSheet();done&&done(c);});
-    document.getElementById('pcPhone').onclick=()=>{closeSheet();pickFromPhone(name,done);};
+    if(document.getElementById('pcPhone'))document.getElementById('pcPhone').onclick=()=>{closeSheet();pickFromPhone(name,done);};
     document.getElementById('pcType').onclick=()=>{openContactSheet({name:name||''},done);};
     document.getElementById('pcCancel').onclick=closeSheet;
     return;
   }
   // 2) no saved contacts yet: explain what will happen before opening the phone's picker
-  openSheet(`<h3>👤 לקשר את "${esc(name||'')}" לאיש קשר?</h3><div class="small" style="margin-bottom:8px">ייפתח בוחר אנשי הקשר של הטלפון — בחר שם את האדם (אפשר לחפש). אחרי הבחירה המשימה תציע וואטסאפ, טלפון ו-Waze, וההתאמה תישמר להבא.</div>
-    <div class="btns"><button class="btn p" id="pcPhone">📇 בחר מאנשי הקשר של הטלפון</button><button class="btn" id="pcType">⌨️ הקלד שם ומספר</button><button class="btn" id="pcCancel">ביטול</button></div>`);
-  document.getElementById('pcPhone').onclick=()=>{closeSheet();pickFromPhone(name,done);};
+  openSheet(`<h3>👤 לקשר את "${esc(name||'')}" לאיש קשר?</h3><div class="small" style="margin-bottom:8px">הדרך האמינה: לשתף את איש הקשר מאפליקציית אנשי הקשר של הטלפון אל My Doing (פעם אחת לכל אדם). אחרי זה המשימה תציע וואטסאפ, טלפון ו-Waze, וההתאמה תישמר להבא.</div>
+    <div class="btns"><button class="btn p" id="pcShare">📤 שתף מאפליקציית אנשי הקשר</button>${navigator.contacts&&navigator.contacts.select?'<button class="btn" id="pcPhone">📇 בוחר הטלפון</button>':''}<button class="btn" id="pcType">⌨️ הקלד שם ומספר</button><button class="btn" id="pcCancel">ביטול</button></div>`);
+  document.getElementById('pcShare').onclick=()=>shareInstructions(name,done);
+  if(document.getElementById('pcPhone'))document.getElementById('pcPhone').onclick=()=>{closeSheet();pickFromPhone(name,done);};
   document.getElementById('pcType').onclick=()=>{openContactSheet({name:name||''},done);};
   document.getElementById('pcCancel').onclick=closeSheet;
 }
@@ -564,7 +577,7 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'wa': {const {c}=contactFor(it);if(c)openWhatsApp(it,c);return;}
     case 'contact': {const {c}=contactFor(it);if(c)openContactActions(it,c);return;}
     case 'waze': {const {c}=contactFor(it);if(c&&c.address)window.open(wazeUrl(c.address),'_blank');return;}
-    case 'pick': {const {name}=contactFor(it);pickContact(name,async c=>{try{it.contact=c.id;await save(it);await render();}catch(e){logErr('קישור משימה לאיש קשר: '+(e&&e.message||e));}openContactActions(it,c);});return;}
+    case 'pick': {const {name}=contactFor(it);window.__pickItem=it;pickContact(name,async c=>{try{it.contact=c.id;await save(it);await render();}catch(e){logErr('קישור משימה לאיש קשר: '+(e&&e.message||e));}openContactActions(it,c);});return;}
   }
   render();
 });
@@ -646,7 +659,7 @@ function openEdit(it,isNew=false){
     rec.onerror=e=>toast('שגיאת הקלטה: '+e.error);
     rec.onend=()=>{recOn=false;$('eMic').classList.remove('rec');$('eMic').textContent='🎤';const t=(fin||$('eTitle').value).trim();if(!t)return;const p=parseHebrew(t);$('eTitle').value=p.title||t;it.raw=t;if(p.date)$('eDate').value=p.date;if(p.time)$('eTime').value=p.time;if(p.condition){$('eCond').value=p.condition;sheet.querySelector('[data-type=cond]').click();}};
     rec.start();};
-  $('eNewContact').onclick=()=>{collect();pickContact(detectName(it.title)||'',async c=>{it.contact=c.id;await save(it);toast('נבחר איש קשר: '+c.name);openEdit(it,isNew);});};
+  $('eNewContact').onclick=()=>{collect();window.__pickItem=it;pickContact(detectName(it.title)||'',async c=>{it.contact=c.id;await save(it);toast('נבחר איש קשר: '+c.name);openEdit(it,isNew);});};
   $('eRepU').onchange=()=>{$('wdays').style.display=$('eRepU').value==='week'?'':'none';};
   sheet.querySelectorAll('[data-wd]').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
   $('addChk').onclick=()=>{$('chk').insertAdjacentHTML('beforeend',chkRow({t:'',done:false},$('chk').children.length));$('chk').lastElementChild.querySelector('input[type=text]').focus();};
@@ -761,6 +774,41 @@ document.querySelector('main').addEventListener('change',async e=>{
   if(e.target.id==='importFile'){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());for(const it of (d.items||[]))await save(it);if(d.lists){lists=d.lists;await saveLists();}if(d.contacts){contacts=d.contacts;await saveContacts();}if(d.imported)await DB.kset('imported',d.imported);toast('יובאו '+(d.items||[]).length+' פריטים');render();}catch(err){toast('קובץ לא תקין');}}
 });
 
+/* ===================== Shared contact (vCard via share target) ===================== */
+function qpDecode(str){try{const bytes=[];let i=0;while(i<str.length){if(str[i]==='='&&/^[0-9A-Fa-f]{2}$/.test(str.substr(i+1,2))){bytes.push(parseInt(str.substr(i+1,2),16));i+=3;}else{bytes.push(str.charCodeAt(i)&0xff);i++;}}return new TextDecoder('utf-8').decode(new Uint8Array(bytes));}catch(e){return str;}}
+function parseVCard(txt){
+  const lines=txt.replace(/\r/g,'').replace(/=\n/g,'').split('\n').reduce((a,l)=>{if(/^[ \t]/.test(l)&&a.length)a[a.length-1]+=l.slice(1);else a.push(l);return a;},[]);
+  const out={name:'',phones:[],address:''};
+  for(const line of lines){const i=line.indexOf(':');if(i<0)continue;const head=line.slice(0,i).toUpperCase();let val=line.slice(i+1);const key=head.split(';')[0].replace(/^ITEM\d+\./,'');if(/QUOTED-PRINTABLE/.test(head))val=qpDecode(val);
+    val=val.replace(/\\,/g,',').replace(/\;/g,';').replace(/\\n/gi,' ');
+    if(key==='FN'&&!out.name)out.name=val.trim();
+    else if(key==='N'&&!out.name){const p=val.split(';');out.name=[p[1],p[0]].filter(Boolean).join(' ').trim();}
+    else if(key==='TEL'){const d=normPhone(val);if(validPhone(d)&&!out.phones.includes(d))out.phones.push(/CELL|MOBILE/.test(head)?d:d);}
+    else if(key==='ADR'&&!out.address){const p=val.split(';');out.address=[p[2],p[3]].map(x=>(x||'').trim()).filter(Boolean).join(', ');}
+  }
+  // prefer a mobile number for WhatsApp
+  const tel=lines.find(l=>/^TEL[^:]*(CELL|MOBILE)/i.test(l));if(tel){const d=normPhone(tel.slice(tel.indexOf(':')+1));if(validPhone(d)){out.phones=[d,...out.phones.filter(x=>x!==d)];}}
+  return out;
+}
+async function takeSharedPayload(){
+  try{const c=await caches.open('share-inbox');const r=await c.match('./__shared');if(!r)return null;const j=await r.json();await c.delete('./__shared');return j;}catch(e){return null;}
+}
+async function handleSharedContact(payload){
+  let v=null;
+  if(payload.vcf&&/BEGIN:VCARD/i.test(payload.vcf))v=parseVCard(payload.vcf);
+  else{ // contact shared as plain text (name + number)
+    const t=[payload.title,payload.text].filter(Boolean).join('\n');const m=t.match(/(\+?\d[\d\s\-()]{7,}\d)/);
+    if(m){const d=normPhone(m[1]);if(validPhone(d)){const nm=t.split('\n').map(x=>x.trim()).filter(x=>x&&!/\d{5,}/.test(x))[0]||'';v={name:nm,phones:[d],address:''};}}
+  }
+  if(!v)return false;
+  const pend=JSON.parse(localStorage.getItem('pendingContactLink')||'null');localStorage.removeItem('pendingContactLink');
+  const want=pend&&pend.name?pend.name:'';
+  const c={id:uid(),name:(want||v.name||'').trim(),phone:v.phones[0]||'',aliases:v.name&&want&&v.name!==want?[v.name]:[],address:v.address||''};
+  const finish=async(cc)=>{let it=pend&&pend.itemId?items.find(x=>x.id===pend.itemId):null;if(it){it.contact=cc.id;await save(it);}await render();toast('נשמר: '+cc.name);if(it)openContactActions(it,cc);};
+  if(!validPhone(c.phone)){toast('באיש הקשר ששותף אין מספר נייד — השלם ידנית');openContactSheet(c,finish);return true;}
+  // let the user confirm/edit before saving
+  openContactSheet(c,finish);return true;
+}
 /* ===================== Share target ===================== */
 function handleShare(){
   const u=new URL(location.href);const text=[u.searchParams.get('title'),u.searchParams.get('text'),u.searchParams.get('url')].filter(Boolean).join(' ').trim();
@@ -772,7 +820,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.12.3';
+const APP_VER='0.13';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
@@ -792,7 +840,9 @@ document.getElementById('exitBtn').onclick=()=>{
   if(!(await DB.kget('lists')))await saveLists();
   await maintenance();
   await render();
-  const shared=handleShare();
+  let shared=false;
+  if(new URL(location.href).searchParams.get('shared')==='1'){history.replaceState(null,'',location.pathname);const pl=await takeSharedPayload();if(pl){if(!(await handleSharedContact(pl))){const t=[pl.title,pl.text,pl.url].filter(Boolean).join(' ').trim();if(t){const first=t.split('\n').map(x=>x.trim()).filter(Boolean)[0]||t;const it=buildFromText(first.slice(0,140),'share');if(t.length>first.length)it.note=t.slice(0,1000);openEdit(it,true);}}shared=true;}}
+  if(!shared)shared=handleShare();
   await pullInbox();await maintenance();await render();checkUpdate(false);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){await maintenance();await pullInbox();await render();checkUpdate(false);}});
