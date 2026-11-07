@@ -266,7 +266,12 @@ async function pickContact(name,done){
     document.getElementById('pcCancel').onclick=closeSheet;
     return;
   }
-  pickFromPhone(name,done);
+  // 2) no saved contacts yet: explain what will happen before opening the phone's picker
+  openSheet(`<h3>👤 לקשר את "${esc(name||'')}" לאיש קשר?</h3><div class="small" style="margin-bottom:8px">ייפתח בוחר אנשי הקשר של הטלפון — בחר שם את האדם (אפשר לחפש). אחרי הבחירה המשימה תציע וואטסאפ, טלפון ו-Waze, וההתאמה תישמר להבא.</div>
+    <div class="btns"><button class="btn p" id="pcPhone">📇 בחר מאנשי הקשר של הטלפון</button><button class="btn" id="pcType">⌨️ הקלד שם ומספר</button><button class="btn" id="pcCancel">ביטול</button></div>`);
+  document.getElementById('pcPhone').onclick=()=>{closeSheet();pickFromPhone(name,done);};
+  document.getElementById('pcType').onclick=()=>{openContactSheet({name:name||''},done);};
+  document.getElementById('pcCancel').onclick=closeSheet;
 }
 function openContactSheet(c,done){
   const isNew=!c.id;
@@ -738,7 +743,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.11.1';
+const APP_VER='0.12';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
