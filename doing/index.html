@@ -328,7 +328,7 @@ function openContactSheet(c,done){
   $('cSave').onclick=async()=>{const n=$('cName').value.trim(),ph=normPhone($('cPhone').value);if(!n||!ph){toast('צריך שם ומספר');return;}c.name=n;c.phone=ph;c.aliases=$('cAl').value.split(',').map(x=>x.trim()).filter(Boolean);c.address=$('cAddr').value.trim();if(isNew){c.id=uid();contacts.push(c);}await saveContacts();closeSheet();render();done&&done(c);};
   const applyText=txt=>{txt=(txt||'').trim();if(!txt)return;let v=null;
     if(/BEGIN:VCARD/i.test(txt))v=parseVCard(txt);
-    else{const m=txt.match(/(\+?\d[\d\s\-()]{7,}\d)/);const d=m?normPhone(m[1]):'';const rest=txt.replace(m?m[1]:'','');const lines=rest.split(/\n|,/).map(x=>x.trim()).filter(Boolean);v={name:lines[0]||'',phones:validPhone(d)?[d]:[],address:lines.slice(1).join(', ')};}
+    else v=parseContactText(txt)||{name:'',phones:[],address:''};
     if(v.name&&!$('cName').value.trim())$('cName').value=v.name;else if(v.name&&v.name!==$('cName').value.trim()){const al=$('cAl').value.trim();if(!al.split(',').map(x=>x.trim()).includes(v.name))$('cAl').value=al?al+', '+v.name:v.name;}
     if(v.phones&&v.phones[0])$('cPhone').value='+'+v.phones[0];
     if(v.address&&!$('cAddr').value.trim())$('cAddr').value=v.address;
@@ -800,16 +800,33 @@ function parseVCard(txt){
   const tel=lines.find(l=>/^TEL[^:]*(CELL|MOBILE)/i.test(l));if(tel){const d=normPhone(tel.slice(tel.indexOf(':')+1));if(validPhone(d)){out.phones=[d,...out.phones.filter(x=>x!==d)];}}
   return out;
 }
+function parseContactText(t){
+  t=(t||'').trim();if(!t)return null;
+  // Samsung/Google "share as text": "[Name] X [Mobile] +972… [Home] street city [Work info] …" (labels may be on one line or many)
+  const fields={};const re=/\[([^\]]+)\]\s*([^\[]*)/g;let m;while((m=re.exec(t))){const k=m[1].trim().toLowerCase();const val=m[2].trim();if(val&&!(k in fields))fields[k]=val;}
+  const out={name:'',phones:[],address:''};
+  if(Object.keys(fields).length){
+    out.name=fields['name']||fields['שם']||'';
+    for(const k of ['mobile','cell','נייד','phone','טלפון','work','home phone']){if(fields[k]){const d=normPhone(fields[k]);if(validPhone(d)&&!out.phones.includes(d))out.phones.push(d);}}
+    for(const k of Object.keys(fields)){if(out.phones.length)break;const d=normPhone(fields[k]);if(validPhone(d)&&/\d{7,}/.test(fields[k].replace(/\D/g,'')))out.phones.push(d);}
+    for(const k of ['home','address','כתובת','work address','home address']){if(fields[k]&&!/^\+?[\d\s\-()]+$/.test(fields[k])){out.address=fields[k];break;}}
+    if(!out.name){const first=t.replace(/\[[^\]]+\]/g,'\n').split('\n').map(x=>x.trim()).filter(x=>x&&!/\d{5,}/.test(x))[0];out.name=first||'';}
+    return (out.name||out.phones.length)?out:null;
+  }
+  const pm=t.match(/(\+?\d[\d\s\-()]{7,}\d)/);
+  if(!pm)return null;const d=normPhone(pm[1]);if(!validPhone(d))return null;
+  const before=t.slice(0,pm.index).replace(/[,\n]+$/,'').trim(),after=t.slice(pm.index+pm[1].length).replace(/^[,\n\s]+/,'').trim();
+  const bl=before.split(/\n|,/).map(x=>x.trim()).filter(Boolean);
+  return {name:bl[0]||'',phones:[d],address:[...bl.slice(1),...after.split(/\n/).map(x=>x.trim()).filter(Boolean)].join(', ')};
+}
+function looksLikeContact(t){return /BEGIN:VCARD/i.test(t)||(/\[(Name|Mobile|Phone|Home|שם|נייד|טלפון)\]/i.test(t)&&/\d{7,}/.test(t.replace(/\D/g,'')));}
 async function takeSharedPayload(){
   try{const c=await caches.open('share-inbox');const r=await c.match('./__shared');if(!r)return null;const j=await r.json();await c.delete('./__shared');return j;}catch(e){return null;}
 }
 async function handleSharedContact(payload){
   let v=null;
   if(payload.vcf&&/BEGIN:VCARD/i.test(payload.vcf))v=parseVCard(payload.vcf);
-  else{ // contact shared as plain text (name + number)
-    const t=[payload.title,payload.text].filter(Boolean).join('\n');const m=t.match(/(\+?\d[\d\s\-()]{7,}\d)/);
-    if(m){const d=normPhone(m[1]);if(validPhone(d)){const nm=t.split('\n').map(x=>x.trim()).filter(x=>x&&!/\d{5,}/.test(x))[0]||'';v={name:nm,phones:[d],address:''};}}
-  }
+  else v=parseContactText([payload.title,payload.text].filter(Boolean).join('\n'));
   if(!v)return false;
   const pend=JSON.parse(localStorage.getItem('pendingContactLink')||'null');localStorage.removeItem('pendingContactLink');
   const want=pend&&pend.name?pend.name:'';
@@ -824,13 +841,14 @@ function handleShare(){
   const u=new URL(location.href);const text=[u.searchParams.get('title'),u.searchParams.get('text'),u.searchParams.get('url')].filter(Boolean).join(' ').trim();
   if(!text)return false;
   history.replaceState(null,'',location.pathname);
+  if(looksLikeContact(text)){handleSharedContact({title:u.searchParams.get('title')||'',text:u.searchParams.get('text')||'',vcf:/BEGIN:VCARD/i.test(text)?text:''});return true;}
   const first=text.split('\n').map(s=>s.trim()).filter(Boolean)[0]||text;
   const it=buildFromText(first.slice(0,140),'share');if(text.length>first.length)it.note=text.slice(0,1000);
   openEdit(it,true);return true;
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.14';
+const APP_VER='0.14.1';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
