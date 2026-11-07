@@ -166,7 +166,7 @@ const DEFAULT_LISTS=[{id:'ideas',name:'רעיונות'},{id:'calls',name:'שיח
 async function load(){
   items=await DB.all();
   lists=(await DB.kget('lists'))||DEFAULT_LISTS.slice();
-  contacts=(await DB.kget('contacts'))||[];
+  contacts=(await DB.kget('contacts'))||[];{let ch=false;for(const c of contacts){const n=normPhone(c.phone);if(n!==c.phone){c.phone=n;ch=true;}}if(ch)await DB.kset('contacts',contacts);}
   settings=Object.assign({skipSat:true,model:'claude-sonnet-5-5',apiKey:''},(await DB.kget('settings'))||{});
   if(settings.model==='claude-haiku-5-5'){settings.model='claude-sonnet-5-5';await DB.kset('settings',settings);} // 0.6.3: Haiku misses Hebrew handwriting
 }
@@ -237,7 +237,7 @@ function addrStr(a){if(!a)return '';return [a.addressLine?.join(' '),a.city].fil
 function wazeUrl(addr){return 'https://waze.com/ul?q='+encodeURIComponent(addr)+'&navigate=yes';}
 function validPhone(p){return /^\d{10,15}$/.test(p||'');}
 function waUrl(c,m){return 'https://wa.me/'+c.phone+(m?'?text='+encodeURIComponent(m):'');}
-function normPhone(p){let d=String(p||'').replace(/[^\d+]/g,'');if(d.startsWith('+'))d=d.slice(1);if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0'))d='972'+d.slice(1);return d;}
+function normPhone(p){let d=String(p||'').replace(/[^\d+]/g,'');if(d.startsWith('+'))d=d.slice(1);if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0'))d='972'+d.slice(1);if(d.startsWith('9720'))d='972'+d.slice(4);return d;}
 function draftMessage(it,c){const name=c.name;
   let t=(' '+(it.title||'')+' ').replace(NAME_RE,' ');
   for(const n of [...name.split(' '),...(c.aliases||[])])t=t.replace(new RegExp('\\s-?(?:ל|ו|ב|מ|עם|אצל|את)?'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=[\\s,.?!])'),' ');
@@ -738,7 +738,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.11';
+const APP_VER='0.11.1';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
