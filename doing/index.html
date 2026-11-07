@@ -325,7 +325,7 @@ function openContactSheet(c,done){
     <div class="row" style="margin:0;align-items:flex-start"><textarea id="cVcf" rows="3" dir="auto" placeholder="BEGIN:VCARD … END:VCARD  או: באטריס 052-8530677 גבעת אמנון ותמר 7"></textarea><button class="btn" id="cPaste" style="flex:0 0 auto">הדבק</button></div>
     <div class="btns" style="margin-top:10px"><button class="btn p" id="cSave">שמור</button>${!isNew?'<button class="btn d" id="cDel">מחק</button>':''}<button class="btn" id="cCancel">ביטול</button></div>`);
   const $=id=>document.getElementById(id);
-  $('cSave').onclick=async()=>{const n=$('cName').value.trim(),ph=normPhone($('cPhone').value);if(!n||!ph){toast('צריך שם ומספר');return;}c.name=n;c.phone=ph;c.aliases=$('cAl').value.split(',').map(x=>x.trim()).filter(Boolean);c.address=$('cAddr').value.trim();if(isNew){c.id=uid();contacts.push(c);}await saveContacts();closeSheet();render();done&&done(c);};
+  $('cSave').onclick=async()=>{const n=$('cName').value.trim(),ph=normPhone($('cPhone').value);if(!n||!ph){toast('צריך שם ומספר');return;}c.name=n;c.phone=ph;c.aliases=$('cAl').value.split(',').map(x=>x.trim()).filter(Boolean);c.address=$('cAddr').value.trim();if(!c.id)c.id=uid();if(!contacts.some(x=>x.id===c.id))contacts.push(c);await saveContacts();closeSheet();render();done&&done(c);};
   const applyText=txt=>{txt=(txt||'').trim();if(!txt)return;let v=null;
     if(/BEGIN:VCARD/i.test(txt))v=parseVCard(txt);
     else v=parseContactText(txt)||{name:'',phones:[],address:''};
@@ -848,7 +848,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.14.1';
+const APP_VER='0.14.2';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
@@ -873,7 +873,7 @@ document.getElementById('exitBtn').onclick=()=>{
   if(!shared)shared=handleShare();
   await pullInbox();await maintenance();await render();checkUpdate(false);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){await maintenance();await pullInbox();await render();checkUpdate(false);}});
+  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){contacts=(await DB.kget('contacts'))||contacts;await maintenance();await pullInbox();await render();checkUpdate(false);}});
 })();
 </script>
 </body>
