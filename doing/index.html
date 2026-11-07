@@ -234,8 +234,18 @@ const NAME_RE=new RegExp("(?:^|\\s)(?:עם|אצל|אל|להתקשר ל|לשלו�
 const STOP=new Set(['מחר','היום','הבוקר','הערב','שבוע','חודש','בית','בנק','קופה','רופא','חנות','עבודה','גינה','מכולת','סופר','דואר','משרד','רופאה','אחות','ד"ר','דר','דוקטור','פרופ']);
 function detectName(title){for(const re of NAME_PATS){const m=(' '+title).match(re);if(m){const n=m[1].trim();if(!STOP.has(n.split(' ')[0]))return n;}}return null;}
 function findContact(name){if(!name)return null;const k=name.toLowerCase();return contacts.find(c=>c.name.toLowerCase()===k||(c.aliases||[]).some(a=>a.toLowerCase()===k))||contacts.find(c=>k.startsWith(c.name.toLowerCase())||c.name.toLowerCase().startsWith(k))||null;}
-function scanContacts(title){const t=' '+(title||'')+' ';for(const c of contacts){for(const n of [c.name,...(c.aliases||[])]){if(new RegExp('[\\s,]-?(?:ל|ו|ב|מ)?'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=[\\s,.?!])').test(t))return c;}}return null;}
-function contactFor(it){if(it.contact){const c=contacts.find(x=>x.id===it.contact);if(c)return {c,name:c.name};}const c=scanContacts(it.title);if(c)return {c,name:c.name};const name=detectName(it.title||'');return {c:null,name};}
+// loose Hebrew key: lowercase, strip spelling-only letters (י/ו) so באטריס / ביאטריס / בטריס all match
+const looseKey=w=>String(w||'').toLowerCase().replace(/[^א-תa-z0-9]/g,'').replace(/[יוא]/g,'');
+const contactKeys=c=>[c.name,...(c.aliases||[]),...(c.name||'').split(/\s+/).filter(w=>w.length>=3)];
+function scanContacts(title){const t=' '+(title||'')+' ';
+  // 1) exact word match (name, alias, or any word of the full name, with Hebrew prefixes ל/ו/ב/מ)
+  for(const c of contacts){for(const n of contactKeys(c)){if(n&&new RegExp('[\\s,]-?(?:ל|ו|ב|מ|של|עם)?'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=[\\s,.?!:;]|$)').test(t))return c;}}
+  // 2) loose match on the words of the title (spelling variants), words of 3+ letters only
+  const words=t.split(/[\s,.?!:;]+/).filter(w=>w.length>=3);
+  for(const c of contacts){const keys=contactKeys(c).map(looseKey).filter(k=>k.length>=3);
+    for(const w of words){const lw=looseKey(w);if(!lw)continue;for(const k of keys){if(lw===k||(lw.length>k.length&&lw.endsWith(k)&&/^(ל|ו|ב|מ|ש|של|ול|וב|ומ)$/.test(lw.slice(0,lw.length-k.length))))return c;}}}
+  return null;}
+function contactFor(it){if(it.contact){const c=contacts.find(x=>x.id===it.contact);if(c)return {c,name:c.name};}const c=scanContacts(it.title)||findContact(detectName(it.title||''));if(c)return {c,name:c.name};const name=detectName(it.title||'');return {c:null,name};}
 function addrStr(a){if(!a)return '';return [a.addressLine?.join(' '),a.city].filter(Boolean).join(', ')||a.toJSON?.()?.addressLine?.join(' ')||'';}
 function wazeUrl(addr){return 'https://waze.com/ul?q='+encodeURIComponent(addr)+'&navigate=yes';}
 function validPhone(p){return /^\d{10,15}$/.test(p||'');}
@@ -848,7 +858,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.14.2';
+const APP_VER='0.15';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
