@@ -258,8 +258,15 @@ async function pickFromPhone(name,done){
   let props=['name','tel'];
   try{if(navigator.contacts.getProperties){const sup=await navigator.contacts.getProperties();if(sup.includes('address'))props.push('address');}}catch(e){}
   let r;
+  try{localStorage.setItem('pickstate','opened '+new Date().toLocaleTimeString('he-IL'));}catch(_){}
+  // watchdog: Chrome sometimes never resolves the picker promise in an installed PWA — fall back to manual entry
+  let settled=false,timer=null;
+  const onVis=()=>{if(document.visibilityState==='visible'&&!settled){clearTimeout(timer);timer=setTimeout(()=>{if(!settled){settled=true;try{localStorage.setItem('pickstate','timeout (promise never resolved)');}catch(_){}toast('הטלפון לא החזיר את איש הקשר (באג של כרום באפליקציה מותקנת) — הקלד את המספר ידנית');openContactSheet({name:name||''},done);}},4000);}};
+  document.addEventListener('visibilitychange',onVis);
   try{r=await navigator.contacts.select(props,{multiple:false});}
-  catch(e){toast('בחירת אנשי קשר נכשלה ('+(e&&e.message||e)+') — הקלד ידנית');openContactSheet({name:name||''},done);return;}
+  catch(e){document.removeEventListener('visibilitychange',onVis);clearTimeout(timer);if(settled)return;settled=true;try{localStorage.setItem('pickstate','error '+(e&&e.message||e));}catch(_){}toast('בחירת אנשי קשר נכשלה ('+(e&&e.message||e)+') — הקלד ידנית');openContactSheet({name:name||''},done);return;}
+  document.removeEventListener('visibilitychange',onVis);clearTimeout(timer);if(settled)return;settled=true;
+  try{localStorage.setItem('pickstate','resolved '+(r?r.length:'null'));}catch(_){}
   if(!r||!r[0]){toast('לא נבחר איש קשר (הבוחר חזר ריק)');return;}
   const raw=r[0];
   try{localStorage.setItem('lastpick',JSON.stringify({name:raw.name,tel:raw.tel,address:raw.address&&raw.address.map?raw.address.map(a=>({line:a.addressLine,city:a.city,toJSON:typeof a.toJSON})):raw.address}));}catch(_){}
@@ -748,7 +755,7 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='saveSettings'){settings.apiKey=document.getElementById('apiKey').value.trim();settings.model=document.getElementById('model').value.trim()||'claude-sonnet-5-5';await saveSettings();toast('נשמר');}
   if(e.target.id==='pullBtn'){await pullInbox();render();}
   if(e.target.id==='updBtn'){checkUpdate(true);}
-  if(e.target.id==='errBtn'){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';openSheet('<h3>יומן שגיאות</h3><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
+  if(e.target.id==='errBtn'){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';openSheet('<h3>יומן שגיאות</h3><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\npick state: '+esc(localStorage.getItem('pickstate')||'(אין)')+'\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
 });
 document.querySelector('main').addEventListener('change',async e=>{
   if(e.target.id==='importFile'){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());for(const it of (d.items||[]))await save(it);if(d.lists){lists=d.lists;await saveLists();}if(d.contacts){contacts=d.contacts;await saveContacts();}if(d.imported)await DB.kset('imported',d.imported);toast('יובאו '+(d.items||[]).length+' פריטים');render();}catch(err){toast('קובץ לא תקין');}}
@@ -765,7 +772,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.12.2';
+const APP_VER='0.12.3';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
