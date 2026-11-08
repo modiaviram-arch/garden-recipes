@@ -54,6 +54,11 @@ h2 .cnt{font-size:12px;color:var(--muted);font-weight:400}
 .badge.warn{background:#FBE3DF;color:var(--warn)}
 .badge.acc{background:#FBEBDD;color:#9B5A14}
 .x{color:var(--muted);font-size:20px;padding:2px 6px;flex:none}
+.zz{color:var(--muted);font-size:17px;padding:2px 4px;flex:none}
+.search{margin-top:8px;display:none;gap:6px}.search.on{display:flex}
+.search input{flex:1;font-size:16px;padding:9px 12px;border:0;border-radius:12px;background:rgba(255,255,255,.96);color:#1C2430}
+.search button{background:rgba(255,255,255,.2);color:#fff;border-radius:12px;min-width:42px;font-size:17px}
+mark{background:#FFE9A8;color:inherit;border-radius:3px}
 .q{border-color:var(--accent);background:var(--card)}
 .q .n{color:var(--ink)}
 .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
@@ -106,9 +111,11 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
     <div class="quick">
       <input id="quick" placeholder="הוספה מהירה… (למשל: מחר ב-10 להתקשר לדני)" autocomplete="off" enterkeyhint="done">
       <button id="micBtn" title="הקלטה קולית">🎤</button>
+      <button id="searchBtn" title="חיפוש">🔍</button>
       <button id="addBtn" title="הוסף">＋</button>
     </div>
     <div class="hint" id="hint"></div>
+    <div class="search" id="searchRow"><input id="search" placeholder="חיפוש בכל המשימות, הרשימות והיומן…" autocomplete="off" enterkeyhint="search"><button id="searchClear" title="סגור">✕</button></div>
   </header>
 
   <main>
@@ -116,6 +123,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
     <section id="v-lists" class="view"></section>
     <section id="v-log" class="view"></section>
     <section id="v-more" class="view"></section>
+    <section id="v-search" class="view"></section>
   </main>
 
   <nav class="nav">
@@ -203,6 +211,9 @@ function parseHebrew(text){
   m=cut(/ בין (?:יום )?(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת) ל(?:יום )?(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת) /);
   if(m){r.date=nextDow(DAYN[m[1]]);r.window=nextDow(DAYN[m[2]],r.date);}
   // dates
+  if(cut(/ (?:ב)?סוף השבוע /)){let c=T;for(let i=0;i<=7;i++){c=addDays(T,i);if(dow(c)===4&&c>T)break;}r.date=c;} // חמישי הקרוב
+  if(cut(/ (?:ב)?תחילת החודש(?: הבא)? /)){const x=new Date(T+'T00:00:00');x.setMonth(x.getMonth()+1,1);r.date=ymd(x);}
+  if(cut(/ (?:ב)?סוף החודש(?: הבא)? /)){const x=new Date(T+'T00:00:00');x.setMonth(x.getMonth()+1,0);let d=ymd(x);if(d<=T||addDays(T,3)>=d&&!t.includes('הבא')){x.setMonth(x.getMonth()+2,0);d=ymd(x);}r.date=d;}
   if(cut(/ (?:היום|הלילה|הערב) /))r.date=T;
   if(cut(/ מחרתיים /))r.date=addDays(T,2);
   else if(cut(/ מחר /))r.date=addDays(T,1);
@@ -425,8 +436,8 @@ async function pullInbox(){
 
 /* ===================== Rendering ===================== */
 let view='today';
-function show(v){view=v;document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();}
-document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+function show(v){view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(searchQ){searchQ='';searchIn.value='';searchRow.classList.remove('on');}show(b.dataset.v);});
 
 function contactBtns(it){if(it.status!=='open'||it.type!=='task')return '';const {c,name}=contactFor(it);if(c)return '<div class="btns"><button class="btn o" data-act="contact">📲 '+esc(c.name)+': וואטסאפ · טלפון'+(c.address?' · Waze':'')+'</button></div>';if(name)return '<div class="btns"><button class="btn" data-act="pick">👤 בחר איש קשר: '+esc(name)+'</button></div>';return '';}
 function taskCard(it,opts={}){
@@ -446,9 +457,9 @@ function taskCard(it,opts={}){
     ${meta.length?'<div class="m">'+esc(meta.join(' · '))+'</div>':''}
     ${contactBtns(it)}
     ${it.checklist&&it.checklist.length?'<div class="btns"><button class="btn" data-act="checklist">🛒 רשימה '+it.checklist.filter(c=>c.done).length+'/'+it.checklist.length+'</button></div>':(it.photo?'<div class="btns"><button class="btn p" data-act="decode">🔍 פענח רשימה מהצילום</button></div>':'')}
-    ${stuck?'<div class="btns"><button class="btn" data-act="snooze7">דחה שבוע</button><button class="btn" data-act="tolist">לרשימה</button><button class="btn d" data-act="trash">מחק</button></div>':''}
+    ${stuck?'<div class="btns"><button class="btn" data-act="snooze">⏰ דחה…</button><button class="btn" data-act="tolist">לרשימה</button><button class="btn d" data-act="trash">מחק</button></div>':''}
     </div>
-    <button class="x" data-act="trash" title="מחק">✕</button></div>`;
+    ${it.status==='open'&&it.type==='task'?'<button class="zz" data-act="snooze" title="דחה">⏰</button>':''}<button class="x" data-act="trash" title="מחק">✕</button></div>`;
 }
 function condCard(it){
   return `<div class="card q" data-id="${it.id}">
@@ -472,7 +483,7 @@ function listTopicCard(l){
 async function renderToday(){
   const T=today(),T1=addDays(T,1),T7=addDays(T,7);
   const open=items.filter(i=>i.status==='open');
-  const cal=((await DB.kget('calendar'))||[]).filter(e=>e.date===T);
+  const calAll=(await DB.kget('calendar'))||[];const cal=calAll.filter(e=>e.date===T);
   const hidden=new Set((await DB.kget('hiddenEvents'))||[]);
   const conds=open.filter(i=>i.type==='cond'&&i.date&&i.date<=T);
   const topics=open.filter(i=>i.type==='topic'&&i.date&&i.date<=T);
@@ -488,7 +499,8 @@ async function renderToday(){
   if(deliv.length){h+=`<h2>📦 דואר ומשלוחים לאסוף <span class="cnt">${deliv.length}</span></h2>`;deliv.forEach(i=>h+=taskCard(i));}
   h+=`<h2>✅ משימות היום <span class="cnt">${tasks.length}</span></h2>`;
   if(tasks.length)tasks.forEach(i=>h+=taskCard(i));else h+=`<div class="empty"><b>🌤️</b>אין משימות להיום. הוסף למעלה — בהקלדה או בקול.</div>`;
-  if(tomorrow.length){h+=`<details><summary>מחר (${tomorrow.length})</summary>`;tomorrow.forEach(i=>h+=taskCard(i));h+='</details>';}
+  const calT1=calAll.filter(e=>e.date===T1&&!hidden.has(e.id));
+  if(tomorrow.length||calT1.length){h+=`<details><summary>מחר (${tomorrow.length+calT1.length})</summary>`;for(const e of calT1)h+=`<div class="card ev" data-ev="${esc(e.id)}"><div class="t"><div class="n">📅 ${esc(e.title)}</div><div class="m">${e.start?'<span dir="ltr">'+esc(e.start)+(e.end?'–'+esc(e.end):'')+'</span>':'כל היום'}${e.location?' · '+esc(e.location):''}</div></div></div>`;tomorrow.forEach(i=>h+=taskCard(i));h+='</details>';}
   if(week.length){h+=`<details><summary>השבוע (${week.length})</summary>`;week.forEach(i=>h+=taskCard(i,{showDate:true}));h+='</details>';}
   document.getElementById('v-today').innerHTML=h;
 }
@@ -536,14 +548,37 @@ function renderMore(){
   <h2>💾 גיבוי</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 6.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 8.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
 }
+let searchQ='';
+function hl(txt,q){const e=esc(txt);if(!q)return e;const i=e.toLowerCase().indexOf(esc(q).toLowerCase());return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length);}
+function renderSearch(){
+  const q=searchQ.trim().toLowerCase();const sec=document.getElementById('v-search');
+  if(!q){sec.innerHTML='';return;}
+  const hit=i=>[i.title,i.note,i.condition,i.parentTitle,(lists.find(l=>l.id===i.list)||{}).name,(i.checklist||[]).map(c=>c.text||c.title||'').join(' ')].filter(Boolean).join(' ').toLowerCase().includes(q);
+  const found=items.filter(i=>i.status!=='trash'&&hit(i));
+  const groups=[['פתוחות',found.filter(i=>i.status==='open').sort((a,b)=>(a.date||'9').localeCompare(b.date||'9'))],['בוצעו',found.filter(i=>i.status==='done'||i.status==='closed').sort((a,b)=>(b.doneAt||0)-(a.doneAt||0))]];
+  let h=`<h2>🔍 תוצאות ל"${esc(searchQ.trim())}" <span class="cnt">${found.length}</span></h2>`;
+  if(!found.length)h+='<div class="empty"><b>🔍</b>לא נמצא כלום.</div>';
+  for(const [name,arr] of groups){if(!arr.length)continue;h+=`<h2>${name} <span class="cnt">${arr.length}</span></h2>`;
+    for(const it of arr){const done=it.status!=='open';const when=done?fmtDate(ymd(new Date(it.doneAt||it.updatedAt))):(it.date?fmtDate(it.date):'ללא תאריך');const ln=it.list?(lists.find(l=>l.id===it.list)||{}).name:'';
+      h+=`<div class="card" data-id="${it.id}"><div class="circle ${done?'done':''}" ${done?'':'data-act="done"'}>${done?(it.status==='closed'?'–':'✓'):''}</div><div class="t" data-act="edit"><div class="n">${hl(it.title,searchQ.trim())}<span class="src">${SRC[it.source]||''}</span></div><div class="m">${when}${ln?' · '+esc(ln):''}${it.note?' · '+hl(it.note.slice(0,80),searchQ.trim()):''}</div>${done?'<div class="btns"><button class="btn" data-act="reopen">החזר למשימות</button></div>':''}</div></div>`;}}
+  sec.innerHTML=h;
+}
+function updateBadge(){try{if(!('setAppBadge' in navigator))return;const T=today();const n=items.filter(i=>i.status==='open'&&i.type==='task'&&i.date&&i.date<=T).length;n?navigator.setAppBadge(n):navigator.clearAppBadge();}catch(e){}}
 async function render(){
   document.getElementById('dateLine').textContent=fmtDate(today())+' · '+new Date().getDate()+'.'+(new Date().getMonth()+1);
+  if(searchQ.trim()){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-search'));renderSearch();updateBadge();return;}
+  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+view));
   if(view==='today')await renderToday();else if(view==='lists')renderLists();else if(view==='log')renderLog();else renderMore();
+  updateBadge();
 }
+const searchRow=document.getElementById('searchRow'),searchIn=document.getElementById('search');
+document.getElementById('searchBtn').onclick=()=>{searchRow.classList.toggle('on');if(searchRow.classList.contains('on'))searchIn.focus();else{searchQ='';searchIn.value='';render();}};
+document.getElementById('searchClear').onclick=()=>{searchRow.classList.remove('on');searchQ='';searchIn.value='';render();};
+let searchT;searchIn.addEventListener('input',()=>{clearTimeout(searchT);searchT=setTimeout(()=>{searchQ=searchIn.value;render();},150);});
 
 /* ===================== Actions ===================== */
 async function complete(it){
@@ -560,6 +595,22 @@ function openFollowUp(parent){
   document.getElementById('fuNo').onclick=()=>{closeSheet();render();};
   document.getElementById('fuType').onclick=()=>{openEdit(mk(),true);};
   document.getElementById('fuVoice').onclick=()=>{const it=mk();it.source='voice';openEdit(it,true);setTimeout(()=>{const b=document.getElementById('eMic');if(b)b.click();},250);};
+}
+function openSnooze(it){
+  const T=today();
+  const opts=[['מחר',skipDay(addDays(T,1))],['ראשון הקרוב',nextDow(0)],['בעוד שבוע',addDays(T,7)],['בעוד שבועיים',addDays(T,14)],['בעוד חודש',addDays(T,30)]];
+  openSheet(`<h3>⏰ דחייה: ${esc(it.title)}</h3>
+    <div class="btns">${opts.map(([n,d])=>`<button class="btn p" data-sn="${d}">${n}<br><span style="font-weight:400;font-size:12px">${fmtDate(d)}</span></button>`).join('')}</div>
+    <div class="btns"><button class="btn" data-sn="none">בלי תאריך</button><label class="btn" style="display:inline-block">תאריך אחר… <input type="date" id="snDate" style="display:none"></label></div>
+    <label class="lbl">או להעביר לרשימה</label>
+    <div class="chips">${lists.map(l=>`<button data-snl="${l.id}" class="${it.list===l.id?'on':''}">${esc(l.name)}</button>`).join('')}</div>
+    <div class="btns" style="margin-top:12px"><button class="btn" id="snClose">סגור</button></div>`);
+  const sh=document.getElementById('sheet');
+  const apply=async(d,msg)=>{it.date=d;it.rollovers=0;await save(it);closeSheet();await render();toast(msg);};
+  sh.querySelectorAll('[data-sn]').forEach(b=>b.onclick=()=>{const v=b.dataset.sn;if(v==='none')apply(null,'הוסר התאריך — נמצא ברשימות');else apply(v,'נדחה ל'+fmtDate(v));});
+  sh.querySelectorAll('[data-snl]').forEach(b=>b.onclick=async()=>{it.list=b.dataset.snl;if(!it.date||it.date<=T)it.date=null;it.rollovers=0;await save(it);closeSheet();await render();toast('הועבר לרשימת '+(lists.find(l=>l.id===it.list)||{}).name);});
+  const di=document.getElementById('snDate');di.onchange=()=>{if(di.value)apply(di.value,'נדחה ל'+fmtDate(di.value));};di.parentElement.onclick=()=>{try{di.showPicker();}catch(e){di.style.display='inline-block';}};
+  document.getElementById('snClose').onclick=closeSheet;
 }
 async function trash(it){const prev=it.status;it.status='trash';it.deletedAt=Date.now();await save(it);toast('הועבר לסל','בטל',async()=>{it.status=prev==='trash'?'open':prev;it.deletedAt=null;await save(it);await render();toast('שוחזר');});}
 document.querySelector('main').addEventListener('click',async e=>{
@@ -588,6 +639,7 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'restore': it.status='open';it.deletedAt=null;await save(it);toast('שוחזר');break;
     case 'purge': await DB.del(it.id);items=items.filter(x=>x.id!==it.id);break;
     case 'reopen': it.status='open';it.doneAt=null;await save(it);break;
+    case 'snooze': openSnooze(it);return;
     case 'snooze7': it.date=addDays(today(),7);it.rollovers=0;await save(it);break;
     case 'snooze30': it.date=addDays(today(),30);await save(it);break;
     case 'tolist': openEdit(it);return;
@@ -858,7 +910,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.15';
+const APP_VER='0.16';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
