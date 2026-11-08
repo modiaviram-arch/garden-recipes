@@ -1163,32 +1163,34 @@ function smartShare(pl){
 }
 /* optional: let Claude read the message and propose title/date/time (needs the API key from settings) */
 async function refineShare(it,text,sender){
-  if(!settings.apiKey||!navigator.onLine||!text||text.length<12)return null;
+  if(!settings.apiKey)return {error:'אין מפתח API בהגדרות'};if(!navigator.onLine)return {error:'אין רשת'};if(!text||text.length<12)return {error:'הטקסט קצר מדי'};
   const sys='אתה עוזר שהופך הודעת וואטסאפ או מייל שקיבל אדם ישראלי למשימה אחת קצרה באפליקציית משימות. ענה אך ורק ב-JSON תקין: {"title":"...", "date":"YYYY-MM-DD או null", "time":"HH:MM או null", "who":"שם האדם שצריך לענות לו או null"}. title: פעולה בעברית, עד 70 תווים, מתחילה בפועל בשם הפועל (לענות ל…, להזמין…, לשלם…, לאשר…, להביא…); אם יש אדם — "לענות ל<שם>: <העניין>". date: המועד שבו המשימה צריכה להתבצע לפי תוכן ההודעה (לא תאריך שליחת ההודעה); אם ההודעה מבקשת תשובה בלי מועד — התאריך של היום. היום: '+today()+'. השולח (אם ידוע): '+(sender||'לא ידוע')+'.';
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':settings.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:settings.model||'claude-sonnet-5-5',max_tokens:300,system:sys,messages:[{role:'user',content:text.slice(0,4000)}]})});
-    if(!res.ok)return null;const j=await res.json();const txt=(j.content||[]).map(c=>c.text||'').join('');const m=txt.match(/\{[\s\S]*\}/);if(!m)return null;
+    if(!res.ok){let d='';try{d=(await res.json()).error?.message||'';}catch(e){}return {error:'API '+res.status+(d?': '+d.slice(0,120):'')};}const j=await res.json();const txt=(j.content||[]).map(c=>c.text||'').join('');const m=txt.match(/\{[\s\S]*\}/);if(!m)return {error:'תשובה לא צפויה: '+txt.slice(0,80)};
     const o=JSON.parse(m[0]);const out={};
     if(o.title&&typeof o.title==='string')out.title=o.title.trim().slice(0,140);
     if(o.date&&/^\d{4}-\d{2}-\d{2}$/.test(o.date))out.date=o.date;
     if(o.time&&/^\d{2}:\d{2}$/.test(o.time))out.time=o.time;
     if(o.who&&typeof o.who==='string')out.who=o.who.trim();
     return out;
-  }catch(e){return null;}
+  }catch(e){return {error:e.message||String(e)};}
 }
 /* open the edit sheet from a share, then improve it in the background if Claude is available */
 function openShared(pl){
   const {it,sender,kind,body}=smartShare(pl);
   window.__shareIt=it;openEdit(it,true);
   if(kind!=='text')toast(kind==='whatsapp'?'זוהתה הודעת וואטסאפ'+(sender?' מ'+sender:''):'זוהה מייל'+(sender?' מ'+sender:''));
-  refineShare(it,body||pl.text||'',sender).then(r=>{
-    if(!r||window.__shareIt!==it)return;const $=id=>document.getElementById(id);if(!$('eTitle'))return;
+  const run=()=>refineShare(it,body||pl.text||'',sender).then(r=>{
+    if(window.__shareIt!==it)return;const $=id=>document.getElementById(id);if(!$('eTitle'))return;
+    if(!r||r.error){const msg='דיוק Claude נכשל: '+(r&&r.error||'?');try{syncLog(msg);}catch(e){}toast(msg,'נסה שוב',run);return;}
     if(r.title)$('eTitle').value=r.title;if(r.date&&$('eDate'))$('eDate').value=r.date;if(r.time&&$('eTime'))$('eTime').value=r.time;
     document.querySelectorAll('.dt input').forEach(i=>i.dispatchEvent(new Event('change')));
     if(r.who&&!it.contact){const c=findContact(r.who);if(c&&$('eContact'))$('eContact').value=c.id;}
     toast('Claude דייק את המשימה — בדוק ושמור');
   });
+  toast('מדייק עם Claude…');run();
 }
 
 /* ===================== Share target ===================== */
@@ -1201,7 +1203,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.23.2';
+const APP_VER='0.23.3';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
