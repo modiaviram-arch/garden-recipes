@@ -425,7 +425,7 @@ async function pullInbox(){
     const imported=new Set((await DB.kget('imported'))||[]);let n=0;
     for(const t of (data.tasks||[])){
       if(!t.id||imported.has(t.id))continue;
-      const it=newItem({title:t.title||'',note:t.note||'',date:t.date||today(),time:t.time||null,source:t.source||'claude',list:t.list||null,extId:t.id,type:t.type||'task',condition:t.condition||'',url:t.url||null});
+      const it=newItem({title:t.title||'',note:t.note||'',date:t.date||(t.list?null:today()),time:t.time||null,source:t.source||'claude',list:t.list||null,extId:t.id,type:t.type||'task',condition:t.condition||'',url:t.url||null});
       if(t.repeat)it.repeat=t.repeat;
       await save(it);imported.add(t.id);n++;
     }
@@ -911,7 +911,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.17';
+const APP_VER='0.17.1';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
