@@ -605,7 +605,10 @@ async function render(){
   document.getElementById('dateLine').textContent=fmtDate(today())+' · '+new Date().getDate()+'.'+(new Date().getMonth()+1);
   if(searchQ.trim()){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-search'));renderSearch();updateBadge();return;}
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+view));
-  if(view==='today')await renderToday();else if(view==='lists')renderLists();else if(view==='log')renderLog();else renderMore();
+  try{if(view==='today')await renderToday();else if(view==='lists')renderLists();else if(view==='log')renderLog();else renderMore();}
+  catch(e){const msg=(e&&e.message)||String(e);try{logErr('render '+view+': '+msg);}catch(_){}
+    if(view==='more')document.getElementById('v-more').innerHTML=`<h2>⚠️ שגיאה בטעינת המסך</h2><div class="card" style="display:block"><div class="small" dir="auto">${esc(msg)}</div><div class="btns" style="margin-top:8px"><button class="btn p" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button><button class="btn" id="exportBtn">ייצוא לקובץ</button></div></div><h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER}</div>`;
+    else toast('שגיאה בתצוגה: '+msg.slice(0,80));}
   updateBadge();
 }
 const searchRow=document.getElementById('searchRow'),searchIn=document.getElementById('search');
@@ -1024,7 +1027,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.18.1';
+const APP_VER='0.18.2';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
