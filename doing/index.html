@@ -500,8 +500,10 @@ async function pullInbox(){
 }
 
 /* ===================== Rendering ===================== */
-let view='today';
-function show(v){if(v==='more'&&view!=='more')moreSub=null;view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();}
+let view='today';let openListId=null; // 0.22: the list currently expanded in the lists view — quick add goes there
+function quickTargetList(){return (view==='lists'&&openListId&&lists.find(l=>l.id===openListId))||null;}
+function quickTarget(){const l=quickTargetList();quick.placeholder=l?'הוספה לרשימת '+l.name+'…':'הוספה מהירה… (למשל: מחר ב-10 להתקשר לדני)';if(!quick.value.trim())hint.textContent=l?'← נכנס לרשימת '+l.name:'';}
+function show(v){if(v==='more'&&view!=='more')moreSub=null;view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();quickTarget();}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(searchQ){searchQ='';searchIn.value='';searchRow.classList.remove('on');}show(b.dataset.v);});
 
 function contactBtns(it){if(it.status!=='open'||it.type!=='task')return '';const {c,name}=contactFor(it);if(c)return '<div class="btns"><button class="btn o" data-act="contact">📲 '+esc(c.name)+': וואטסאפ · טלפון'+(c.address?' · Waze':'')+'</button></div>';if(name)return '<div class="btns"><button class="btn" data-act="pick">👤 בחר איש קשר: '+esc(name)+'</button></div>';return '';}
@@ -578,12 +580,14 @@ function renderLists(){
   h+=`<h2>רשימות נושא <button class="btn" data-lact="new" style="font-size:12px">+ רשימה</button></h2>`;
   for(const l of lists){
     const arr=open.filter(i=>i.list===l.id).sort((a,b)=>(a.date||'9').localeCompare(b.date||'9'));
-    h+=`<details ${arr.length?'':''}><summary><span class="listhead">${esc(l.name)} <span class="cnt">(${arr.length})</span> <button class="bell" data-lact="remind" data-list="${l.id}" title="תזכורת לנושא">${l.remind&&l.remind.date?'🔔':'🔕'}</button><button class="bell" data-lact="rename" data-list="${l.id}">✏️</button></span></summary>
+    h+=`<details data-list="${l.id}" ${openListId===l.id?'open':''}><summary><span class="listhead">${esc(l.name)} <span class="cnt">(${arr.length})</span> <button class="bell" data-lact="remind" data-list="${l.id}" title="תזכורת לנושא">${l.remind&&l.remind.date?'🔔':'🔕'}</button><button class="bell" data-lact="rename" data-list="${l.id}">✏️</button></span></summary>
       ${l.remind&&l.remind.date?'<div class="small" style="padding:0 8px">תזכורת: '+fmtDate(l.remind.date)+(l.remind.repeat?' · '+repeatLabel(l.remind.repeat):'')+'</div>':''}
       ${arr.map(i=>taskCard(i,{showDate:true})).join('')||'<div class="small" style="padding:6px 8px">ריק</div>'}
       <div class="btns" style="padding:4px 8px"><button class="btn" data-lact="addto" data-list="${l.id}">+ הוסף ל${esc(l.name)}</button></div></details>`;
   }
   document.getElementById('v-lists').innerHTML=h;
+  document.querySelectorAll('#v-lists details[data-list]').forEach(d=>d.addEventListener('toggle',()=>{if(d.open){openListId=d.dataset.list;document.querySelectorAll('#v-lists details[data-list]').forEach(o=>{if(o!==d&&o.open)o.open=false;});}else if(openListId===d.dataset.list)openListId=null;quickTarget();}));
+  quickTarget();
 }
 function renderLog(){
   const done=items.filter(i=>i.status==='done'||i.status==='closed').sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
@@ -762,7 +766,7 @@ document.querySelector('main').addEventListener('click',async e=>{
 
 /* ===================== Quick add ===================== */
 const quick=document.getElementById('quick'),hint=document.getElementById('hint');
-quick.addEventListener('input',()=>{const p=parseHebrew(quick.value);const parts=[];if(p.date)parts.push(fmtDate(p.date));if(p.time)parts.push(p.time);if(p.repeat)parts.push(repeatLabel(p.repeat));if(p.condition)parts.push('תנאי: '+p.condition);if(p.topic)parts.push('תזכורת לנושא');if(p.list)parts.push('רשימת '+(lists.find(l=>l.id===p.list)||{}).name);hint.textContent=quick.value.trim()?(parts.join(' · ')||'יתווסף להיום'):'';});
+quick.addEventListener('input',()=>{const p=parseHebrew(quick.value);const parts=[];{const tl=quickTargetList();if(tl&&!p.list)parts.push('לרשימת '+tl.name);}if(p.date)parts.push(fmtDate(p.date));if(p.time)parts.push(p.time);if(p.repeat)parts.push(repeatLabel(p.repeat));if(p.condition)parts.push('תנאי: '+p.condition);if(p.topic)parts.push('תזכורת לנושא');if(p.list)parts.push('רשימת '+(lists.find(l=>l.id===p.list)||{}).name);hint.textContent=quick.value.trim()?(parts.join(' · ')||'יתווסף להיום'):'';});
 quick.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();quickAdd();}});
 document.getElementById('addBtn').onclick=()=>{if(quick.value.trim())quickAdd();else openEdit(newItem({date:today()}),true);};
 async function quickAdd(source='manual'){
@@ -771,13 +775,14 @@ async function quickAdd(source='manual'){
   if(it.type==='topic'&&!it.date){openEdit(it,true);return;}
   const twin=findDup(it);
   if(twin){quick.value='';hint.textContent='';dupEvent(it,twin,'quick');toast('כבר קיימת: "'+twin.title.slice(0,40)+'"','הוסף בכל זאת',async()=>{await save(it);toast('נוסף: '+it.title);render();});return;}
-  await save(it);quick.value='';hint.textContent='';toast('נוסף: '+it.title);render();
+  await save(it);quick.value='';hint.textContent='';{const l=it.list&&lists.find(x=>x.id===it.list);toast('נוסף'+(l?' לרשימת '+l.name:'')+': '+it.title);}render();quickTarget();
 }
 function buildFromText(raw,source){
   const p=parseHebrew(raw);
   const it=newItem({title:p.title||raw,raw,date:p.date||(p.condition||p.topic?null:today()),time:p.time,repeat:p.repeat,source,condition:p.condition,windowEnd:p.window,list:p.list});
   if(p.condition)it.type='cond';
   if(p.topic){it.type='topic';const l=lists.find(x=>p.title.includes(x.name));if(l)it.list=l.id;}
+  if(source==='manual'||source==='voice'){const tl=quickTargetList();if(tl&&!it.list&&it.type==='task'){it.list=tl.id;if(!p.date)it.date=null;}} // 0.22: typed while a list is open → into that list, undated
   if(!it.date&&it.type==='task'&&!it.list)it.date=today();
   return it;
 }
@@ -1110,7 +1115,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.21';
+const APP_VER='0.22';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
