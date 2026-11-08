@@ -173,6 +173,7 @@ const SRC={manual:'',voice:'🎤',share:'💬',email:'📧',calendar:'📅',deli
 
 /* ===================== State ===================== */
 let items=[], lists=[], settings={}, contacts=[];
+let importedSet=new Set(), device=null, tombs={}; // 0.19
 const DEFAULT_LISTS=[{id:'ideas',name:'רעיונות'},{id:'calls',name:'שיחות'},{id:'trips',name:'נסיעות'},{id:'care',name:'טיפולים'},{id:'garden',name:'גינה'},{id:'shopping',name:'קניות'}];
 async function load(){
   items=await DB.all();
@@ -181,12 +182,14 @@ async function load(){
   contacts=(await DB.kget('contacts'))||[];{let ch=false;for(const c of contacts){const n=normPhone(c.phone);if(n!==c.phone){c.phone=n;ch=true;}}if(ch)await DB.kset('contacts',contacts);}
   settings=Object.assign({skipSat:true,model:'claude-sonnet-5-5',apiKey:'',ghToken:'',backupPass:'',syncAuto:true},(await DB.kget('settings'))||{});
   events=(await DB.kget('events'))||[];for(const it of items)shadow.set(it.id,shape(it));
+  importedSet=new Set((await DB.kget('imported'))||[]);tombs=(await DB.kget('tombs'))||{};
+  device=(await DB.kget('device'))||null;if(!device){device={id:uid(),name:/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)?'טלפון':'מחשב',createdAt:Date.now()};await DB.kset('device',device);}
   if(settings.model==='claude-haiku-5-5'){settings.model='claude-sonnet-5-5';await DB.kset('settings',settings);} // 0.6.3: Haiku misses Hebrew handwriting
 }
-const saveLists=()=>DB.kset('lists',lists);
-const saveContacts=()=>DB.kset('contacts',contacts);
+const saveLists=()=>{markDirty();return DB.kset('lists',lists);};
+const saveContacts=()=>{markDirty();return DB.kset('contacts',contacts);};
 const saveSettings=()=>DB.kset('settings',settings);
-async function save(it){it.updatedAt=Date.now();trackEvent(it);await DB.put(it);const i=items.findIndex(x=>x.id===it.id);if(i>=0)items[i]=it;else items.push(it);}
+async function save(it){it.updatedAt=Date.now();trackEvent(it);await DB.put(it);const i=items.findIndex(x=>x.id===it.id);if(i>=0)items[i]=it;else items.push(it);markDirty();}
 /* ---- change log for the outbox (0.18): compare against the last saved shape of each item ---- */
 const shadow=new Map();let events=[];
 const shape=it=>({status:it.status,date:it.date,list:it.list,title:it.title});
@@ -200,7 +203,7 @@ function trackEvent(it){
   else if(it.status==='open'&&prev.list!==it.list&&it.list){type='moved';extra={list:(lists.find(l=>l.id===it.list)||{}).name||it.list};}
   shadow.set(it.id,shape(it));
   if(!type)return;
-  events.push(Object.assign({ts:new Date().toISOString(),type,id:it.id,extId:it.extId||null,title:it.title,list:it.list?((lists.find(l=>l.id===it.list)||{}).name||it.list):null,date:it.date||null},extra));
+  events.push(Object.assign({ts:new Date().toISOString(),type,id:it.id,device:device?device.name:null,extId:it.extId||null,title:it.title,list:it.list?((lists.find(l=>l.id===it.list)||{}).name||it.list):null,date:it.date||null},extra));
   if(events.length>600)events=events.slice(-600);
   DB.kset('events',events).catch(()=>{});
 }
@@ -424,7 +427,7 @@ function repeatLabel(rep){if(!rep)return '';let s=rep.unit==='day'?(rep.every===
 async function maintenance(){
   const T=today();let changed=0;
   for(const it of items){
-    if(it.status==='trash'&&it.deletedAt&&Date.now()-it.deletedAt>7*864e5){await DB.del(it.id);items=items.filter(x=>x.id!==it.id);continue;}
+    if(it.status==='trash'&&it.deletedAt&&Date.now()-it.deletedAt>7*864e5){await purgeItem(it.id);continue;}
     if(it.status!=='open'||!it.date)continue;
     if(it.date<T){
       if(it.type==='cond'&&it.windowEnd&&it.windowEnd>=T){continue;}
@@ -440,9 +443,10 @@ async function pullInbox(){
   try{
     const res=await fetch('inbox.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)return;
     const data=await res.json();
-    const imported=new Set((await DB.kget('imported'))||[]);let n=0;
+    const imported=importedSet;let n=0;
     for(const t of (data.tasks||[])){
       if(!t.id||imported.has(t.id))continue;
+      if(items.some(x=>x.extId===t.id)){imported.add(t.id);continue;} // 0.19: already received via another device
       const it=newItem({title:t.title||'',note:t.note||'',date:t.date||(t.list?null:today()),time:t.time||null,source:t.source||'claude',list:t.list||null,extId:t.id,type:t.type||'task',condition:t.condition||'',url:t.url||null});
       if(t.repeat)it.repeat=t.repeat;
       await save(it);imported.add(t.id);n++;
@@ -566,24 +570,27 @@ function renderMore(){
   ${contacts.length?contacts.map(c=>`<div class="card" data-cid="${c.id}"><div class="t" data-cact="edit"><div class="n">${esc(c.name)}</div><div class="m"><span dir="ltr">+${esc(c.phone)}</span>${c.aliases&&c.aliases.length?' · '+esc(c.aliases.join(', ')):''}${c.address?' · 🚗 '+esc(c.address):''}</div></div></div>`).join(''):'<div class="small" style="padding:4px 8px">עדיין אין. כשתכתוב משימה "עם ביאטריס" — האפליקציה תציע לבחור איש קשר.</div>'}
   <h2>🔄 סנכרון עם Claude וגיבוי ל-GitHub</h2>
   <div class="card" style="display:block">
-    <div class="small" style="margin-bottom:8px">פעם ביום (ובלחיצה) האפליקציה שולחת לריפו מה בוצע, נדחה ונמחק — כך Claude יודע מה קרה — ומעלה גיבוי מלא <b>מוצפן</b> של כל הנתונים. שחזור: בטלפון חדש, "שחזר מגיבוי" + הסיסמה.</div>
+    <div class="small" style="margin-bottom:8px">פעם ביום (ובלחיצה) האפליקציה שולחת לריפו מה בוצע, נדחה ונמחק — כך Claude יודע מה קרה — ומעלה גיבוי מלא <b>מוצפן</b> של כל הנתונים. <b>סנכרון בין מכשירים (0.19):</b> כל מכשיר עם אותו טוקן ואותה סיסמה כותב קובץ מוצפן משלו, והאפליקציה ממזגת אותם בכל פתיחה — החדש יותר מנצח, מחיקה נשמרת 30 יום.</div>
     <form id="syncForm" action="#" method="post" onsubmit="return false" style="margin:0">
     <input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none" tabindex="-1" aria-hidden="true">
+    <label class="lbl">שם המכשיר הזה (לסנכרון בין מכשירים)</label>
+    <input id="deviceName" value="${esc(device?device.name:'')}" placeholder="טלפון / מחשב" autocomplete="off">
     <label class="lbl">טוקן GitHub (Fine-grained, הרשאת Contents על garden-recipes בלבד — נשמר בטלפון)</label>
     <div class="row" style="gap:4px"><input id="ghToken" type="password" placeholder="github_pat_…" value="${esc(settings.ghToken||'')}" autocomplete="off"><button type="button" class="btn" data-eye="ghToken" style="flex:0 0 auto">👁</button></div>
     <label class="lbl">סיסמת הצפנה לגיבוי (בלעדיה הגיבוי לא נשלח; אין לה שחזור — תן לגוגל לשמור אותה כשהוא מציע)</label>
     <div class="row" style="gap:4px"><input id="backupPass" name="password" type="password" placeholder="סיסמה חזקה" value="${esc(settings.backupPass||'')}" autocomplete="current-password"><button type="button" class="btn" data-eye="backupPass" style="flex:0 0 auto">👁</button></div>
     </form>
     <div class="chips" style="margin-top:8px"><button data-set="syncAuto" data-val="1" class="${settings.syncAuto?'on':''}">סנכרון אוטומטי יומי</button><button data-set="syncAuto" data-val="0" class="${!settings.syncAuto?'on':''}">ידני בלבד</button></div>
-    <div class="btns"><button class="btn p" id="saveSync">שמור</button><button class="btn p" id="syncBtn">⬆️ שלח ל-Claude וגבה עכשיו</button><button class="btn" id="restoreBtn">⬇️ שחזר מגיבוי</button></div>
+    <div class="btns"><button class="btn p" id="saveSync">שמור</button><button class="btn p" id="syncBtn">⬆️ שלח ל-Claude וגבה עכשיו</button><button class="btn" id="restoreBtn">⬇️ שחזר מגיבוי</button><button class="btn" id="devSyncBtn">🔁 סנכרן מכשירים עכשיו</button></div>
     <div class="small" style="margin-top:8px" id="syncLine">${syncStatusLine()}</div>
+    <div class="small" style="margin-top:6px" id="devLine">…</div>
   </div>
   <h2>💾 גיבוי מקומי וכלים</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><button class="btn" id="shareBtn">שתף גיבוי…</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 8.11.2026 · הנתונים נשמרים בטלפון; גיבוי מוצפן ל-GitHub כשמוגדר טוקן וסיסמה.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 8.11.2026 · מכשיר: ${esc(device?device.name:'')} · הנתונים נשמרים במכשיר; גיבוי וסנכרון מוצפנים ל-GitHub כשמוגדרים טוקן וסיסמה.</div>`;
   document.getElementById('v-more').innerHTML=h;
-  DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});fillSyncLine();
+  DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});fillSyncLine();fillDevLine();
 }
 let searchQ='';
 function hl(txt,q){const e=esc(txt);if(!q)return e;const i=e.toLowerCase().indexOf(esc(q).toLowerCase());return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length);}
@@ -673,7 +680,7 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'decode': openEdit(it);setTimeout(()=>{const b=document.getElementById('decodeBtn');if(b)b.click();},150);return;
     case 'trash': await trash(it);break;
     case 'restore': it.status='open';it.deletedAt=null;await save(it);toast('שוחזר');break;
-    case 'purge': await DB.del(it.id);items=items.filter(x=>x.id!==it.id);break;
+    case 'purge': await purgeItem(it.id);break;
     case 'reopen': it.status='open';it.doneAt=null;await save(it);break;
     case 'snooze': openSnooze(it);return;
     case 'snooze7': it.date=addDays(today(),7);it.rollovers=0;await save(it);break;
@@ -871,7 +878,7 @@ async function ocrList(dataUrl){
 }
 
 /* ===================== GitHub sync: outbox + encrypted backup (0.18) ===================== */
-const GH={owner:'modiaviram-arch',repo:'garden-recipes',branch:'main',outbox:'doing/outbox.json',backup:'doing/backup.json'};
+const GH={owner:'modiaviram-arch',repo:'garden-recipes',branch:'main',outbox:'doing/outbox.json',backup:'doing/backup.json',syncDir:'doing/sync'};
 const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);};
 const unb64=str=>Uint8Array.from(atob(str),c=>c.charCodeAt(0));
 const utf8b64=str=>b64(new TextEncoder().encode(str));
@@ -891,7 +898,7 @@ async function deriveKey(pass,salt){const km=await crypto.subtle.importKey('raw'
 async function encryptJSON(obj,pass){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const key=await deriveKey(pass,salt);const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(obj)));return {v:1,alg:'AES-GCM-256/PBKDF2-SHA256-310k',salt:b64(salt),iv:b64(iv),data:b64(new Uint8Array(ct))};}
 async function decryptJSON(env,pass){const key=await deriveKey(pass,unb64(env.salt));const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(env.iv)},key,unb64(env.data));return JSON.parse(new TextDecoder().decode(pt));}
 /* ---- what goes out ---- */
-function exportData(){return {exported:new Date().toISOString(),app:APP_VER,items,lists,contacts,settings:{skipSat:settings.skipSat,model:settings.model,syncAuto:settings.syncAuto},imported:null};}
+function exportData(){return {exported:new Date().toISOString(),app:APP_VER,items,lists,contacts,settings:{skipSat:settings.skipSat,model:settings.model,syncAuto:settings.syncAuto},imported:[...importedSet],tombs,deviceId:device&&device.id,deviceName:device&&device.name};}
 function buildOutbox(lastSyncAt){
   const T=today();const since=lastSyncAt?new Date(lastSyncAt).toISOString():null;
   const recent=events.filter(e=>!since||e.ts>since);
@@ -910,10 +917,12 @@ async function syncNow(manual){
   try{
     const lastSync=await DB.kget('lastSync');
     const stamp=new Date().toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'});
+    try{await pullDevices(true);}catch(e){syncLog('משיכת מכשירים לפני outbox נכשלה: '+(e.message||e));}
     await ghPut(GH.outbox,JSON.stringify(buildOutbox(lastSync),null,1),'outbox: '+stamp);
     let backed=false;
     if(settings.backupPass){const env=await encryptJSON(exportData(),settings.backupPass);env.exported=new Date().toISOString();env.app=APP_VER;env.items=items.filter(i=>i.status!=='trash').length;await ghPut(GH.backup,JSON.stringify(env,null,1),'backup: '+stamp);backed=true;}
     await DB.kset('lastSync',Date.now());await DB.kset('lastSyncErr','');
+    if(settings.backupPass){try{await pushDevice(true);}catch(e){syncLog('דחיפת קובץ המכשיר נכשלה: '+(e.message||e));}}
     if(manual)toast(backed?'נשלח ל-Claude והגיבוי הועלה ✓':'נשלח ל-Claude ✓ (בלי גיבוי — אין סיסמה)');
   }catch(e){await DB.kset('lastSyncErr',(e&&e.message)||String(e));if(manual)toast('הסנכרון נכשל: '+((e&&e.message)||e));else logErr('סנכרון: '+((e&&e.message)||e));}
   syncing=false;if(view==='more')render();
@@ -933,9 +942,7 @@ async function restoreFromGitHub(){
   document.getElementById('rsGo').onclick=async()=>{
     const pass=document.getElementById('rsPass').value;if(!pass){toast('חסרה סיסמה');return;}
     let d;try{d=await decryptJSON(env,pass);}catch(e){toast('סיסמה שגויה או גיבוי פגום');return;}
-    let n=0;for(const it of (d.items||[])){const cur=items.find(x=>x.id===it.id);if(!cur||(it.updatedAt||0)>(cur.updatedAt||0)){await DB.put(it);if(cur)Object.assign(cur,it);else items.push(it);shadow.set(it.id,shape(it));n++;}}
-    if(d.lists&&d.lists.length){for(const l of d.lists)if(!lists.some(x=>x.id===l.id))lists.push(l);await saveLists();}
-    if(d.contacts){for(const c of d.contacts)if(!contacts.some(x=>x.id===c.id))contacts.push(c);await saveContacts();}
+    const n=await mergeRemote(d,'גיבוי');
     if(d.settings){settings.skipSat=d.settings.skipSat??settings.skipSat;await saveSettings();}
     closeSheet();await render();toast('שוחזרו '+n+' פריטים');
   };
@@ -952,12 +959,13 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='saveSettings'){settings.apiKey=document.getElementById('apiKey').value.trim();settings.model=document.getElementById('model').value.trim()||'claude-sonnet-5-5';await saveSettings();toast('נשמר');}
   if(e.target.id==='pullBtn'){await pullInbox();render();}
   if(e.target.closest&&e.target.closest('[data-eye]')){const i=document.getElementById(e.target.closest('[data-eye]').dataset.eye);i.type=i.type==='password'?'text':'password';return;}
-  if(e.target.id==='saveSync'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveSettings();await offerPasswordSave();toast('נשמר');}
-  if(e.target.id==='syncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveSettings();await offerPasswordSave();await syncNow(true);}
+  if(e.target.id==='saveSync'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await offerPasswordSave();toast('נשמר');}
+  if(e.target.id==='devSyncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await devSyncNow();}
+  if(e.target.id==='syncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await offerPasswordSave();await syncNow(true);}
   if(e.target.id==='restoreBtn'){await restoreFromGitHub();}
   if(e.target.id==='shareBtn'){await shareBackup();}
   if(e.target.id==='updBtn'){checkUpdate(true);}
-  if(e.target.id==='errBtn'){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';openSheet('<h3>יומן שגיאות</h3><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\npick state: '+esc(localStorage.getItem('pickstate')||'(אין)')+'\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
+  if(e.target.id==='errBtn'){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';const S=JSON.parse(localStorage.getItem('synclog')||'[]');openSheet('<h3>יומן שגיאות</h3><div class="small" style="white-space:pre-wrap"><b>סנכרון:</b>\n'+esc(S.join('\n')||'(ריק)')+'</div><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\npick state: '+esc(localStorage.getItem('pickstate')||'(אין)')+'\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
 });
 document.querySelector('main').addEventListener('change',async e=>{
   if(e.target.id==='importFile'){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());for(const it of (d.items||[]))await save(it);if(d.lists){lists=d.lists;await saveLists();}if(d.contacts){contacts=d.contacts;await saveContacts();}if(d.imported)await DB.kset('imported',d.imported);toast('יובאו '+(d.items||[]).length+' פריטים');render();}catch(err){toast('קובץ לא תקין');}}
@@ -1027,7 +1035,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.18.3';
+const APP_VER='0.19';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
@@ -1041,6 +1049,102 @@ document.getElementById('exitBtn').onclick=()=>{
   // a PWA opened from the home screen can't always close itself — guide the user if we're still here
   setTimeout(()=>{if(!document.hidden)toast('לחץ על "חזרה" או "בית" בטלפון כדי לסגור — הכול כבר שמור');},400);
 };
+
+/* ===================== 0.19: two-way sync between devices (one encrypted file per device) ===================== */
+function syncLog(m){try{const L=JSON.parse(localStorage.getItem('synclog')||'[]');L.unshift(new Date().toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'})+' '+m);localStorage.setItem('synclog',JSON.stringify(L.slice(0,40)));}catch(e){}}
+async function saveDeviceName(){const e=document.getElementById('deviceName');if(!e||!device)return;const n=e.value.trim();if(n&&n!==device.name){device.name=n;await DB.kset('device',device);markDirty();}}
+async function purgeItem(id){await DB.del(id);items=items.filter(x=>x.id!==id);shadow.delete(id);tombs[id]=Date.now();await DB.kset('tombs',tombs);markDirty();}
+function pruneTombs(){const cut=Date.now()-30*864e5;let ch=false;for(const k in tombs)if(tombs[k]<cut){delete tombs[k];ch=true;}if(ch)DB.kset('tombs',tombs).catch(()=>{});}
+function canDevSync(){return !!(settings.ghToken&&settings.backupPass&&device);}
+function syncPayload(){pruneTombs();const cut=Date.now()-30*864e5;
+  return {v:1,deviceId:device.id,deviceName:device.name,generated:new Date().toISOString(),app:APP_VER,
+    items:items.filter(i=>!(i.status==='trash'&&i.deletedAt&&i.deletedAt<cut)),lists,contacts,imported:[...importedSet],tombs,events:events.slice(-150)};}
+/* merge a remote snapshot (another device's file, or backup.json) into the local DB. Rule: newer updatedAt wins; tie → done/trash beats open; tombstones delete; nothing else deletes. */
+async function mergeRemote(d,who){
+  let n=0,conf=0;const T=Date.now();
+  for(const [id,ts] of Object.entries(d.tombs||{})){const cur=items.find(x=>x.id===id);if(cur&&(cur.updatedAt||0)<ts){await DB.del(id);items=items.filter(x=>x.id!==id);shadow.delete(id);n++;}if(!tombs[id]||tombs[id]<ts)tombs[id]=ts;}
+  const rank=s=>s==='open'?0:1;
+  for(const it of (d.items||[])){
+    if(!it||!it.id)continue;if(tombs[it.id]&&tombs[it.id]>(it.updatedAt||0))continue;
+    let cur=items.find(x=>x.id===it.id);
+    if(!cur&&it.extId){ // same inbox item received independently on both devices → one survives (newer; tie → smaller id)
+      const twin=items.find(x=>x.extId===it.extId&&x.id!==it.id);
+      if(twin){const tu=twin.updatedAt||0,ru2=it.updatedAt||0;const remoteWins=ru2>tu||(ru2===tu&&it.id<twin.id);
+        if(!remoteWins)continue;
+        await DB.del(twin.id);items=items.filter(x=>x.id!==twin.id);shadow.delete(twin.id);}
+    }
+    const ru=it.updatedAt||0,lu=cur?(cur.updatedAt||0):-1;
+    let take=!cur||ru>lu||(ru===lu&&cur&&rank(it.status)>rank(cur.status));
+    if(take){
+      if(cur){if((cur.rollovers||0)>(it.rollovers||0))it.rollovers=cur.rollovers;if(Math.abs(ru-lu)<10*60e3&&(cur.title!==it.title||cur.status!==it.status))conf++;Object.assign(cur,it);await DB.put(cur);shadow.set(cur.id,shape(cur));}
+      else{items.push(it);await DB.put(it);shadow.set(it.id,shape(it));}
+      n++;
+    }else if(cur&&(it.rollovers||0)>(cur.rollovers||0)){cur.rollovers=it.rollovers;await DB.put(cur);}
+  }
+  let lch=false;for(const l of (d.lists||[]))if(l&&l.id&&!lists.some(x=>x.id===l.id)){lists.push(l);lch=true;}if(lch)await DB.kset('lists',lists);
+  let cch=false;for(const c of (d.contacts||[]))if(c&&c.id&&!contacts.some(x=>x.id===c.id)){contacts.push(c);cch=true;}if(cch)await DB.kset('contacts',contacts);
+  let ich=false;for(const id of (d.imported||[]))if(!importedSet.has(id)){importedSet.add(id);ich=true;}if(ich)await DB.kset('imported',[...importedSet]);
+  if(d.events&&d.events.length){const key=e=>e.ts+'|'+e.type+'|'+e.id;const have=new Set(events.map(key));let ech=false;for(const e of d.events)if(!have.has(key(e))){events.push(e);have.add(key(e));ech=true;}if(ech){events.sort((a,b)=>a.ts<b.ts?-1:1);if(events.length>600)events=events.slice(-600);await DB.kset('events',events);}}
+  await DB.kset('tombs',tombs);
+  if(n)dirty=true; // our file should carry the merged state too
+  if(n)syncLog('מוזג מ'+who+': '+n+' פריטים'+(conf?' ('+conf+' שונו בשני המכשירים — החדש נשמר)':''));
+  if(conf)toast(conf+' פריטים שונו גם במכשיר אחר — נשמרה הגרסה החדשה יותר');
+  return n;
+}
+async function ghRaw(path){const r=await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,{headers:{Authorization:'Bearer '+settings.ghToken,Accept:'application/vnd.github.raw+json'},cache:'no-store'});if(r.status===404)return null;if(!r.ok)throw new Error('GitHub '+r.status);return r.text();}
+let pullingDev=false;
+async function pullDevices(force){
+  if(!canDevSync()||!navigator.onLine||pullingDev)return 0;
+  const last=(await DB.kget('lastPullDev'))||0;if(!force&&Date.now()-last<5*60e3)return 0;
+  pullingDev=true;let total=0;
+  try{
+    const dir=await ghGet(GH.syncDir);const files=Array.isArray(dir)?dir.filter(f=>f.type==='file'&&f.name.endsWith('.json')&&f.name!==device.id+'.json'):[];
+    const shas=(await DB.kget('devShas'))||{};const devs=(await DB.kget('devices'))||{};
+    if(!files.length){
+      // bootstrap: no other device has written a sync file yet — merge backup.json once (same password, same merge)
+      if(!(await DB.kget('bootstrapped'))){try{const r=await fetch('backup.json?ts='+Date.now(),{cache:'no-store'});if(r.ok){const env=await r.json();if(env&&env.data){const d=await decryptJSON(env,settings.backupPass);total+=await mergeRemote(d,'הגיבוי בריפו');}}}catch(e){syncLog('אתחול מהגיבוי נכשל: '+(e.message||e));}await DB.kset('bootstrapped',1);}
+    }
+    for(const f of files){
+      if(shas[f.name]===f.sha){continue;}
+      let env;try{env=JSON.parse(await ghRaw(f.path));}catch(e){syncLog('קובץ '+f.name+' לא נקרא: '+(e.message||e));continue;}
+      let d;try{d=await decryptJSON(env,settings.backupPass);}catch(e){syncLog('סיסמה שונה במכשיר "'+(env.deviceName||f.name)+'" — לא מוזג');devs[f.name]={name:env.deviceName||f.name,generated:env.generated,error:'סיסמה שונה'};continue;}
+      const n=await mergeRemote(d,'"'+(d.deviceName||f.name)+'"');total+=n;shas[f.name]=f.sha;
+      devs[f.name]={name:d.deviceName||f.name,generated:d.generated,app:d.app,mergedAt:Date.now(),received:n,items:(d.items||[]).length};
+    }
+    await DB.kset('devShas',shas);await DB.kset('devices',devs);await DB.kset('lastPullDev',Date.now());await DB.kset('lastPullDevErr','');
+    if(total){await maintenance();toast('התקבלו '+total+' עדכונים ממכשיר אחר');}
+  }catch(e){await DB.kset('lastPullDevErr',(e&&e.message)||String(e));syncLog('משיכה: '+((e&&e.message)||e));throw e;}
+  finally{pullingDev=false;if(view==='more')fillDevLine();}
+  return total;
+}
+let dirty=false,pushT=null,pushing=false;
+function markDirty(){dirty=true;if(!canDevSync())return;clearTimeout(pushT);pushT=setTimeout(()=>pushDevice(false).catch(()=>{}),30000);}
+function flushPush(){if(dirty&&canDevSync()){clearTimeout(pushT);pushDevice(false).catch(()=>{});}}
+async function pushDevice(force){
+  if(!canDevSync()||!navigator.onLine||pushing)return false;if(!dirty&&!force)return false;
+  pushing=true;
+  try{
+    const env=await encryptJSON(syncPayload(),settings.backupPass);env.v=1;env.deviceId=device.id;env.deviceName=device.name;env.generated=new Date().toISOString();env.app=APP_VER;env.items=items.filter(i=>i.status!=='trash').length;
+    await ghPut(GH.syncDir+'/'+device.id+'.json',JSON.stringify(env),'sync '+device.name+': '+new Date().toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}));
+    dirty=false;await DB.kset('lastPushDev',Date.now());await DB.kset('lastPushDevErr','');return true;
+  }catch(e){await DB.kset('lastPushDevErr',(e&&e.message)||String(e));syncLog('דחיפה: '+((e&&e.message)||e));throw e;}
+  finally{pushing=false;if(view==='more')fillDevLine();}
+}
+async function devSyncNow(){
+  if(!settings.ghToken){toast('קודם הזן טוקן GitHub');return;}if(!settings.backupPass){toast('סנכרון בין מכשירים דורש סיסמת הצפנה (זהה בשני המכשירים)');return;}if(!navigator.onLine){toast('אין רשת');return;}
+  const line=document.getElementById('devLine');if(line)line.textContent='מסנכרן מכשירים…';
+  try{const n=await pullDevices(true);await pushDevice(true);await render();toast(n?'התקבלו '+n+' עדכונים · הקובץ שלך נשלח ✓':'אין עדכונים חדשים · הקובץ שלך נשלח ✓');}
+  catch(e){toast('סנכרון מכשירים נכשל: '+((e&&e.message)||e));}
+}
+async function fillDevLine(){const e=document.getElementById('devLine');if(!e)return;
+  if(!canDevSync()){e.textContent='סנכרון בין מכשירים: לא פעיל (דרושים טוקן וסיסמת הצפנה).';return;}
+  const devs=(await DB.kget('devices'))||{};const lp=await DB.kget('lastPullDev'),lpe=await DB.kget('lastPullDevErr'),lpush=await DB.kget('lastPushDev'),lpushe=await DB.kget('lastPushDevErr');
+  const f=t=>t?new Date(t).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}):'—';
+  let h='מכשיר זה: <b>'+esc(device.name)+'</b> · נשלח '+f(lpush)+(lpushe?' · שגיאת שליחה: '+esc(lpushe):'')+' · נמשך '+f(lp)+(lpe?' · שגיאת משיכה: '+esc(lpe):'')+(dirty?' · יש שינויים שטרם נשלחו':'');
+  const others=Object.values(devs);
+  h+=others.length?'<br>מכשירים אחרים: '+others.map(d=>esc(d.name)+' (עדכן '+(d.generated?f(d.generated):'?')+(d.error?', '+esc(d.error):d.received?', התקבלו '+d.received:'')+')').join(' · '):'<br>עדיין לא נמצאו מכשירים אחרים.';
+  e.innerHTML=h;
+}
 /* ===================== Boot ===================== */
 (async function(){
   await openDB();await load();
@@ -1050,9 +1154,10 @@ document.getElementById('exitBtn').onclick=()=>{
   let shared=false;
   if(new URL(location.href).searchParams.get('shared')==='1'){history.replaceState(null,'',location.pathname);const pl=await takeSharedPayload();if(pl){if(!(await handleSharedContact(pl))){const t=[pl.title,pl.text,pl.url].filter(Boolean).join(' ').trim();if(t){const first=t.split('\n').map(x=>x.trim()).filter(Boolean)[0]||t;const it=buildFromText(first.slice(0,140),'share');if(t.length>first.length)it.note=t.slice(0,1000);openEdit(it,true);}}shared=true;}}
   if(!shared)shared=handleShare();
-  await pullInbox();await maintenance();await render();checkUpdate(false);autoSync();
+  await pullInbox();await maintenance();await render();checkUpdate(false);
+  pullDevices(false).then(n=>{if(n)render();}).catch(e=>syncLog('משיכת מכשירים: '+(e.message||e))).finally(()=>autoSync());
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){contacts=(await DB.kget('contacts'))||contacts;await maintenance();await pullInbox();await render();checkUpdate(false);autoSync();}});
+  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){contacts=(await DB.kget('contacts'))||contacts;await maintenance();await pullInbox();await render();checkUpdate(false);pullDevices(false).then(n=>{if(n)render();}).catch(e=>syncLog('משיכת מכשירים: '+(e.message||e))).finally(()=>autoSync());}else{flushPush();}});
 })();
 </script>
 </body>
