@@ -114,6 +114,90 @@
       "date": "2026-12-02",
       "list": "garden",
       "source": "claude"
+    },
+    {
+      "id": "cl-nyc-20261108-1",
+      "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+      "date": "2026-11-09",
+      "list": "trips",
+      "source": "claude",
+      "note": "שני הפרטים שחסרים לסגירת התכנון (טיוטה 3)."
+    },
+    {
+      "id": "cl-nyc-20261108-2",
+      "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+      "date": "2026-11-10",
+      "list": "trips",
+      "source": "claude",
+      "note": "אחרי אישור נעמה. מספר הכרטיסים לפי מי מצטרף. הלוח המלא של דצמבר בהערות של טיוטה 3 אם צריך תאריך חלופי."
+    },
+    {
+      "id": "cl-nyc-20261108-3",
+      "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+      "date": "2026-11-10",
+      "list": "trips",
+      "source": "claude",
+      "note": "לפני המופע: סיור קצר Grand Central → ספריית ניו יורק → טיימס סקוור; חזרה הביתה 16:30."
+    },
+    {
+      "id": "cl-nyc-20261108-4",
+      "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
+      "date": "2026-11-12",
+      "list": "trips",
+      "source": "claude",
+      "note": "באותו יום לפני כן: Frick + Neue Galerie."
+    },
+    {
+      "id": "cl-nyc-20261108-5",
+      "title": "לבדוק תוקף דרכונים (רחל ואני) ואישור ESTA לכניסה לארה\"ב",
+      "date": "2026-11-12",
+      "list": "trips",
+      "source": "claude",
+      "note": "ESTA תקף שנתיים או עד פקיעת הדרכון – לוודא שמכסה 15–30.12."
+    },
+    {
+      "id": "cl-nyc-20261108-6",
+      "title": "ביטוח נסיעות לחו\"ל 15–30.12, לרחל ולי",
+      "date": "2026-11-20",
+      "list": "trips",
+      "source": "claude"
+    },
+    {
+      "id": "cl-nyc-20261108-7",
+      "title": "לקנות מתנות לגל (7) ואדם (4) לנסיעה",
+      "date": "2026-11-25",
+      "list": "trips",
+      "source": "claude"
+    },
+    {
+      "id": "cl-nyc-20261108-8",
+      "title": "ג׳אז בניו יורק – לבחור מתוך דוח המועדונים (מגיע 27.11) ולהזמין",
+      "date": "2026-11-28",
+      "list": "trips",
+      "source": "claude",
+      "note": "המשימה המתוזמנת בודקת ב-27.11 את Village Vanguard, Smalls, Mezzrow, Dizzy's, Birdland, Blue Note, Smoke ועוד ל-16–30.12."
+    },
+    {
+      "id": "cl-nyc-20261108-9",
+      "title": "כרטיסים מתוזמנים מראש: 9/11 Memorial Museum (שלישי 22.12 בוקר), Frick, Neue Galerie (17.12)",
+      "date": "2026-12-01",
+      "list": "trips",
+      "source": "claude",
+      "note": "בחגים נגמרים מהר – להזמין ברגע שהתאריכים סופיים."
+    },
+    {
+      "id": "cl-nyc-20261108-10",
+      "title": "eSIM / חבילת גלישה לארה\"ב + להודיע לחברת האשראי על הנסיעה",
+      "date": "2026-12-08",
+      "list": "trips",
+      "source": "claude"
+    },
+    {
+      "id": "cl-nyc-20261108-11",
+      "title": "צ'ק-אין לטיסה לניו יורק (15.12) – נפתח 24 שעות לפני",
+      "date": "2026-12-14",
+      "list": "trips",
+      "source": "claude"
     }
   ],
   "calendar": [
