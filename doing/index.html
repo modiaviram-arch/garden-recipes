@@ -567,10 +567,13 @@ function renderMore(){
   <h2>🔄 סנכרון עם Claude וגיבוי ל-GitHub</h2>
   <div class="card" style="display:block">
     <div class="small" style="margin-bottom:8px">פעם ביום (ובלחיצה) האפליקציה שולחת לריפו מה בוצע, נדחה ונמחק — כך Claude יודע מה קרה — ומעלה גיבוי מלא <b>מוצפן</b> של כל הנתונים. שחזור: בטלפון חדש, "שחזר מגיבוי" + הסיסמה.</div>
+    <form id="syncForm" action="#" method="post" onsubmit="return false" style="margin:0">
+    <input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
     <label class="lbl">טוקן GitHub (Fine-grained, הרשאת Contents על garden-recipes בלבד — נשמר בטלפון)</label>
-    <input id="ghToken" type="password" placeholder="github_pat_…" value="${esc(settings.ghToken||'')}" autocomplete="off">
-    <label class="lbl">סיסמת הצפנה לגיבוי (בלעדיה הגיבוי לא נשלח; אין לה שחזור — לשמור במקום בטוח)</label>
-    <input id="backupPass" type="password" placeholder="סיסמה חזקה" value="${esc(settings.backupPass||'')}" autocomplete="off">
+    <div class="row" style="gap:4px"><input id="ghToken" type="password" placeholder="github_pat_…" value="${esc(settings.ghToken||'')}" autocomplete="off"><button type="button" class="btn" data-eye="ghToken" style="flex:0 0 auto">👁</button></div>
+    <label class="lbl">סיסמת הצפנה לגיבוי (בלעדיה הגיבוי לא נשלח; אין לה שחזור — תן לגוגל לשמור אותה כשהוא מציע)</label>
+    <div class="row" style="gap:4px"><input id="backupPass" name="password" type="password" placeholder="סיסמה חזקה" value="${esc(settings.backupPass||'')}" autocomplete="current-password"><button type="button" class="btn" data-eye="backupPass" style="flex:0 0 auto">👁</button></div>
+    </form>
     <div class="chips" style="margin-top:8px"><button data-set="syncAuto" data-val="1" class="${settings.syncAuto?'on':''}">סנכרון אוטומטי יומי</button><button data-set="syncAuto" data-val="0" class="${!settings.syncAuto?'on':''}">ידני בלבד</button></div>
     <div class="btns"><button class="btn p" id="saveSync">שמור</button><button class="btn p" id="syncBtn">⬆️ שלח ל-Claude וגבה עכשיו</button><button class="btn" id="restoreBtn">⬇️ שחזר מגיבוי</button></div>
     <div class="small" style="margin-top:8px" id="syncLine">${syncStatusLine()}</div>
@@ -893,6 +896,9 @@ function buildOutbox(lastSyncAt){
   const done14=items.filter(i=>(i.status==='done'||i.status==='closed')&&i.doneAt&&Date.now()-i.doneAt<14*864e5).map(i=>({id:i.id,extId:i.extId||null,title:i.title,status:i.status,doneAt:new Date(i.doneAt).toISOString(),list:i.list?((lists.find(l=>l.id===i.list)||{}).name||i.list):null}));
   return {generated:new Date().toISOString(),app:APP_VER,note:'נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude',since_last_sync:since,events_since_last_sync:recent,recent_events:events.slice(-150),open_tasks:open,done_last_14_days:done14,stats:{open:open.length,overdue:open.filter(o=>o.overdue).length,stuck:open.filter(o=>o.rollovers>=3).length,lists:lists.map(l=>({name:l.name,open:items.filter(i=>i.status==='open'&&i.list===l.id).length}))}};
 }
+/* ask the phone's password manager (Google) to keep the backup passphrase, so a new phone fills it by fingerprint */
+let offeredPass='';
+async function offerPasswordSave(){try{if(!settings.backupPass||settings.backupPass===offeredPass)return;offeredPass=settings.backupPass;if(window.PasswordCredential&&navigator.credentials){const c=new PasswordCredential({id:'my-doing-backup',name:'My Doing – סיסמת גיבוי',password:settings.backupPass});await navigator.credentials.store(c);}}catch(e){}}
 let syncing=false;
 async function syncNow(manual){
   if(syncing)return;if(!settings.ghToken){if(manual)toast('קודם הזן טוקן GitHub ושמור');return;}
@@ -917,10 +923,10 @@ async function restoreFromGitHub(){
   try{const r=await fetch('backup.json?ts='+Date.now(),{cache:'no-store'});if(r.ok)env=await r.json();}catch(e){}
   if(!env||!env.data){toast('לא נמצא גיבוי בריפו');return;}
   openSheet(`<h3>⬇️ שחזור מגיבוי</h3><div class="small">גיבוי מ-${esc(env.exported?new Date(env.exported).toLocaleString('he-IL'):'?')} · ${esc(String(env.items||''))} פריטים · גרסה ${esc(env.app||'?')}</div>
-    <label class="lbl" style="margin-top:10px">סיסמת ההצפנה</label><input id="rsPass" type="password" value="${esc(settings.backupPass||'')}" autocomplete="off">
+    <form action="#" onsubmit="return false" style="margin:0"><input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true"><label class="lbl" style="margin-top:10px">סיסמת ההצפנה (גוגל ימלא בטביעת אצבע אם נשמרה)</label><div class="row" style="gap:4px"><input id="rsPass" name="password" type="password" value="${esc(settings.backupPass||'')}" autocomplete="current-password"><button type="button" class="btn" id="rsEye" style="flex:0 0 auto">👁</button></div></form>
     <div class="small" style="margin-top:8px">השחזור ממזג: פריטים שקיימים כבר בטלפון מתעדכנים לגרסה החדשה יותר, חדשים נוספים, שום דבר לא נמחק.</div>
     <div class="btns" style="margin-top:10px"><button class="btn p" id="rsGo">שחזר</button><button class="btn" id="rsClose">ביטול</button></div>`);
-  document.getElementById('rsClose').onclick=closeSheet;
+  document.getElementById('rsClose').onclick=closeSheet;document.getElementById('rsEye').onclick=()=>{const i=document.getElementById('rsPass');i.type=i.type==='password'?'text':'password';};
   document.getElementById('rsGo').onclick=async()=>{
     const pass=document.getElementById('rsPass').value;if(!pass){toast('חסרה סיסמה');return;}
     let d;try{d=await decryptJSON(env,pass);}catch(e){toast('סיסמה שגויה או גיבוי פגום');return;}
@@ -942,8 +948,9 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='exportBtn'){const data={exported:new Date().toISOString(),items,lists,contacts,settings:{skipSat:settings.skipSat},imported:await DB.kget('imported')};const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-doing-'+today()+'.json';a.click();}
   if(e.target.id==='saveSettings'){settings.apiKey=document.getElementById('apiKey').value.trim();settings.model=document.getElementById('model').value.trim()||'claude-sonnet-5-5';await saveSettings();toast('נשמר');}
   if(e.target.id==='pullBtn'){await pullInbox();render();}
-  if(e.target.id==='saveSync'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveSettings();toast('נשמר');}
-  if(e.target.id==='syncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveSettings();await syncNow(true);}
+  if(e.target.closest&&e.target.closest('[data-eye]')){const i=document.getElementById(e.target.closest('[data-eye]').dataset.eye);i.type=i.type==='password'?'text':'password';return;}
+  if(e.target.id==='saveSync'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveSettings();await offerPasswordSave();toast('נשמר');}
+  if(e.target.id==='syncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveSettings();await offerPasswordSave();await syncNow(true);}
   if(e.target.id==='restoreBtn'){await restoreFromGitHub();}
   if(e.target.id==='shareBtn'){await shareBackup();}
   if(e.target.id==='updBtn'){checkUpdate(true);}
@@ -1017,7 +1024,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.18';
+const APP_VER='0.18.1';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
