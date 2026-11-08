@@ -769,8 +769,10 @@ const quick=document.getElementById('quick'),hint=document.getElementById('hint'
 quick.addEventListener('input',()=>{const p=parseHebrew(quick.value);const parts=[];{const tl=quickTargetList();if(tl&&!p.list)parts.push('לרשימת '+tl.name);}if(p.date)parts.push(fmtDate(p.date));if(p.time)parts.push(p.time);if(p.repeat)parts.push(repeatLabel(p.repeat));if(p.condition)parts.push('תנאי: '+p.condition);if(p.topic)parts.push('תזכורת לנושא');if(p.list)parts.push('רשימת '+(lists.find(l=>l.id===p.list)||{}).name);hint.textContent=quick.value.trim()?(parts.join(' · ')||'יתווסף להיום'):'';});
 quick.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();quickAdd();}});
 document.getElementById('addBtn').onclick=()=>{if(quick.value.trim())quickAdd();else openEdit(newItem({date:today()}),true);};
+const WA_TS=/\[\s*\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?,?\s+\d{1,2}:\d{2}(?::\d{2})?\s*\]\s*[^:\n]{1,40}:/; // WhatsApp timestamp + sender
 async function quickAdd(source='manual'){
   const raw=quick.value.trim();if(!raw)return;
+  if(WA_TS.test(raw)){quick.value='';hint.textContent='';openShared({title:'',text:raw,url:''});return;} // 0.23.5: a pasted WhatsApp chat goes through the smart parser, not the plain one
   const it=buildFromText(raw,source);
   if(it.type==='topic'&&!it.date){openEdit(it,true);return;}
   const twin=findDup(it);
@@ -1124,7 +1126,9 @@ function scanDateTime(t){
 }
 /* parse a shared payload {title,text,url} into a task; returns {it,sender,kind,body} */
 function smartShare(pl){
-  let text=String(pl.text||'').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g,'').replace(/\r/g,'').trim();const shTitle=String(pl.title||'').trim();const url=pl.url||null;
+  let text=String(pl.text||'').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g,'').replace(/\r/g,'').trim();
+  text=text.replace(/\s*(\[\s*\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?,?\s+\d{1,2}:\d{2}(?::\d{2})?\s*\]\s*[^:\n]{1,40}:)/g,(m,g,off)=>off===0?g:'\n'+g).trim(); // 0.23.5: pasted into a single-line field → newlines were lost; put each message back on its own line
+  const shTitle=String(pl.title||'').trim();const url=pl.url||null;
   let sender=null,subject=null,kind='text',allText=null;
   // WhatsApp export/forward prefixes: "[8/11/2026, 20:15] שם: …" or "8.11.26, 20:15 - שם: …"
   const waRe=/^\[?\s*\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?,?\s+\d{1,2}:\d{2}(?::\d{2})?\s*\]?\s*[-–]?\s*([^:\n]{1,40}):\s*/;
@@ -1204,7 +1208,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.23.4';
+const APP_VER='0.23.5';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
