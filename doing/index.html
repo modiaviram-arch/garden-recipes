@@ -568,7 +568,7 @@ function renderMore(){
   <div class="card" style="display:block">
     <div class="small" style="margin-bottom:8px">פעם ביום (ובלחיצה) האפליקציה שולחת לריפו מה בוצע, נדחה ונמחק — כך Claude יודע מה קרה — ומעלה גיבוי מלא <b>מוצפן</b> של כל הנתונים. שחזור: בטלפון חדש, "שחזר מגיבוי" + הסיסמה.</div>
     <form id="syncForm" action="#" method="post" onsubmit="return false" style="margin:0">
-    <input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true">
+    <input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none" tabindex="-1" aria-hidden="true">
     <label class="lbl">טוקן GitHub (Fine-grained, הרשאת Contents על garden-recipes בלבד — נשמר בטלפון)</label>
     <div class="row" style="gap:4px"><input id="ghToken" type="password" placeholder="github_pat_…" value="${esc(settings.ghToken||'')}" autocomplete="off"><button type="button" class="btn" data-eye="ghToken" style="flex:0 0 auto">👁</button></div>
     <label class="lbl">סיסמת הצפנה לגיבוי (בלעדיה הגיבוי לא נשלח; אין לה שחזור — תן לגוגל לשמור אותה כשהוא מציע)</label>
@@ -926,7 +926,7 @@ async function restoreFromGitHub(){
   try{const r=await fetch('backup.json?ts='+Date.now(),{cache:'no-store'});if(r.ok)env=await r.json();}catch(e){}
   if(!env||!env.data){toast('לא נמצא גיבוי בריפו');return;}
   openSheet(`<h3>⬇️ שחזור מגיבוי</h3><div class="small">גיבוי מ-${esc(env.exported?new Date(env.exported).toLocaleString('he-IL'):'?')} · ${esc(String(env.items||''))} פריטים · גרסה ${esc(env.app||'?')}</div>
-    <form action="#" onsubmit="return false" style="margin:0"><input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" tabindex="-1" aria-hidden="true"><label class="lbl" style="margin-top:10px">סיסמת ההצפנה (גוגל ימלא בטביעת אצבע אם נשמרה)</label><div class="row" style="gap:4px"><input id="rsPass" name="password" type="password" value="${esc(settings.backupPass||'')}" autocomplete="current-password"><button type="button" class="btn" id="rsEye" style="flex:0 0 auto">👁</button></div></form>
+    <form action="#" onsubmit="return false" style="margin:0"><input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none" tabindex="-1" aria-hidden="true"><label class="lbl" style="margin-top:10px">סיסמת ההצפנה (גוגל ימלא בטביעת אצבע אם נשמרה)</label><div class="row" style="gap:4px"><input id="rsPass" name="password" type="password" value="${esc(settings.backupPass||'')}" autocomplete="current-password"><button type="button" class="btn" id="rsEye" style="flex:0 0 auto">👁</button></div></form>
     <div class="small" style="margin-top:8px">השחזור ממזג: פריטים שקיימים כבר בטלפון מתעדכנים לגרסה החדשה יותר, חדשים נוספים, שום דבר לא נמחק.</div>
     <div class="btns" style="margin-top:10px"><button class="btn p" id="rsGo">שחזר</button><button class="btn" id="rsClose">ביטול</button></div>`);
   document.getElementById('rsClose').onclick=closeSheet;document.getElementById('rsEye').onclick=()=>{const i=document.getElementById('rsPass');i.type=i.type==='password'?'text':'password';};
@@ -1027,7 +1027,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.18.2';
+const APP_VER='0.18.3';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
