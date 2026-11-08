@@ -102,6 +102,7 @@ details summary{cursor:pointer;color:var(--blue);font-weight:600;padding:6px 2px
 .listhead{display:flex;align-items:center;gap:8px}
 .listhead .bell{font-size:18px;padding:2px 6px}
 hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+.dt{position:relative;display:block;flex:1;min-width:0}.dt input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;padding:0;z-index:2}.dt .dtv{display:block;font-size:16px;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.96);color:#1C2430;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dt .dtv.ph{color:#8A94A6}
 </style>
 </head>
 <body>
@@ -459,7 +460,7 @@ async function pullInbox(){
 
 /* ===================== Rendering ===================== */
 let view='today';
-function show(v){view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();}
+function show(v){if(v==='more'&&view!=='more')moreSub=null;view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(searchQ){searchQ='';searchIn.value='';searchRow.classList.remove('on');}show(b.dataset.v);});
 
 function contactBtns(it){if(it.status!=='open'||it.type!=='task')return '';const {c,name}=contactFor(it);if(c)return '<div class="btns"><button class="btn o" data-act="contact">📲 '+esc(c.name)+': וואטסאפ · טלפון'+(c.address?' · Waze':'')+'</button></div>';if(name)return '<div class="btns"><button class="btn" data-act="pick">👤 בחר איש קשר: '+esc(name)+'</button></div>';return '';}
@@ -551,12 +552,24 @@ function renderLog(){
     h+=`<div class="card" data-id="${it.id}"><div class="circle done">${it.status==='closed'?'–':'✓'}</div><div class="t" data-act="edit"><div class="n">${esc(it.title)}<span class="src">${SRC[it.source]||''}</span>${it.status==='closed'?'<span class="badge">לא נדרש</span>':''}</div><div class="m">${new Date(it.doneAt||it.updatedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}${it.list?' · '+((lists.find(l=>l.id===it.list)||{}).name||''):''}</div><div class="btns"><button class="btn" data-act="reopen">החזר למשימות</button></div></div><button class="x" data-act="trash">✕</button></div>`;}
   document.getElementById('v-log').innerHTML=h;
 }
+let moreSub=null; // null = menu · 'trash' | 'contacts' | 'settings'
+function moreHead(title){return `<div class="row" style="align-items:center;gap:8px;margin:4px 0 6px"><button class="btn" data-more="menu" style="flex:0 0 auto">› חזרה</button><h2 style="margin:0;flex:1">${title}</h2></div>`;}
 function renderMore(){
+  let h='';
+  if(moreSub==='trash'){
+    h+=moreHead('🗑️ סל (7 ימים)');
   const trash=items.filter(i=>i.status==='trash').sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));
-  let h=`<h2>🗑️ סל (7 ימים) <span class="cnt">${trash.length}</span></h2>`;
+    h+=`<div class="small" style="padding:0 8px 6px">${trash.length} פריטים</div>`;
   if(!trash.length)h+='<div class="small" style="padding:4px 8px">הסל ריק</div>';
   for(const it of trash)h+=`<div class="card" data-id="${it.id}"><div class="t"><div class="n">${esc(it.title)}</div><div class="m">נמחק ${fmtDate(ymd(new Date(it.deletedAt)))} · יימחק סופית בעוד ${Math.max(0,7-Math.floor((Date.now()-it.deletedAt)/864e5))} ימים</div><div class="btns"><button class="btn o" data-act="restore">שחזר</button><button class="btn d" data-act="purge">מחק לצמיתות</button></div></div></div>`;
-  h+=`<h2>⚙️ הגדרות</h2>
+  }else if(moreSub==='contacts'){
+    h+=moreHead('📇 אנשי קשר');
+    h+=`<div class="btns" style="margin:0 0 8px"><button class="btn p" data-cact="new">+ איש קשר</button></div>
+  ${contacts.length?contacts.map(c=>`<div class="card" data-cid="${c.id}"><div class="t" data-cact="edit"><div class="n">${esc(c.name)}</div><div class="m"><span dir="ltr">+${esc(c.phone)}</span>${c.aliases&&c.aliases.length?' · '+esc(c.aliases.join(', ')):''}${c.address?' · 🚗 '+esc(c.address):''}</div></div></div>`).join(''):'<div class="small" style="padding:4px 8px">עדיין אין. כשתכתוב משימה "עם ביאטריס" — האפליקציה תציע לבחור איש קשר.</div>'}
+`;
+  }else if(moreSub==='settings'){
+    h+=moreHead('⚙️ הגדרות וגיבוי');
+    h+=`<h2>כללי</h2>
   <div class="card" style="display:block">
     <label class="lbl">דילוג על שבת במשימות חוזרות (ברירת מחדל)</label>
     <div class="chips"><button data-set="skipSat" data-val="1" class="${settings.skipSat?'on':''}">לא בשבת</button><button data-set="skipSat" data-val="0" class="${!settings.skipSat?'on':''}">כולל שבת</button></div>
@@ -566,8 +579,6 @@ function renderMore(){
     <input id="model" value="${esc(settings.model||'claude-sonnet-5-5')}">
     <div class="btns"><button class="btn p" id="saveSettings">שמור הגדרות</button></div>
   </div>
-  <h2>📇 אנשי קשר <button class="btn" data-cact="new" style="font-size:12px">+ איש קשר</button></h2>
-  ${contacts.length?contacts.map(c=>`<div class="card" data-cid="${c.id}"><div class="t" data-cact="edit"><div class="n">${esc(c.name)}</div><div class="m"><span dir="ltr">+${esc(c.phone)}</span>${c.aliases&&c.aliases.length?' · '+esc(c.aliases.join(', ')):''}${c.address?' · 🚗 '+esc(c.address):''}</div></div></div>`).join(''):'<div class="small" style="padding:4px 8px">עדיין אין. כשתכתוב משימה "עם ביאטריס" — האפליקציה תציע לבחור איש קשר.</div>'}
   <h2>🔄 סנכרון עם Claude וגיבוי ל-GitHub</h2>
   <div class="card" style="display:block">
     <div class="small" style="margin-bottom:8px">פעם ביום (ובלחיצה) האפליקציה שולחת לריפו מה בוצע, נדחה ונמחק — כך Claude יודע מה קרה — ומעלה גיבוי מלא <b>מוצפן</b> של כל הנתונים. <b>סנכרון בין מכשירים (0.19):</b> כל מכשיר עם אותו טוקן ואותה סיסמה כותב קובץ מוצפן משלו, והאפליקציה ממזגת אותם בכל פתיחה — החדש יותר מנצח, מחיקה נשמרת 30 יום.</div>
@@ -589,8 +600,18 @@ function renderMore(){
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><button class="btn" id="shareBtn">שתף גיבוי…</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
   <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 8.11.2026 · מכשיר: ${esc(device?device.name:'')} · הנתונים נשמרים במכשיר; גיבוי וסנכרון מוצפנים ל-GitHub כשמוגדרים טוקן וסיסמה.</div>`;
+  }else{
+    const trashN=items.filter(i=>i.status==='trash').length;
+    h+=`<h2>עוד</h2>
+    <div class="card" data-more="trash" style="cursor:pointer"><div class="t"><div class="n">🗑️ סל</div><div class="m">${trashN?trashN+' פריטים · מחיקה סופית אחרי 7 ימים':'ריק'}</div></div><div class="m" style="font-size:22px">‹</div></div>
+    <div class="card" data-more="contacts" style="cursor:pointer"><div class="t"><div class="n">📇 אנשי קשר</div><div class="m">${contacts.length?contacts.length+' אנשי קשר':'עדיין אין'}</div></div><div class="m" style="font-size:22px">‹</div></div>
+    <div class="card" data-more="settings" style="cursor:pointer"><div class="t"><div class="n">⚙️ הגדרות וגיבוי</div><div class="m">שבת, מפתח API, סנכרון בין מכשירים, גיבוי ושחזור, ייצוא/ייבוא</div></div><div class="m" style="font-size:22px">‹</div></div>
+    <div class="card" style="display:block"><div class="btns"><button class="btn" id="syncBtn2">⬆️ שלח ל-Claude וגבה</button><button class="btn" id="devSyncBtn2">🔁 סנכרן מכשירים</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן</button></div>
+    <div class="small" style="margin-top:8px" id="devLine">…</div></div>
+    <div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · מכשיר: ${esc(device?device.name:'')}</div>`;
+  }
   document.getElementById('v-more').innerHTML=h;
-  DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});fillSyncLine();fillDevLine();
+  DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});fillSyncLine();fillDevLine();window.scrollTo(0,0);
 }
 let searchQ='';
 function hl(txt,q){const e=esc(txt);if(!q)return e;const i=e.toLowerCase().indexOf(esc(q).toLowerCase());return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length);}
@@ -657,6 +678,7 @@ function openSnooze(it){
 }
 async function trash(it){const prev=it.status;it.status='trash';it.deletedAt=Date.now();await save(it);toast('הועבר לסל','בטל',async()=>{it.status=prev==='trash'?'open':prev;it.deletedAt=null;await save(it);await render();toast('שוחזר');});}
 document.querySelector('main').addEventListener('click',async e=>{
+  const mo=e.target.closest('[data-more]');if(mo){moreSub=mo.dataset.more==='menu'?null:mo.dataset.more;render();return;}
   const b=e.target.closest('[data-act],[data-lact],[data-set],[data-cact]');if(!b)return;
   if(b.dataset.cact){if(b.dataset.cact==='new')openContactSheet({});else{const c=contacts.find(x=>x.id===b.closest('[data-cid]').dataset.cid);if(c)openContactSheet(c);}return;}
   if(b.dataset.set){settings[b.dataset.set]=b.dataset.val==='1';await saveSettings();render();return;}
@@ -734,7 +756,13 @@ mic.onclick=()=>{
 
 /* ===================== Sheets ===================== */
 const sheet=document.getElementById('sheet'),sheetBg=document.getElementById('sheetBg');
-function openSheet(html){sheet.innerHTML=html;sheet.classList.add('on');sheetBg.classList.add('on');}
+function openSheet(html){sheet.innerHTML=html;sheet.classList.add('on');sheetBg.classList.add('on');decorateDT(sheet);}
+/* 0.20: Chrome shows <input type=date/time> in the browser's locale (mm/dd/yyyy, AM/PM on an English PC). Overlay a transparent native input on an Israeli-formatted label; taps still open the native picker. */
+function fmtDMY(v){if(!v)return '';const d=new Date(v+'T00:00:00');if(isNaN(d))return v;return 'יום '+DAYS[d.getDay()]+' '+d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();}
+function decorateDT(root){for(const inp of root.querySelectorAll('input[type=date],input[type=time]')){if(inp.closest('.dt')||inp.style.display==='none')continue;
+  const w=document.createElement('span');w.className='dt';inp.parentNode.insertBefore(w,inp);const v=document.createElement('span');v.className='dtv';w.appendChild(v);w.appendChild(inp);
+  const upd=()=>{const x=inp.value;v.textContent=x?(inp.type==='date'?fmtDMY(x):x):(inp.type==='date'?'בחר תאריך…':'שעה…');v.classList.toggle('ph',!x);};inp.addEventListener('input',upd);inp.addEventListener('change',upd);upd();
+  w.addEventListener('click',e=>{if(e.target!==inp){try{inp.showPicker&&inp.showPicker();}catch(_){inp.focus();}}});}}
 function closeSheet(){sheet.classList.remove('on');sheetBg.classList.remove('on');}
 sheetBg.onclick=closeSheet;
 
@@ -963,6 +991,8 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='devSyncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await devSyncNow();}
   if(e.target.id==='syncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await offerPasswordSave();await syncNow(true);}
   if(e.target.id==='restoreBtn'){await restoreFromGitHub();}
+  if(e.target.id==='syncBtn2'){await syncNow(true);}
+  if(e.target.id==='devSyncBtn2'){await devSyncNow();}
   if(e.target.id==='shareBtn'){await shareBackup();}
   if(e.target.id==='updBtn'){checkUpdate(true);}
   if(e.target.id==='errBtn'){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';const S=JSON.parse(localStorage.getItem('synclog')||'[]');openSheet('<h3>יומן שגיאות</h3><div class="small" style="white-space:pre-wrap"><b>סנכרון:</b>\n'+esc(S.join('\n')||'(ריק)')+'</div><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\npick state: '+esc(localStorage.getItem('pickstate')||'(אין)')+'\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
@@ -1035,7 +1065,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.19';
+const APP_VER='0.20';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
