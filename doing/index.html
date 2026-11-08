@@ -361,12 +361,12 @@ async function pickContact(name,done){
 function openContactSheet(c,done){
   const isNew=!c.id;
   openSheet(`<h3>${isNew?'איש קשר חדש':'עריכת איש קשר'}</h3>
-    <label class="lbl">שם (כפי שמופיע במשימות)</label><input id="cName" value="${esc(c.name||'')}" placeholder="ביאטריס">
-    <label class="lbl">מספר וואטסאפ</label><input id="cPhone" type="tel" dir="ltr" value="${esc(c.phone?'+'+c.phone:'')}" placeholder="050-1234567">
-    <label class="lbl">שמות נוספים (מופרדים בפסיק)</label><input id="cAl" value="${esc((c.aliases||[]).join(', '))}" placeholder="בטי, ביאטריס כהן">
-    <label class="lbl">כתובת (לניווט ב-Waze)</label><input id="cAddr" value="${esc(c.address||'')}" placeholder="הרצל 12, רמת השרון">
+    <label class="lbl">שם (כפי שמופיע במשימות)</label><input id="cName" value="${esc(c.name||'')}">
+    <label class="lbl">מספר וואטסאפ</label><input id="cPhone" type="tel" dir="ltr" value="${esc(c.phone?'+'+c.phone:'')}">
+    <label class="lbl">שמות נוספים (מופרדים בפסיק)</label><input id="cAl" value="${esc((c.aliases||[]).join(', '))}">
+    <label class="lbl">כתובת (לניווט ב-Waze)</label><input id="cAddr" value="${esc(c.address||'')}">
     <label class="lbl">📋 או הדבק כאן vCard / טקסט של איש קשר (שם, מספר, כתובת) — השדות יתמלאו לבד</label>
-    <div class="row" style="margin:0;align-items:flex-start"><textarea id="cVcf" rows="3" dir="auto" placeholder="BEGIN:VCARD … END:VCARD  או: באטריס 052-8530677 גבעת אמנון ותמר 7"></textarea><button class="btn" id="cPaste" style="flex:0 0 auto">הדבק</button></div>
+    <div class="row" style="margin:0;align-items:flex-start"><textarea id="cVcf" rows="3" dir="auto"></textarea><button class="btn" id="cPaste" style="flex:0 0 auto">הדבק</button></div>
     <div class="btns" style="margin-top:10px"><button class="btn p" id="cSave">שמור</button>${!isNew?'<button class="btn d" id="cDel">מחק</button>':''}<button class="btn" id="cCancel">ביטול</button></div>`);
   const $=id=>document.getElementById(id);
   $('cSave').onclick=async()=>{const n=$('cName').value.trim(),ph=normPhone($('cPhone').value);if(!n||!ph){toast('צריך שם ומספר');return;}c.name=n;c.phone=ph;c.aliases=$('cAl').value.split(',').map(x=>x.trim()).filter(Boolean);c.address=$('cAddr').value.trim();if(!c.id)c.id=uid();if(!contacts.some(x=>x.id===c.id))contacts.push(c);await saveContacts();closeSheet();render();done&&done(c);};
@@ -1208,7 +1208,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.23.5';
+const APP_VER='0.23.6';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
