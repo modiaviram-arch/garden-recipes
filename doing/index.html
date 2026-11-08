@@ -1070,7 +1070,7 @@ function parseVCard(txt){
 function parseContactText(t){
   t=(t||'').trim();if(!t)return null;
   // Samsung/Google "share as text": "[Name] X [Mobile] +972… [Home] street city [Work info] …" (labels may be on one line or many)
-  const fields={};const re=/\[([^\]]+)\]\s*([^\[]*)/g;let m;while((m=re.exec(t))){const k=m[1].trim().toLowerCase();const val=m[2].trim();if(val&&!(k in fields))fields[k]=val;}
+  const fields={};const re=/\[([^\]]+)\]\s*([^\[]*)/g;let m;while((m=re.exec(t))){const k=m[1].trim().toLowerCase();if(/^\d{1,2}[./]\d{1,2}/.test(k))continue;const val=m[2].trim();if(val&&!(k in fields))fields[k]=val;}
   const out={name:'',phones:[],address:''};
   if(Object.keys(fields).length){
     out.name=fields['name']||fields['שם']||'';
@@ -1093,6 +1093,7 @@ async function takeSharedPayload(){
 async function handleSharedContact(payload){
   let v=null;
   if(payload.vcf&&/BEGIN:VCARD/i.test(payload.vcf))v=parseVCard(payload.vcf);
+  else if(!looksLikeContact([payload.title,payload.text].filter(Boolean).join('\n')))return false; // 0.23.4: a WhatsApp chat has [11/8, 15:11] brackets — not a contact card
   else v=parseContactText([payload.title,payload.text].filter(Boolean).join('\n'));
   if(!v)return false;
   const pend=JSON.parse(localStorage.getItem('pendingContactLink')||'null');localStorage.removeItem('pendingContactLink');
@@ -1203,7 +1204,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.23.3';
+const APP_VER='0.23.4';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
