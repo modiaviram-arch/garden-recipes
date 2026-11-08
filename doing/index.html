@@ -439,22 +439,63 @@ async function maintenance(){
   return changed;
 }
 
+/* ===================== Duplicates (0.21) ===================== */
+/* fingerprint: lower-case, strip punctuation/quotes/dashes, drop short function words, sorted token set */
+const DUP_STOP=new Set(['את','של','על','עם','אל','גם','כבר','אולי','צריך','לא','או','ו','ה','ל','ב','מ','כ','the','a','to','and','of','for']);
+function dupTokens(t){return String(t||'').toLowerCase().replace(/[״"'׳`.,;:!?()\[\]{}–—\-\/\\|+*#@&]/g,' ').split(/\s+/).map(w=>w.trim()).filter(w=>w&&!DUP_STOP.has(w));}
+function dupFp(t){return [...new Set(dupTokens(t))].sort().join(' ');}
+function dupSim(a,b){const A=new Set(dupTokens(a)),B=new Set(dupTokens(b));if(!A.size||!B.size)return 0;let inter=0;for(const w of A)if(B.has(w))inter++;return inter/(A.size+B.size-inter);}
+function dupDateClose(a,b){if(!a.date||!b.date)return true;return Math.abs(new Date(a.date)-new Date(b.date))<=7*864e5;}
+/* an open item that is the "same" task: identical fingerprint, or ≥80% shared words; dates within a week (or undated); same list when both have one */
+function findDup(cand,strict=false){
+  const fp=dupFp(cand.title);if(!fp)return null;
+  for(const it of items){
+    if(it.status!=='open'||it.id===cand.id)continue;
+    if(cand.extId&&it.extId===cand.extId)return it;
+    if(cand.list&&it.list&&cand.list!==it.list)continue;
+    if(!dupDateClose(cand,it))continue;
+    if(dupFp(it.title)===fp)return it;
+    if(!strict&&dupSim(cand.title,it.title)>=0.8)return it;
+  }
+  return null;
+}
+function dupEvent(cand,twin,how){
+  events.push({ts:new Date().toISOString(),type:'dup',id:twin.id,device:device?device.name:null,extId:cand.extId||null,title:cand.title,dupOf:twin.title,how});
+  if(events.length>600)events=events.slice(-600);DB.kset('events',events).catch(()=>{});
+}
+/* one-time cleanup of duplicates that already slipped in: identical fingerprint among open tasks → keep the oldest, move the rest to trash (recoverable for 7 days) */
+async function dedupExisting(){
+  if(await DB.kget('dedup21'))return 0;
+  const open=items.filter(i=>i.status==='open'&&i.type!=='topic').sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  let n=0;
+  for(let i=0;i<open.length;i++){const a=open[i];if(a.status!=='open')continue;const fa=dupFp(a.title);if(!fa)continue;
+    for(let j=i+1;j<open.length;j++){const b=open[j];if(b.status!=='open')continue;
+      if(a.list&&b.list&&a.list!==b.list)continue;if(!dupDateClose(a,b))continue;
+      if(dupFp(b.title)===fa){if(a.note&&!b.note){}else if(b.note&&!a.note){a.note=b.note;}b.status='trash';b.deletedAt=Date.now();dupEvent(b,a,'cleanup');await save(b);await save(a);n++;}
+    }}
+  await DB.kset('dedup21',Date.now());
+  if(n)toast('נוקו '+n+' משימות כפולות (נמצאות בסל המחזור)');
+  return n;
+}
+
 /* ===================== Inbox from Claude ===================== */
 async function pullInbox(){
   try{
     const res=await fetch('inbox.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)return;
     const data=await res.json();
-    const imported=importedSet;let n=0;
+    const imported=importedSet;let n=0,dups=0;
     for(const t of (data.tasks||[])){
       if(!t.id||imported.has(t.id))continue;
       if(items.some(x=>x.extId===t.id)){imported.add(t.id);continue;} // 0.19: already received via another device
+      const cand={title:t.title||'',date:t.date||null,list:t.list||null,extId:t.id};
+      const twin=findDup(cand);if(twin){dupEvent(cand,twin,'inbox');imported.add(t.id);dups++;continue;} // 0.21: same task already open → skip
       const it=newItem({title:t.title||'',note:t.note||'',date:t.date||(t.list?null:today()),time:t.time||null,source:t.source||'claude',list:t.list||null,extId:t.id,type:t.type||'task',condition:t.condition||'',url:t.url||null});
       if(t.repeat)it.repeat=t.repeat;
       await save(it);imported.add(t.id);n++;
     }
     await DB.kset('imported',[...imported]);
     if(data.calendar){await DB.kset('calendar',data.calendar);await DB.kset('calendarAt',data.generated||Date.now());}
-    if(n)toast('נקלטו '+n+' פריטים חדשים');
+    if(n||dups)toast('נקלטו '+n+' פריטים חדשים'+(dups?' · דולגו '+dups+' כפולים':''));
   }catch(e){/* offline */}
 }
 
@@ -728,6 +769,8 @@ async function quickAdd(source='manual'){
   const raw=quick.value.trim();if(!raw)return;
   const it=buildFromText(raw,source);
   if(it.type==='topic'&&!it.date){openEdit(it,true);return;}
+  const twin=findDup(it);
+  if(twin){quick.value='';hint.textContent='';dupEvent(it,twin,'quick');toast('כבר קיימת: "'+twin.title.slice(0,40)+'"','הוסף בכל זאת',async()=>{await save(it);toast('נוסף: '+it.title);render();});return;}
   await save(it);quick.value='';hint.textContent='';toast('נוסף: '+it.title);render();
 }
 function buildFromText(raw,source){
@@ -833,7 +876,9 @@ function openEdit(it,isNew=false){
     if(it.type==='task'&&!it.date&&!it.list)it.date=today();
     if(it.type!=='task'&&!it.date)it.date=today();
   };
-  $('eSave').onclick=async()=>{collect();await save(it);closeSheet();toast('נשמר');render();};
+  $('eSave').onclick=async()=>{collect();
+    if(isNew){const twin=findDup(it);if(twin&&!it.__force){it.__force=true;dupEvent(it,twin,'edit');toast('כבר קיימת משימה דומה: "'+twin.title.slice(0,40)+'" — לחץ שמור שוב כדי להוסיף בכל זאת');return;}}
+    delete it.__force;await save(it);closeSheet();toast('נשמר');render();};
   if($('eDone'))$('eDone').onclick=async()=>{collect();it.status='done';it.doneAt=Date.now();await save(it);if(it.repeat){const nd=nextOccurrence(it,today());await save(newItem({title:it.title,note:it.note,time:it.time,list:it.list,source:it.source,repeat:it.repeat,date:nd}));}closeSheet();render();openFollowUp(it);};
   if($('eFollow'))$('eFollow').onclick=()=>{collect();save(it);openFollowUp(it);};
   if($('eTrash'))$('eTrash').onclick=async()=>{await trash(it);closeSheet();render();};
@@ -1065,7 +1110,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.20';
+const APP_VER='0.21';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
@@ -1179,7 +1224,7 @@ async function fillDevLine(){const e=document.getElementById('devLine');if(!e)re
 (async function(){
   await openDB();await load();
   if(!(await DB.kget('lists')))await saveLists();
-  await maintenance();
+  await maintenance();await dedupExisting();
   await render();
   let shared=false;
   if(new URL(location.href).searchParams.get('shared')==='1'){history.replaceState(null,'',location.pathname);const pl=await takeSharedPayload();if(pl){if(!(await handleSharedContact(pl))){const t=[pl.title,pl.text,pl.url].filter(Boolean).join(' ').trim();if(t){const first=t.split('\n').map(x=>x.trim()).filter(Boolean)[0]||t;const it=buildFromText(first.slice(0,140),'share');if(t.length>first.length)it.note=t.slice(0,1000);openEdit(it,true);}}shared=true;}}
