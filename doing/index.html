@@ -1117,19 +1117,21 @@ function scanDateTime(t){
   if(!out.date){m=t.match(/\b(\d{1,2})\s+ב(ינואר|פברואר|מרץ|אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|דצמבר)\b/);
     if(m){const mi=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'].indexOf(m[2])+1;let d=ymd3(Y,mi,+m[1]);if(d&&d<addDays(today(),-30))d=ymd3(Y+1,mi,+m[1]);if(d)out.date=d;}}
   if(!out.date){if(/(?<![א-ת])[לב]?מחרתיים(?![א-ת])/.test(t))out.date=addDays(today(),2);else if(/(?<![א-ת])[לב]?מחר(?![א-ת])/.test(t))out.date=addDays(today(),1);else if(/(?<![א-ת])[לב]?היום(?![א-ת])/.test(t))out.date=today();}
-  if(!out.date){m=t.match(/(?:^|\s)(?:ב?יום\s+|ב)(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)(?![א-ת])/);if(m)out.date=nextWeekday(WD_HE[m[1]]);}
+  if(!out.date){m=t.match(/(?:^|\s)(?:[בל]?יום\s+|[בל])(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)(?![א-ת])/);if(m)out.date=nextWeekday(WD_HE[m[1]]);}
   if(!out.date&&/סוף השבוע|בסופ"ש|בסופש/.test(t))out.date=nextWeekday(5);
   return out;
 }
 /* parse a shared payload {title,text,url} into a task; returns {it,sender,kind,body} */
 function smartShare(pl){
-  let text=String(pl.text||'').replace(/\r/g,'').trim();const shTitle=String(pl.title||'').trim();const url=pl.url||null;
+  let text=String(pl.text||'').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g,'').replace(/\r/g,'').trim();const shTitle=String(pl.title||'').trim();const url=pl.url||null;
   let sender=null,subject=null,kind='text';
   // WhatsApp export/forward prefixes: "[8/11/2026, 20:15] שם: …" or "8.11.26, 20:15 - שם: …"
   const waRe=/^\[?\s*\d{1,2}[./]\d{1,2}[./]\d{2,4},?\s+\d{1,2}:\d{2}(?::\d{2})?\s*\]?\s*[-–]?\s*([^:\n]{1,40}):\s*/;
   const lines=text.split('\n');let waHits=0;
-  const stripped=lines.map(l=>{const m=l.match(waRe);if(m){waHits++;if(!sender)sender=m[1].trim();return l.slice(m[0].length);}return l;});
-  if(waHits){kind='whatsapp';text=stripped.join('\n').trim();}
+  const senders=[],lineBy=[];const stripped=lines.map(l=>{const m=l.match(waRe);if(m){waHits++;senders.push(m[1].trim());lineBy.push([m[1].trim(),l.slice(m[0].length)]);return l.slice(m[0].length);}return l;});
+  if(waHits){kind='whatsapp';text=stripped.join('\n').trim();const SELF=/^(מודי|modi|מודי אבירם|אני|you|me)$/i;const others=senders.filter(n=>!SELF.test(n));const pick=others.length?others:senders;sender=pick.sort((a,b)=>pick.filter(x=>x===b).length-pick.filter(x=>x===a).length)[0]||null;
+    if(sender&&others.length){const mine=lineBy.filter(x=>x[0]===sender).map(x=>x[1]).join('\n').trim();if(mine)text=mine;} // the other party's words carry the task
+  }
   // Email headers (Outlook / Gmail "share as text")
   const hdr=/^(from|מאת|sender|שולח)\s*:\s*(.+)$/i,subj=/^(subject|נושא)\s*:\s*(.+)$/i,other=/^(to|אל|cc|עותק|sent|נשלח|date|תאריך|importance|חשיבות)\s*:/i;
   const kept=[];let emailHits=0;
@@ -1145,8 +1147,12 @@ function smartShare(pl){
   // gist: first meaningful sentence
   const noGreet=body.replace(/^(?:היי|הי|שלום|בוקר טוב|ערב טוב|צהריים טובים|מודי|יקירי)[^,.!:\n]{0,25}[,.!:]?\s*/,'').replace(/^(?:היי|הי|שלום)\s*[,.!]?\s*/,'');
   const firstSent=(noGreet.split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim()).find(x=>x.length>=4&&!/^(תודה|בברכה|להתראות)/.test(x))||noGreet||body).replace(/[,\s]*(?:תודה|בברכה)[.!]?\s*$/,'').slice(0,90).trim();
-  let gist=subject||firstSent||'הודעה ששותפה';
-  if(sender&&!/^(אני|me|you)$/i.test(sender)){const clean=sender.replace(/\s*\(.*?\)\s*/g,'').trim();gist='לענות ל'+(/^[A-Za-z]/.test(clean)?'-':'')+clean+': '+gist;}
+  const cueRe=/\d{1,2}[./]\d{1,2}|\d{1,2}:\d{2}|מחר|היום|ב?יום\s+(?:ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)|ל(?:ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)|סוף השבוע|\d{1,2}\s+ב(?:ינואר|פברואר|מרץ|אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|דצמבר)/;
+  const cueSent=noGreet.split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim()).find(x=>cueRe.test(x));
+  let gist=subject||(cueSent&&cueSent.length>=6?cueSent.slice(0,90):firstSent)||'הודעה ששותפה';
+  if(sender&&!/^(אני|me|you)$/i.test(sender)){const clean=sender.replace(/\s*\(.*?\)\s*/g,'').trim();const hy=/^[A-Za-z]/.test(clean)?'-':'';
+    if(dt.date&&!subject&&!new RegExp(clean.split(' ')[0]).test(gist))gist=gist.replace(/[.!?]+$/,'')+' עם '+clean; // appointment / arrangement → 'X עם שם'
+    else gist='לענות ל'+hy+clean+': '+gist;}
   const it=newItem({title:gist.slice(0,140),raw:text.slice(0,300),date:dt.date||today(),time:dt.time,source:'share',url,note:(body.length>gist.length?body:text).slice(0,1500)});
   if(sender){const c=findContact(sender.replace(/\s*\(.*?\)\s*/g,'').trim());if(c)it.contact=c.id;}
   return {it,sender,kind,body,subject};
@@ -1191,7 +1197,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.23';
+const APP_VER='0.23.1';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
