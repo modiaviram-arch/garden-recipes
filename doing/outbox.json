@@ -1,0 +1,302 @@
+{
+ "generated": "2026-11-08T11:45:32.481Z",
+ "app": "0.18.3",
+ "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
+ "since_last_sync": null,
+ "events_since_last_sync": [],
+ "recent_events": [],
+ "open_tasks": [
+  {
+   "id": "mw3keo7v28tr2",
+   "extId": "tt-6ae98ca648f474e51ba5a3f3",
+   "title": "לנסות לתקן מחשב קטן",
+   "date": "2026-11-08",
+   "list": null,
+   "rollovers": 3,
+   "overdue": false
+  },
+  {
+   "id": "mw3keo7vdt3ab",
+   "extId": "tt-6ade36175a56b43b4e289e09",
+   "title": "להתחיל לעשות תרגילי כח",
+   "date": "2026-11-08",
+   "list": null,
+   "rollovers": 3,
+   "overdue": false
+  },
+  {
+   "id": "mw3keo7vul6tx",
+   "extId": "tt-6ade35ea5a56b43b4e289dfa",
+   "title": "להוסיף שיעור פלדנקרייז מהאינטרנט",
+   "date": "2026-11-08",
+   "list": null,
+   "rollovers": 3,
+   "overdue": false
+  },
+  {
+   "id": "mw4zcw9f2gf9w",
+   "extId": null,
+   "title": "לבדוק לורד מפריז תוכניות בניין עיר",
+   "date": "2026-11-08",
+   "list": null,
+   "rollovers": 2,
+   "overdue": false
+  },
+  {
+   "id": "mw5j2va4i02zb",
+   "extId": null,
+   "title": "להכין תזכורת שבועית, ליום שישי בשעה 20:00 לרישום לשיעור פלדנקרריז בקאונטרי של טבעון",
+   "date": "2026-11-14",
+   "list": "טיפולים",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw6fatzjplfn0",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "date": "2026-11-09",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7npcgh3zda8",
+   "extId": "claude-20261108-kurkum-plant",
+   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "date": "2026-12-02",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7npcghf5vy6",
+   "extId": "claude-20261108-kurkum-harvest",
+   "title": "מכל 4.1 – שליפת הכורכום",
+   "date": "2026-11-23",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7npcghqeqhr",
+   "extId": "claude-20261108-kurkum-seedlings",
+   "title": "לקנות שתילים למכל 4.1: 4 מנגולד, 6–8 חסה, 6 תרד",
+   "date": "2026-11-30",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7npcgimeils",
+   "extId": "claude-20261108-kurkum-irrigation",
+   "title": "לפני הנסיעה – בדיקת השקיה אוטומטית למכל 4.1 ולגינה",
+   "date": "2026-12-13",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcomfi4p",
+   "extId": "cl-garden-20261108-1",
+   "title": "כורכום (מכל 4.1) – לשלוף את קני השורש",
+   "date": "2026-11-29",
+   "list": "גינה",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcp8awp4",
+   "extId": "cl-garden-20261108-2",
+   "title": "קני כורכום – לשטוף, לייבש בצל 2–3 ימים, ואז מקרר/מקפיא",
+   "date": "2026-11-29",
+   "list": "גינה",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcp9rc04",
+   "extId": "cl-garden-20261108-3",
+   "title": "מכל 4.1 – רענון מצע אחרי הכורכום",
+   "date": "2026-11-29",
+   "list": "גינה",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcpymh2e",
+   "extId": "cl-garden-20261108-4",
+   "title": "לקנות שתילים למכל 4.1: 4 מנגולד, 6–8 חסה (ערבית/רומית), 6 תרד",
+   "date": "2026-11-27",
+   "list": "גינה",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcq4hph6",
+   "extId": "cl-nyc-20261108-2",
+   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+   "date": "2026-11-10",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcq9k900",
+   "extId": "cl-nyc-20261108-3",
+   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+   "date": "2026-11-10",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcqiy5zc",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "date": "2026-11-09",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcqr6nh9",
+   "extId": "cl-garden-20261108-6",
+   "title": "לדווח לקלוד: שליפת הכורכום ושתילת 4.1 בוצעו – לעדכון ספר הגינה",
+   "date": "2026-12-02",
+   "list": "גינה",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcqsllc2",
+   "extId": "cl-garden-20261108-5",
+   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "date": "2026-12-01",
+   "list": "גינה",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcr2fzoa",
+   "extId": "cl-nyc-20261108-5",
+   "title": "לבדוק תוקף דרכונים (רחל ואני) ואישור ESTA לכניסה לארה\"ב",
+   "date": "2026-11-12",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcr8j2pb",
+   "extId": "cl-nyc-20261108-6",
+   "title": "ביטוח נסיעות לחו\"ל 15–30.12, לרחל ולי",
+   "date": "2026-11-20",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcrbj9kk",
+   "extId": "cl-nyc-20261108-7",
+   "title": "לקנות מתנות לגל (7) ואדם (4) לנסיעה",
+   "date": "2026-11-25",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcrgadgc",
+   "extId": "cl-nyc-20261108-4",
+   "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
+   "date": "2026-11-12",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcrrprjy",
+   "extId": "cl-nyc-20261108-9",
+   "title": "כרטיסים מתוזמנים מראש: 9/11 Memorial Museum (שלישי 22.12 בוקר), Frick, Neue Galerie (17.12)",
+   "date": "2026-12-01",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcrvbz4c",
+   "extId": "cl-nyc-20261108-8",
+   "title": "ג׳אז בניו יורק – לבחור מתוך דוח המועדונים (מגיע 27.11) ולהזמין",
+   "date": "2026-11-28",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcsb3jvv",
+   "extId": "cl-nyc-20261108-11",
+   "title": "צ'ק-אין לטיסה לניו יורק (15.12) – נפתח 24 שעות לפני",
+   "date": "2026-12-14",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7o3mcsjyaob",
+   "extId": "cl-nyc-20261108-10",
+   "title": "eSIM / חבילת גלישה לארה\"ב + להודיע לחברת האשראי על הנסיעה",
+   "date": "2026-12-08",
+   "list": "נסיעות",
+   "rollovers": 0,
+   "overdue": false
+  }
+ ],
+ "done_last_14_days": [
+  {
+   "id": "mw4zcao8vswlr",
+   "extId": null,
+   "title": "להזמין שלט למאוורר סטאר שבע",
+   "status": "done",
+   "doneAt": "2026-11-07T19:39:15.060Z",
+   "list": null
+  },
+  {
+   "id": "mw6amof90zty7",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "status": "done",
+   "doneAt": "2026-11-07T11:18:23.433Z",
+   "list": null
+  }
+ ],
+ "stats": {
+  "open": 27,
+  "overdue": 0,
+  "stuck": 3,
+  "lists": [
+   {
+    "name": "רעיונות",
+    "open": 0
+   },
+   {
+    "name": "שיחות",
+    "open": 0
+   },
+   {
+    "name": "נסיעות",
+    "open": 11
+   },
+   {
+    "name": "טיפולים",
+    "open": 1
+   },
+   {
+    "name": "גינה",
+    "open": 6
+   },
+   {
+    "name": "קניות",
+    "open": 0
+   }
+  ]
+ }
+}
