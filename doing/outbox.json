@@ -1,6 +1,6 @@
 {
- "generated": "2026-11-08T13:40:54.655Z",
- "app": "0.19",
+ "generated": "2026-11-08T13:40:59.803Z",
+ "app": "0.20",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
  "since_last_sync": null,
  "events_since_last_sync": [
@@ -89,12 +89,39 @@
    "overdue": false
   },
   {
+   "id": "mw4zcw9f2gf9w",
+   "extId": null,
+   "title": "לבדוק לורד מפריז תוכניות בניין עיר",
+   "date": "2026-11-08",
+   "list": null,
+   "rollovers": 2,
+   "overdue": false
+  },
+  {
+   "id": "mw5j2va4i02zb",
+   "extId": null,
+   "title": "להכין תזכורת שבועית, ליום שישי בשעה 20:00 לרישום לשיעור פלדנקרריז בקאונטרי של טבעון",
+   "date": "2026-11-14",
+   "list": "טיפולים",
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
    "id": "mw6c94crzvgfv",
    "extId": null,
    "title": "לקבוע טיפול עם באטריס",
    "date": "2026-11-08",
    "list": null,
    "rollovers": 1,
+   "overdue": false
+  },
+  {
+   "id": "mw6fatzjplfn0",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "date": "2026-11-09",
+   "list": null,
+   "rollovers": 0,
    "overdue": false
   },
   {
@@ -283,33 +310,6 @@
    "title": "צ'ק-אין לטיסה לניו יורק (15.12) – נפתח 24 שעות לפני",
    "date": "2026-12-14",
    "list": "נסיעות",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw4zcw9f2gf9w",
-   "extId": null,
-   "title": "לבדוק לורד מפריז תוכניות בניין עיר",
-   "date": "2026-11-08",
-   "list": null,
-   "rollovers": 2,
-   "overdue": false
-  },
-  {
-   "id": "mw5j2va4i02zb",
-   "extId": null,
-   "title": "להכין תזכורת שבועית, ליום שישי בשעה 20:00 לרישום לשיעור פלדנקרריז בקאונטרי של טבעון",
-   "date": "2026-11-14",
-   "list": "טיפולים",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw6fatzjplfn0",
-   "extId": null,
-   "title": "לקבוע טיפול עם באטריס",
-   "date": "2026-11-09",
-   "list": null,
    "rollovers": 0,
    "overdue": false
   }
