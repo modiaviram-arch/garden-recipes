@@ -1124,13 +1124,13 @@ function scanDateTime(t){
 /* parse a shared payload {title,text,url} into a task; returns {it,sender,kind,body} */
 function smartShare(pl){
   let text=String(pl.text||'').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g,'').replace(/\r/g,'').trim();const shTitle=String(pl.title||'').trim();const url=pl.url||null;
-  let sender=null,subject=null,kind='text';
+  let sender=null,subject=null,kind='text',allText=null;
   // WhatsApp export/forward prefixes: "[8/11/2026, 20:15] שם: …" or "8.11.26, 20:15 - שם: …"
-  const waRe=/^\[?\s*\d{1,2}[./]\d{1,2}[./]\d{2,4},?\s+\d{1,2}:\d{2}(?::\d{2})?\s*\]?\s*[-–]?\s*([^:\n]{1,40}):\s*/;
+  const waRe=/^\[?\s*\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?,?\s+\d{1,2}:\d{2}(?::\d{2})?\s*\]?\s*[-–]?\s*([^:\n]{1,40}):\s*/;
   const lines=text.split('\n');let waHits=0;
   const senders=[],lineBy=[];const stripped=lines.map(l=>{const m=l.match(waRe);if(m){waHits++;senders.push(m[1].trim());lineBy.push([m[1].trim(),l.slice(m[0].length)]);return l.slice(m[0].length);}return l;});
   if(waHits){kind='whatsapp';text=stripped.join('\n').trim();const SELF=/^(מודי|modi|מודי אבירם|אני|you|me)$/i;const others=senders.filter(n=>!SELF.test(n));const pick=others.length?others:senders;sender=pick.sort((a,b)=>pick.filter(x=>x===b).length-pick.filter(x=>x===a).length)[0]||null;
-    if(sender&&others.length){const mine=lineBy.filter(x=>x[0]===sender).map(x=>x[1]).join('\n').trim();if(mine)text=mine;} // the other party's words carry the task
+    allText=text;if(sender&&others.length){const mine=lineBy.filter(x=>x[0]===sender).map(x=>x[1]).join('\n').trim();if(mine)text=mine;} // the other party's words carry the task; the whole chat still supplies date/time
   }
   // Email headers (Outlook / Gmail "share as text")
   const hdr=/^(from|מאת|sender|שולח)\s*:\s*(.+)$/i,subj=/^(subject|נושא)\s*:\s*(.+)$/i,other=/^(to|אל|cc|עותק|sent|נשלח|date|תאריך|importance|חשיבות)\s*:/i;
@@ -1143,13 +1143,17 @@ function smartShare(pl){
   // body = text without signatures / quoted replies
   let body=text.split(/\n(?:--\s*$|___+|נשלח מה-?iPhone|Sent from my|On .* wrote:|ב-.* כתב)/m)[0].trim();
   if(!body&&subject)body=subject;
-  const dt=scanDateTime(body+' '+(subject||''));
+  const dt=scanDateTime((allText||body)+' '+(subject||''));
   // gist: first meaningful sentence
   const noGreet=body.replace(/^(?:היי|הי|שלום|בוקר טוב|ערב טוב|צהריים טובים|מודי|יקירי)[^,.!:\n]{0,25}[,.!:]?\s*/,'').replace(/^(?:היי|הי|שלום)\s*[,.!]?\s*/,'');
   const firstSent=(noGreet.split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim()).find(x=>x.length>=4&&!/^(תודה|בברכה|להתראות)/.test(x))||noGreet||body).replace(/[,\s]*(?:תודה|בברכה)[.!]?\s*$/,'').slice(0,90).trim();
   const cueRe=/\d{1,2}[./]\d{1,2}|\d{1,2}:\d{2}|מחר|היום|ב?יום\s+(?:ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)|ל(?:ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)|סוף השבוע|\d{1,2}\s+ב(?:ינואר|פברואר|מרץ|אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|דצמבר)/;
   const cueSent=noGreet.split(/(?<=[.!?])\s+|\n+/).map(x=>x.trim()).find(x=>cueRe.test(x));
   let gist=subject||(cueSent&&cueSent.length>=6?cueSent.slice(0,90):firstSent)||'הודעה ששותפה';
+  const topicRe=/(?<![א-ת])(?:ה)?(פגישה|שיעור(?:\s+(?!הבא|הזה|שלנו|הקרוב)[א-ת]{3,})?|תור(?:\s+ל[א-ת]+)?|טיפול|ארוחת\s+[א-ת]+|קפה|ביקור|הרצאה|אימון|חזרה)(?![א-ת])/;
+  const topicM=body.match(topicRe)||(allText||'').match(topicRe);
+  if(sender&&dt.date&&!subject&&topicM){gist=topicM[1]+(dt.time?' ב-'+dt.time:'');} // 'פגישה ב-12:15' → + ' עם <שם>' below
+  gist=gist.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/\s{2,}/g,' ').trim();
   if(sender&&!/^(אני|me|you)$/i.test(sender)){const clean=sender.replace(/\s*\(.*?\)\s*/g,'').trim();const hy=/^[A-Za-z]/.test(clean)?'-':'';
     if(dt.date&&!subject&&!new RegExp(clean.split(' ')[0]).test(gist))gist=gist.replace(/[.!?]+$/,'')+' עם '+clean; // appointment / arrangement → 'X עם שם'
     else gist='לענות ל'+hy+clean+': '+gist;}
@@ -1197,7 +1201,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.23.1';
+const APP_VER='0.23.2';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
