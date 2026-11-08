@@ -179,13 +179,31 @@ async function load(){
   lists=(await DB.kget('lists'))||DEFAULT_LISTS.slice();
   if(!lists.some(l=>l.id==='garden'||l.name==='גינה')){lists.splice(Math.min(4,lists.length),0,{id:'garden',name:'גינה'});await DB.kset('lists',lists);} // 0.17: רשימת גינה כסעיף 5
   contacts=(await DB.kget('contacts'))||[];{let ch=false;for(const c of contacts){const n=normPhone(c.phone);if(n!==c.phone){c.phone=n;ch=true;}}if(ch)await DB.kset('contacts',contacts);}
-  settings=Object.assign({skipSat:true,model:'claude-sonnet-5-5',apiKey:''},(await DB.kget('settings'))||{});
+  settings=Object.assign({skipSat:true,model:'claude-sonnet-5-5',apiKey:'',ghToken:'',backupPass:'',syncAuto:true},(await DB.kget('settings'))||{});
+  events=(await DB.kget('events'))||[];for(const it of items)shadow.set(it.id,shape(it));
   if(settings.model==='claude-haiku-5-5'){settings.model='claude-sonnet-5-5';await DB.kset('settings',settings);} // 0.6.3: Haiku misses Hebrew handwriting
 }
 const saveLists=()=>DB.kset('lists',lists);
 const saveContacts=()=>DB.kset('contacts',contacts);
 const saveSettings=()=>DB.kset('settings',settings);
-async function save(it){it.updatedAt=Date.now();await DB.put(it);const i=items.findIndex(x=>x.id===it.id);if(i>=0)items[i]=it;else items.push(it);}
+async function save(it){it.updatedAt=Date.now();trackEvent(it);await DB.put(it);const i=items.findIndex(x=>x.id===it.id);if(i>=0)items[i]=it;else items.push(it);}
+/* ---- change log for the outbox (0.18): compare against the last saved shape of each item ---- */
+const shadow=new Map();let events=[];
+const shape=it=>({status:it.status,date:it.date,list:it.list,title:it.title});
+function trackEvent(it){
+  const prev=shadow.get(it.id);const T=today();let type=null,extra={};
+  if(!prev){if(it.status==='open'&&['manual','voice','share'].includes(it.source))type='added';}
+  else if(prev.status!==it.status){
+    if(it.status==='done')type='done';else if(it.status==='closed')type='closed';else if(it.status==='trash')type='deleted';
+    else if(it.status==='open'&&(prev.status==='done'||prev.status==='closed'))type='reopened';else if(it.status==='open'&&prev.status==='trash')type='restored';}
+  else if(it.status==='open'&&prev.date!==it.date&&!(it.date===T&&prev.date&&prev.date<T)){type=it.date?'snoozed':'undated';extra={from:prev.date,to:it.date};}
+  else if(it.status==='open'&&prev.list!==it.list&&it.list){type='moved';extra={list:(lists.find(l=>l.id===it.list)||{}).name||it.list};}
+  shadow.set(it.id,shape(it));
+  if(!type)return;
+  events.push(Object.assign({ts:new Date().toISOString(),type,id:it.id,extId:it.extId||null,title:it.title,list:it.list?((lists.find(l=>l.id===it.list)||{}).name||it.list):null,date:it.date||null},extra));
+  if(events.length>600)events=events.slice(-600);
+  DB.kset('events',events).catch(()=>{});
+}
 
 function newItem(o){return Object.assign({id:uid(),type:'task',title:'',note:'',date:null,time:null,list:null,source:'manual',status:'open',createdAt:Date.now(),doneAt:null,deletedAt:null,rollovers:0,raw:'',condition:'',windowEnd:null,repeat:null,checklist:null,photo:null,extId:null,contact:null},o);}
 
@@ -546,12 +564,23 @@ function renderMore(){
   </div>
   <h2>📇 אנשי קשר <button class="btn" data-cact="new" style="font-size:12px">+ איש קשר</button></h2>
   ${contacts.length?contacts.map(c=>`<div class="card" data-cid="${c.id}"><div class="t" data-cact="edit"><div class="n">${esc(c.name)}</div><div class="m"><span dir="ltr">+${esc(c.phone)}</span>${c.aliases&&c.aliases.length?' · '+esc(c.aliases.join(', ')):''}${c.address?' · 🚗 '+esc(c.address):''}</div></div></div>`).join(''):'<div class="small" style="padding:4px 8px">עדיין אין. כשתכתוב משימה "עם ביאטריס" — האפליקציה תציע לבחור איש קשר.</div>'}
-  <h2>💾 גיבוי</h2>
-  <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button></div>
+  <h2>🔄 סנכרון עם Claude וגיבוי ל-GitHub</h2>
+  <div class="card" style="display:block">
+    <div class="small" style="margin-bottom:8px">פעם ביום (ובלחיצה) האפליקציה שולחת לריפו מה בוצע, נדחה ונמחק — כך Claude יודע מה קרה — ומעלה גיבוי מלא <b>מוצפן</b> של כל הנתונים. שחזור: בטלפון חדש, "שחזר מגיבוי" + הסיסמה.</div>
+    <label class="lbl">טוקן GitHub (Fine-grained, הרשאת Contents על garden-recipes בלבד — נשמר בטלפון)</label>
+    <input id="ghToken" type="password" placeholder="github_pat_…" value="${esc(settings.ghToken||'')}" autocomplete="off">
+    <label class="lbl">סיסמת הצפנה לגיבוי (בלעדיה הגיבוי לא נשלח; אין לה שחזור — לשמור במקום בטוח)</label>
+    <input id="backupPass" type="password" placeholder="סיסמה חזקה" value="${esc(settings.backupPass||'')}" autocomplete="off">
+    <div class="chips" style="margin-top:8px"><button data-set="syncAuto" data-val="1" class="${settings.syncAuto?'on':''}">סנכרון אוטומטי יומי</button><button data-set="syncAuto" data-val="0" class="${!settings.syncAuto?'on':''}">ידני בלבד</button></div>
+    <div class="btns"><button class="btn p" id="saveSync">שמור</button><button class="btn p" id="syncBtn">⬆️ שלח ל-Claude וגבה עכשיו</button><button class="btn" id="restoreBtn">⬇️ שחזר מגיבוי</button></div>
+    <div class="small" style="margin-top:8px" id="syncLine">${syncStatusLine()}</div>
+  </div>
+  <h2>💾 גיבוי מקומי וכלים</h2>
+  <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><button class="btn" id="shareBtn">שתף גיבוי…</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 8.11.2026 · הנתונים נשמרים בטלפון הזה בלבד. גיבוי: ייצוא לקובץ.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 8.11.2026 · הנתונים נשמרים בטלפון; גיבוי מוצפן ל-GitHub כשמוגדר טוקן וסיסמה.</div>`;
   document.getElementById('v-more').innerHTML=h;
-  DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});
+  DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});fillSyncLine();
 }
 let searchQ='';
 function hl(txt,q){const e=esc(txt);if(!q)return e;const i=e.toLowerCase().indexOf(esc(q).toLowerCase());return i<0?e:e.slice(0,i)+'<mark>'+e.slice(i,i+q.length)+'</mark>'+e.slice(i+q.length);}
@@ -835,11 +864,88 @@ async function ocrList(dataUrl){
   throw new Error('לא זוהו פריטים. תשובת המודל: '+(txt.slice(0,400)||'(ריקה) · stop='+(j.stop_reason||'?')+' · raw='+JSON.stringify(j).slice(0,500)));
 }
 
+/* ===================== GitHub sync: outbox + encrypted backup (0.18) ===================== */
+const GH={owner:'modiaviram-arch',repo:'garden-recipes',branch:'main',outbox:'doing/outbox.json',backup:'doing/backup.json'};
+const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000));return btoa(s);};
+const unb64=str=>Uint8Array.from(atob(str),c=>c.charCodeAt(0));
+const utf8b64=str=>b64(new TextEncoder().encode(str));
+async function ghGet(path){
+  const r=await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,{headers:{Authorization:'Bearer '+settings.ghToken,Accept:'application/vnd.github+json'},cache:'no-store'});
+  if(r.status===404)return null;if(!r.ok)throw new Error('GitHub '+r.status+(r.status===401?' — טוקן לא תקין':r.status===403?' — אין הרשאה לריפו':''));return r.json();
+}
+async function ghPut(path,content,message){
+  const cur=await ghGet(path);
+  const body={message,content:utf8b64(content),branch:GH.branch};if(cur&&cur.sha)body.sha=cur.sha;
+  const r=await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,{method:'PUT',headers:{Authorization:'Bearer '+settings.ghToken,Accept:'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){let m='';try{m=(await r.json()).message||'';}catch(e){}throw new Error('GitHub '+r.status+(r.status===401?' — טוקן לא תקין':r.status===403?' — לטוקן אין הרשאת כתיבה':r.status===409?' — התנגשות, נסה שוב':'')+(m?' ('+m+')':''));}
+  return r.json();
+}
+/* ---- encryption: PBKDF2 (310k, SHA-256) -> AES-GCM-256 ---- */
+async function deriveKey(pass,salt){const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function encryptJSON(obj,pass){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const key=await deriveKey(pass,salt);const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(obj)));return {v:1,alg:'AES-GCM-256/PBKDF2-SHA256-310k',salt:b64(salt),iv:b64(iv),data:b64(new Uint8Array(ct))};}
+async function decryptJSON(env,pass){const key=await deriveKey(pass,unb64(env.salt));const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(env.iv)},key,unb64(env.data));return JSON.parse(new TextDecoder().decode(pt));}
+/* ---- what goes out ---- */
+function exportData(){return {exported:new Date().toISOString(),app:APP_VER,items,lists,contacts,settings:{skipSat:settings.skipSat,model:settings.model,syncAuto:settings.syncAuto},imported:null};}
+function buildOutbox(lastSyncAt){
+  const T=today();const since=lastSyncAt?new Date(lastSyncAt).toISOString():null;
+  const recent=events.filter(e=>!since||e.ts>since);
+  const open=items.filter(i=>i.status==='open'&&i.type!=='topic').map(i=>({id:i.id,extId:i.extId||null,title:i.title,date:i.date,list:i.list?((lists.find(l=>l.id===i.list)||{}).name||i.list):null,rollovers:i.rollovers||0,overdue:!!(i.date&&i.date<T)}));
+  const done14=items.filter(i=>(i.status==='done'||i.status==='closed')&&i.doneAt&&Date.now()-i.doneAt<14*864e5).map(i=>({id:i.id,extId:i.extId||null,title:i.title,status:i.status,doneAt:new Date(i.doneAt).toISOString(),list:i.list?((lists.find(l=>l.id===i.list)||{}).name||i.list):null}));
+  return {generated:new Date().toISOString(),app:APP_VER,note:'נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude',since_last_sync:since,events_since_last_sync:recent,recent_events:events.slice(-150),open_tasks:open,done_last_14_days:done14,stats:{open:open.length,overdue:open.filter(o=>o.overdue).length,stuck:open.filter(o=>o.rollovers>=3).length,lists:lists.map(l=>({name:l.name,open:items.filter(i=>i.status==='open'&&i.list===l.id).length}))}};
+}
+let syncing=false;
+async function syncNow(manual){
+  if(syncing)return;if(!settings.ghToken){if(manual)toast('קודם הזן טוקן GitHub ושמור');return;}
+  if(!navigator.onLine){if(manual)toast('אין רשת');return;}
+  syncing=true;const line=document.getElementById('syncLine');if(line)line.textContent='מסנכרן…';
+  try{
+    const lastSync=await DB.kget('lastSync');
+    const stamp=new Date().toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'});
+    await ghPut(GH.outbox,JSON.stringify(buildOutbox(lastSync),null,1),'outbox: '+stamp);
+    let backed=false;
+    if(settings.backupPass){const env=await encryptJSON(exportData(),settings.backupPass);env.exported=new Date().toISOString();env.app=APP_VER;env.items=items.filter(i=>i.status!=='trash').length;await ghPut(GH.backup,JSON.stringify(env,null,1),'backup: '+stamp);backed=true;}
+    await DB.kset('lastSync',Date.now());await DB.kset('lastSyncErr','');
+    if(manual)toast(backed?'נשלח ל-Claude והגיבוי הועלה ✓':'נשלח ל-Claude ✓ (בלי גיבוי — אין סיסמה)');
+  }catch(e){await DB.kset('lastSyncErr',(e&&e.message)||String(e));if(manual)toast('הסנכרון נכשל: '+((e&&e.message)||e));else logErr('סנכרון: '+((e&&e.message)||e));}
+  syncing=false;if(view==='more')render();
+}
+async function autoSync(){try{if(!settings.ghToken||!settings.syncAuto)return;const last=(await DB.kget('lastSync'))||0;if(Date.now()-last>20*3600e3)await syncNow(false);}catch(e){}}
+function syncStatusLine(){return '<span id="syncInfo">…</span>';}
+async function fillSyncLine(){const e=document.getElementById('syncInfo');if(!e)return;const last=await DB.kget('lastSync'),err=await DB.kget('lastSyncErr');e.textContent=(settings.ghToken?'':'לא מוגדר טוקן. ')+(last?'סנכרון אחרון: '+new Date(last).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}):'עדיין לא סונכרן')+(settings.backupPass?' · גיבוי מוצפן פעיל':' · אין סיסמת גיבוי — נשלח רק דיווח')+(err?' · שגיאה אחרונה: '+err:'');}
+async function restoreFromGitHub(){
+  let env=null;
+  try{const r=await fetch('backup.json?ts='+Date.now(),{cache:'no-store'});if(r.ok)env=await r.json();}catch(e){}
+  if(!env||!env.data){toast('לא נמצא גיבוי בריפו');return;}
+  openSheet(`<h3>⬇️ שחזור מגיבוי</h3><div class="small">גיבוי מ-${esc(env.exported?new Date(env.exported).toLocaleString('he-IL'):'?')} · ${esc(String(env.items||''))} פריטים · גרסה ${esc(env.app||'?')}</div>
+    <label class="lbl" style="margin-top:10px">סיסמת ההצפנה</label><input id="rsPass" type="password" value="${esc(settings.backupPass||'')}" autocomplete="off">
+    <div class="small" style="margin-top:8px">השחזור ממזג: פריטים שקיימים כבר בטלפון מתעדכנים לגרסה החדשה יותר, חדשים נוספים, שום דבר לא נמחק.</div>
+    <div class="btns" style="margin-top:10px"><button class="btn p" id="rsGo">שחזר</button><button class="btn" id="rsClose">ביטול</button></div>`);
+  document.getElementById('rsClose').onclick=closeSheet;
+  document.getElementById('rsGo').onclick=async()=>{
+    const pass=document.getElementById('rsPass').value;if(!pass){toast('חסרה סיסמה');return;}
+    let d;try{d=await decryptJSON(env,pass);}catch(e){toast('סיסמה שגויה או גיבוי פגום');return;}
+    let n=0;for(const it of (d.items||[])){const cur=items.find(x=>x.id===it.id);if(!cur||(it.updatedAt||0)>(cur.updatedAt||0)){await DB.put(it);if(cur)Object.assign(cur,it);else items.push(it);shadow.set(it.id,shape(it));n++;}}
+    if(d.lists&&d.lists.length){for(const l of d.lists)if(!lists.some(x=>x.id===l.id))lists.push(l);await saveLists();}
+    if(d.contacts){for(const c of d.contacts)if(!contacts.some(x=>x.id===c.id))contacts.push(c);await saveContacts();}
+    if(d.settings){settings.skipSat=d.settings.skipSat??settings.skipSat;await saveSettings();}
+    closeSheet();await render();toast('שוחזרו '+n+' פריטים');
+  };
+}
+async function shareBackup(){
+  const txt=JSON.stringify(Object.assign(exportData(),{imported:await DB.kget('imported')}),null,1);const name='my-doing-'+today()+'.json';
+  try{const f=new File([txt],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'גיבוי My Doing'});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;a.click();toast('הטלפון לא תומך בשיתוף קובץ — הקובץ ירד להורדות');
+}
+
 /* ===================== Export / import / settings ===================== */
 document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='exportBtn'){const data={exported:new Date().toISOString(),items,lists,contacts,settings:{skipSat:settings.skipSat},imported:await DB.kget('imported')};const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-doing-'+today()+'.json';a.click();}
   if(e.target.id==='saveSettings'){settings.apiKey=document.getElementById('apiKey').value.trim();settings.model=document.getElementById('model').value.trim()||'claude-sonnet-5-5';await saveSettings();toast('נשמר');}
   if(e.target.id==='pullBtn'){await pullInbox();render();}
+  if(e.target.id==='saveSync'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveSettings();toast('נשמר');}
+  if(e.target.id==='syncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveSettings();await syncNow(true);}
+  if(e.target.id==='restoreBtn'){await restoreFromGitHub();}
+  if(e.target.id==='shareBtn'){await shareBackup();}
   if(e.target.id==='updBtn'){checkUpdate(true);}
   if(e.target.id==='errBtn'){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';openSheet('<h3>יומן שגיאות</h3><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\npick state: '+esc(localStorage.getItem('pickstate')||'(אין)')+'\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
 });
@@ -911,7 +1017,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.17.1';
+const APP_VER='0.18';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
@@ -934,9 +1040,9 @@ document.getElementById('exitBtn').onclick=()=>{
   let shared=false;
   if(new URL(location.href).searchParams.get('shared')==='1'){history.replaceState(null,'',location.pathname);const pl=await takeSharedPayload();if(pl){if(!(await handleSharedContact(pl))){const t=[pl.title,pl.text,pl.url].filter(Boolean).join(' ').trim();if(t){const first=t.split('\n').map(x=>x.trim()).filter(Boolean)[0]||t;const it=buildFromText(first.slice(0,140),'share');if(t.length>first.length)it.note=t.slice(0,1000);openEdit(it,true);}}shared=true;}}
   if(!shared)shared=handleShare();
-  await pullInbox();await maintenance();await render();checkUpdate(false);
+  await pullInbox();await maintenance();await render();checkUpdate(false);autoSync();
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){contacts=(await DB.kget('contacts'))||contacts;await maintenance();await pullInbox();await render();checkUpdate(false);}});
+  document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'){contacts=(await DB.kget('contacts'))||contacts;await maintenance();await pullInbox();await render();checkUpdate(false);autoSync();}});
 })();
 </script>
 </body>
