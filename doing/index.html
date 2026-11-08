@@ -173,10 +173,11 @@ const SRC={manual:'',voice:'🎤',share:'💬',email:'📧',calendar:'📅',deli
 
 /* ===================== State ===================== */
 let items=[], lists=[], settings={}, contacts=[];
-const DEFAULT_LISTS=[{id:'ideas',name:'רעיונות'},{id:'calls',name:'שיחות'},{id:'trips',name:'נסיעות'},{id:'care',name:'טיפולים'},{id:'shopping',name:'קניות'}];
+const DEFAULT_LISTS=[{id:'ideas',name:'רעיונות'},{id:'calls',name:'שיחות'},{id:'trips',name:'נסיעות'},{id:'care',name:'טיפולים'},{id:'garden',name:'גינה'},{id:'shopping',name:'קניות'}];
 async function load(){
   items=await DB.all();
   lists=(await DB.kget('lists'))||DEFAULT_LISTS.slice();
+  if(!lists.some(l=>l.id==='garden'||l.name==='גינה')){lists.splice(Math.min(4,lists.length),0,{id:'garden',name:'גינה'});await DB.kset('lists',lists);} // 0.17: רשימת גינה כסעיף 5
   contacts=(await DB.kget('contacts'))||[];{let ch=false;for(const c of contacts){const n=normPhone(c.phone);if(n!==c.phone){c.phone=n;ch=true;}}if(ch)await DB.kset('contacts',contacts);}
   settings=Object.assign({skipSat:true,model:'claude-sonnet-5-5',apiKey:''},(await DB.kget('settings'))||{});
   if(settings.model==='claude-haiku-5-5'){settings.model='claude-sonnet-5-5';await DB.kset('settings',settings);} // 0.6.3: Haiku misses Hebrew handwriting
@@ -910,7 +911,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.16';
+const APP_VER='0.17';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
