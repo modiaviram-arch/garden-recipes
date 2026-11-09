@@ -1,8 +1,8 @@
 {
- "generated": "2026-11-08T13:40:59.803Z",
- "app": "0.20",
+ "generated": "2026-11-09T09:29:34.823Z",
+ "app": "0.23.6",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": null,
+ "since_last_sync": "2026-11-08T11:46:34.487Z",
  "events_since_last_sync": [
   {
    "ts": "2026-11-08T13:17:51.564Z",
@@ -25,6 +25,226 @@
    "date": "2026-11-11",
    "from": "2026-11-08",
    "to": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-08T17:18:02.417Z",
+   "type": "added",
+   "id": "mw83hbw9islp2",
+   "device": "טלפון",
+   "extId": null,
+   "title": "משימה לגינה, לעקור את היערה ולהכין את העציץ שלה לשתילת החצב. ניתוק ממערכת ההשקייה",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:09:04.228Z",
+   "type": "dup",
+   "id": "mw6c94crzvgfv",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "dupOf": "לקבוע טיפול עם באטריס",
+   "how": "cleanup"
+  },
+  {
+   "ts": "2026-11-08T19:09:04.231Z",
+   "type": "deleted",
+   "id": "mw6fatzjplfn0",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-08T19:09:04.240Z",
+   "type": "dup",
+   "id": "mw7p7i5juh0zu",
+   "device": "טלפון",
+   "extId": "cl-garden-20261108-5",
+   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "dupOf": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "how": "cleanup"
+  },
+  {
+   "ts": "2026-11-08T19:09:04.240Z",
+   "type": "deleted",
+   "id": "mw7p7i5nif2cf",
+   "device": "טלפון",
+   "extId": "cl-garden-20261108-5",
+   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "list": "גינה",
+   "date": "2026-12-01"
+  },
+  {
+   "ts": "2026-11-08T19:09:13.638Z",
+   "type": "added",
+   "id": "mw87hmat3r78x",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:21:23.702Z",
+   "type": "done",
+   "id": "mw87hmat3r78x",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:21:26.822Z",
+   "type": "deleted",
+   "id": "mw83hbw9islp2",
+   "device": "טלפון",
+   "extId": null,
+   "title": "משימה לגינה, לעקור את היערה ולהכין את העציץ שלה לשתילת החצב. ניתוק ממערכת ההשקייה",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:21:39.513Z",
+   "type": "added",
+   "id": "mw87xlth7k6xj",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:26:44.998Z",
+   "type": "deleted",
+   "id": "mw87xlth7k6xj",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:27:19.669Z",
+   "type": "added",
+   "id": "mw884wa9b5apu",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:56:58.846Z",
+   "type": "deleted",
+   "id": "mw884wa9b5apu",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:57:28.149Z",
+   "type": "added",
+   "id": "mw89796madu2m",
+   "device": "טלפון",
+   "extId": null,
+   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "list": null,
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-08T19:57:51.232Z",
+   "type": "deleted",
+   "id": "mw5j2va4i02zb",
+   "device": "טלפון",
+   "extId": null,
+   "title": "להכין תזכורת שבועית, ליום שישי בשעה 20:00 לרישום לשיעור פלדנקרריז בקאונטרי של טבעון",
+   "list": "טיפולים",
+   "date": "2026-11-14"
+  },
+  {
+   "ts": "2026-11-08T20:04:32.620Z",
+   "type": "added",
+   "id": "mw89fifmv41k6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "כלום",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T21:32:30.226Z",
+   "type": "deleted",
+   "id": "mw87hmat3r78x",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-09T05:55:31.790Z",
+   "type": "done",
+   "id": "mw7p7i5ofnmiq",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "list": "נסיעות",
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-09T05:55:45.905Z",
+   "type": "done",
+   "id": "mw6c94crzvgfv",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-09T05:56:11.373Z",
+   "type": "added",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-09T05:57:03.031Z",
+   "type": "added",
+   "id": "mw8umq4796ijl",
+   "device": "טלפון",
+   "extId": null,
+   "title": "באטריס , 18:00",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-09T06:40:37.592Z",
+   "type": "done",
+   "id": "mw89fifmv41k6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "אפרת",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-09T06:41:17.440Z",
+   "type": "dup",
+   "id": "mw89796madu2m",
+   "device": "טלפון",
+   "extId": null,
+   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "dupOf": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "how": "edit"
   }
  ],
  "recent_events": [
@@ -49,6 +269,226 @@
    "date": "2026-11-11",
    "from": "2026-11-08",
    "to": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-08T17:18:02.417Z",
+   "type": "added",
+   "id": "mw83hbw9islp2",
+   "device": "טלפון",
+   "extId": null,
+   "title": "משימה לגינה, לעקור את היערה ולהכין את העציץ שלה לשתילת החצב. ניתוק ממערכת ההשקייה",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:09:04.228Z",
+   "type": "dup",
+   "id": "mw6c94crzvgfv",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "dupOf": "לקבוע טיפול עם באטריס",
+   "how": "cleanup"
+  },
+  {
+   "ts": "2026-11-08T19:09:04.231Z",
+   "type": "deleted",
+   "id": "mw6fatzjplfn0",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-08T19:09:04.240Z",
+   "type": "dup",
+   "id": "mw7p7i5juh0zu",
+   "device": "טלפון",
+   "extId": "cl-garden-20261108-5",
+   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "dupOf": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "how": "cleanup"
+  },
+  {
+   "ts": "2026-11-08T19:09:04.240Z",
+   "type": "deleted",
+   "id": "mw7p7i5nif2cf",
+   "device": "טלפון",
+   "extId": "cl-garden-20261108-5",
+   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "list": "גינה",
+   "date": "2026-12-01"
+  },
+  {
+   "ts": "2026-11-08T19:09:13.638Z",
+   "type": "added",
+   "id": "mw87hmat3r78x",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:21:23.702Z",
+   "type": "done",
+   "id": "mw87hmat3r78x",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:21:26.822Z",
+   "type": "deleted",
+   "id": "mw83hbw9islp2",
+   "device": "טלפון",
+   "extId": null,
+   "title": "משימה לגינה, לעקור את היערה ולהכין את העציץ שלה לשתילת החצב. ניתוק ממערכת ההשקייה",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:21:39.513Z",
+   "type": "added",
+   "id": "mw87xlth7k6xj",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:26:44.998Z",
+   "type": "deleted",
+   "id": "mw87xlth7k6xj",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:27:19.669Z",
+   "type": "added",
+   "id": "mw884wa9b5apu",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:56:58.846Z",
+   "type": "deleted",
+   "id": "mw884wa9b5apu",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T19:57:28.149Z",
+   "type": "added",
+   "id": "mw89796madu2m",
+   "device": "טלפון",
+   "extId": null,
+   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "list": null,
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-08T19:57:51.232Z",
+   "type": "deleted",
+   "id": "mw5j2va4i02zb",
+   "device": "טלפון",
+   "extId": null,
+   "title": "להכין תזכורת שבועית, ליום שישי בשעה 20:00 לרישום לשיעור פלדנקרריז בקאונטרי של טבעון",
+   "list": "טיפולים",
+   "date": "2026-11-14"
+  },
+  {
+   "ts": "2026-11-08T20:04:32.620Z",
+   "type": "added",
+   "id": "mw89fifmv41k6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "כלום",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-08T21:32:30.226Z",
+   "type": "deleted",
+   "id": "mw87hmat3r78x",
+   "device": "טלפון",
+   "extId": null,
+   "title": "[11/8, 15:11] Modi: ומתי הפגישה שלנו ביום רביעי? [11/8, 17:53] אפרת נהרי אברהם: אז סיכמנו על 12:15 😅 [11/8, 18:08] Modi: כן!",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-09T05:55:31.790Z",
+   "type": "done",
+   "id": "mw7p7i5ofnmiq",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "list": "נסיעות",
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-09T05:55:45.905Z",
+   "type": "done",
+   "id": "mw6c94crzvgfv",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-09T05:56:11.373Z",
+   "type": "added",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-09T05:57:03.031Z",
+   "type": "added",
+   "id": "mw8umq4796ijl",
+   "device": "טלפון",
+   "extId": null,
+   "title": "באטריס , 18:00",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-09T06:40:37.592Z",
+   "type": "done",
+   "id": "mw89fifmv41k6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "אפרת",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-09T06:41:17.440Z",
+   "type": "dup",
+   "id": "mw89796madu2m",
+   "device": "טלפון",
+   "extId": null,
+   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "dupOf": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "how": "edit"
   }
  ],
  "open_tasks": [
@@ -56,33 +496,33 @@
    "id": "mw4xrlqvathde",
    "extId": "tt-6ae98ca648f474e51ba5a3f3",
    "title": "לנסות לתקן מחשב קטן",
-   "date": "2026-11-08",
+   "date": "2026-11-09",
    "list": null,
-   "rollovers": 3,
+   "rollovers": 4,
    "overdue": false
   },
   {
    "id": "mw4xrlqwtt5xg",
    "extId": "tt-6ade36175a56b43b4e289e09",
    "title": "להתחיל לעשות תרגילי כח",
-   "date": "2026-11-08",
+   "date": "2026-11-09",
    "list": null,
-   "rollovers": 3,
+   "rollovers": 4,
    "overdue": false
   },
   {
    "id": "mw4xrlqwtx2bd",
    "extId": "tt-6ade35ea5a56b43b4e289dfa",
    "title": "להוסיף שיעור פלדנקרייז מהאינטרנט",
-   "date": "2026-11-08",
+   "date": "2026-11-09",
    "list": null,
-   "rollovers": 3,
+   "rollovers": 4,
    "overdue": false
   },
   {
    "id": "mw4xrlqx8dpkj",
    "extId": "tt-6aeacb06e05889cee943c20c",
-   "title": "שיעור",
+   "title": "בדיקה לרחל",
    "date": "2026-11-13",
    "list": null,
    "rollovers": 0,
@@ -92,36 +532,9 @@
    "id": "mw4zcw9f2gf9w",
    "extId": null,
    "title": "לבדוק לורד מפריז תוכניות בניין עיר",
-   "date": "2026-11-08",
-   "list": null,
-   "rollovers": 2,
-   "overdue": false
-  },
-  {
-   "id": "mw5j2va4i02zb",
-   "extId": null,
-   "title": "להכין תזכורת שבועית, ליום שישי בשעה 20:00 לרישום לשיעור פלדנקרריז בקאונטרי של טבעון",
-   "date": "2026-11-14",
-   "list": "טיפולים",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw6c94crzvgfv",
-   "extId": null,
-   "title": "לקבוע טיפול עם באטריס",
-   "date": "2026-11-08",
-   "list": null,
-   "rollovers": 1,
-   "overdue": false
-  },
-  {
-   "id": "mw6fatzjplfn0",
-   "extId": null,
-   "title": "לקבוע טיפול עם באטריס",
    "date": "2026-11-09",
    "list": null,
-   "rollovers": 0,
+   "rollovers": 3,
    "overdue": false
   },
   {
@@ -193,24 +606,6 @@
    "title": "מכל 4.1 – רענון מצע אחרי הכורכום",
    "date": "2026-11-29",
    "list": "גינה",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw7p7i5nif2cf",
-   "extId": "cl-garden-20261108-5",
-   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
-   "date": "2026-12-01",
-   "list": "גינה",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw7p7i5ofnmiq",
-   "extId": "cl-nyc-20261108-1",
-   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
-   "date": "2026-11-09",
-   "list": "נסיעות",
    "rollovers": 0,
    "overdue": false
   },
@@ -312,6 +707,33 @@
    "list": "נסיעות",
    "rollovers": 0,
    "overdue": false
+  },
+  {
+   "id": "mw89796madu2m",
+   "extId": null,
+   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "date": "2026-11-11",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw8ul513mri9u",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "date": "2026-11-10",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw8umq4796ijl",
+   "extId": null,
+   "title": "באטריס , 18:00",
+   "date": "2026-11-09",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
   }
  ],
  "done_last_14_days": [
@@ -338,12 +760,36 @@
    "status": "done",
    "doneAt": "2026-11-07T11:18:23.433Z",
    "list": null
+  },
+  {
+   "id": "mw6c94crzvgfv",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "status": "done",
+   "doneAt": "2026-11-09T05:55:45.905Z",
+   "list": null
+  },
+  {
+   "id": "mw7p7i5ofnmiq",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "status": "done",
+   "doneAt": "2026-11-09T05:55:31.790Z",
+   "list": "נסיעות"
+  },
+  {
+   "id": "mw89fifmv41k6",
+   "extId": null,
+   "title": "אפרת",
+   "status": "done",
+   "doneAt": "2026-11-09T06:40:37.591Z",
+   "list": null
   }
  ],
  "stats": {
-  "open": 29,
+  "open": 27,
   "overdue": 0,
-  "stuck": 3,
+  "stuck": 4,
   "lists": [
    {
     "name": "רעיונות",
@@ -355,15 +801,15 @@
    },
    {
     "name": "נסיעות",
-    "open": 11
+    "open": 10
    },
    {
     "name": "טיפולים",
-    "open": 1
+    "open": 0
    },
    {
     "name": "גינה",
-    "open": 6
+    "open": 5
    },
    {
     "name": "קניות",
