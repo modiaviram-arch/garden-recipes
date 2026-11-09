@@ -181,7 +181,7 @@ async function load(){
   lists=(await DB.kget('lists'))||DEFAULT_LISTS.slice();
   if(!lists.some(l=>l.id==='garden'||l.name==='גינה')){lists.splice(Math.min(4,lists.length),0,{id:'garden',name:'גינה'});await DB.kset('lists',lists);} // 0.17: רשימת גינה כסעיף 5
   contacts=(await DB.kget('contacts'))||[];{let ch=false;for(const c of contacts){const n=normPhone(c.phone);if(n!==c.phone){c.phone=n;ch=true;}}if(ch)await DB.kset('contacts',contacts);}
-  settings=Object.assign({skipSat:true,model:'claude-sonnet-5-5',apiKey:'',ghToken:'',backupPass:'',syncAuto:true},(await DB.kget('settings'))||{});
+  settings=Object.assign({skipSat:true,model:'claude-sonnet-5-5',apiKey:'',ghToken:'',backupPass:'',syncAuto:true,shareAI:true},(await DB.kget('settings'))||{});
   events=(await DB.kget('events'))||[];for(const it of items)shadow.set(it.id,shape(it));
   importedSet=new Set((await DB.kget('imported'))||[]);tombs=(await DB.kget('tombs'))||{};
   device=(await DB.kget('device'))||null;if(!device){device={id:uid(),name:/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)?'טלפון':'מחשב',createdAt:Date.now()};await DB.kset('device',device);}
@@ -209,7 +209,7 @@ function trackEvent(it){
   DB.kset('events',events).catch(()=>{});
 }
 
-function newItem(o){return Object.assign({id:uid(),type:'task',title:'',note:'',date:null,time:null,list:null,source:'manual',status:'open',createdAt:Date.now(),doneAt:null,deletedAt:null,rollovers:0,raw:'',condition:'',windowEnd:null,repeat:null,checklist:null,photo:null,extId:null,contact:null},o);}
+function newItem(o){return Object.assign({id:uid(),type:'task',title:'',note:'',date:null,time:null,list:null,source:'manual',status:'open',createdAt:Date.now(),doneAt:null,deletedAt:null,rollovers:0,raw:'',condition:'',windowEnd:null,repeat:null,checklist:null,photo:null,extId:null,contact:null,addr:'',phone:''},o);}
 
 /* ===================== Hebrew parsing ===================== */
 const NUMW={'אחד':1,'אחת':1,'יומיים':2,'שניים':2,'שתיים':2,'שני':2,'שלושה':3,'שלוש':3,'ארבעה':4,'ארבע':4,'חמישה':5,'חמש':5,'שישה':6,'שש':6,'שבעה':7,'שבע':7,'שמונה':8,'תשעה':9,'תשע':9,'עשרה':10,'עשר':10};
@@ -506,6 +506,8 @@ function quickTarget(){const l=quickTargetList();quick.placeholder=l?'הוספה
 function show(v){if(v==='more'&&view!=='more')moreSub=null;view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();quickTarget();}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(searchQ){searchQ='';searchIn.value='';searchRow.classList.remove('on');}show(b.dataset.v);});
 
+function placeBtns(it){if(it.status!=='open'||it.type!=='task'||(!it.addr&&!it.phone))return '';let h='<div class="btns">';if(it.addr)h+='<button class="btn" data-act="nav">🚗 Waze</button>';if(it.phone)h+='<button class="btn" data-act="call">📞 '+esc(fmtPhone(it.phone))+'</button>';return h+'</div>';}
+function fmtPhone(p){const d=String(p||'').replace(/\D/g,'');if(/^972\d{8,9}$/.test(d)){const l='0'+d.slice(3);return l.length===10?l.slice(0,3)+'-'+l.slice(3):l.slice(0,2)+'-'+l.slice(2);}if(/^0\d{8,9}$/.test(d))return d.length===10?d.slice(0,3)+'-'+d.slice(3):d.slice(0,2)+'-'+d.slice(2);return p;}
 function contactBtns(it){if(it.status!=='open'||it.type!=='task')return '';const {c,name}=contactFor(it);if(c)return '<div class="btns"><button class="btn o" data-act="contact">📲 '+esc(c.name)+': וואטסאפ · טלפון'+(c.address?' · Waze':'')+'</button></div>';if(name)return '<div class="btns"><button class="btn" data-act="pick">👤 בחר איש קשר: '+esc(name)+'</button></div>';return '';}
 function taskCard(it,opts={}){
   const src=SRC[it.source]||'';
@@ -517,12 +519,13 @@ function taskCard(it,opts={}){
   if(it.repeat)meta.push(repeatLabel(it.repeat));
 
   if(it.parentTitle)meta.push('↪ '+it.parentTitle);
+  if(it.addr)meta.push('📍 '+it.addr);
   if(it.note)meta.push(it.note.slice(0,60));
   return `<div class="card ${stuck?'stuck':''}" data-id="${it.id}">
     <button class="circle ${it.status==='done'?'done':''}" data-act="done">${it.status==='done'?'✓':''}</button>
     <div class="t" data-act="edit"><div class="n">${esc(it.title)}<span class="src">${src}</span>${stuck?'<span class="badge warn">תקועה ×'+it.rollovers+'</span>':''}${(it.rollovers||0)>0&&!stuck?'<span class="badge">מאתמול</span>':''}</div>
     ${meta.length?'<div class="m">'+esc(meta.join(' · '))+'</div>':''}
-    ${contactBtns(it)}
+    ${contactBtns(it)}${placeBtns(it)}
     ${it.checklist&&it.checklist.length?'<div class="btns"><button class="btn" data-act="checklist">🛒 רשימה '+it.checklist.filter(c=>c.done).length+'/'+it.checklist.length+'</button></div>':(it.photo?'<div class="btns"><button class="btn p" data-act="decode">🔍 פענח רשימה מהצילום</button></div>':'')}
     ${stuck?'<div class="btns"><button class="btn" data-act="snooze">⏰ דחה…</button><button class="btn" data-act="tolist">לרשימה</button><button class="btn d" data-act="trash">מחק</button></div>':''}
     </div>
@@ -618,7 +621,10 @@ function renderMore(){
   <div class="card" style="display:block">
     <label class="lbl">דילוג על שבת במשימות חוזרות (ברירת מחדל)</label>
     <div class="chips"><button data-set="skipSat" data-val="1" class="${settings.skipSat?'on':''}">לא בשבת</button><button data-set="skipSat" data-val="0" class="${!settings.skipSat?'on':''}">כולל שבת</button></div>
-    <label class="lbl">מפתח Claude API לזיהוי רשימת קניות מצולמת (נשמר בטלפון בלבד)</label>
+    <label class="lbl">הודעה מודבקת / משותפת → נושא · כתובת · טלפון (0.24)</label>
+    <div class="chips"><button data-set="shareAI" data-val="1" class="${settings.shareAI!==false?'on':''}">דיוק עם Claude (ברירת מחדל)</button><button data-set="shareAI" data-val="0" class="${settings.shareAI===false?'on':''}">חוקים בלבד (בלי רשת)</button></div>
+    <div class="small" style="padding:0 8px 6px">בלי מפתח API או בלי רשת — תמיד לפי חוקים.</div>
+    <label class="lbl">מפתח Claude API לזיהוי רשימת קניות מצולמת ולדיוק הודעות (נשמר בטלפון בלבד)</label>
     <input id="apiKey" type="password" placeholder="sk-ant-…" value="${esc(settings.apiKey||'')}">
     <label class="lbl">מודל</label>
     <input id="model" value="${esc(settings.model||'claude-sonnet-5-5')}">
@@ -644,7 +650,7 @@ function renderMore(){
   <h2>💾 גיבוי מקומי וכלים</h2>
   <div class="card" style="display:block"><div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><button class="btn" id="shareBtn">שתף גיבוי…</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button></div>
   <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div></div>
-  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 8.11.2026 · מכשיר: ${esc(device?device.name:'')} · הנתונים נשמרים במכשיר; גיבוי וסנכרון מוצפנים ל-GitHub כשמוגדרים טוקן וסיסמה.</div>`;
+  <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 9.11.2026 · מכשיר: ${esc(device?device.name:'')} · הנתונים נשמרים במכשיר; גיבוי וסנכרון מוצפנים ל-GitHub כשמוגדרים טוקן וסיסמה.</div>`;
   }else{
     const trashN=items.filter(i=>i.status==='trash').length;
     h+=`<h2>עוד</h2>
@@ -759,6 +765,8 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'wa': {const {c}=contactFor(it);if(c)openWhatsApp(it,c);return;}
     case 'contact': {const {c}=contactFor(it);if(c)openContactActions(it,c);return;}
     case 'waze': {const {c}=contactFor(it);if(c&&c.address)window.open(wazeUrl(c.address),'_blank');return;}
+    case 'nav': {const a=it.addr||((contactFor(it).c||{}).address);if(a){const w=window.open(wazeUrl(a),'_blank');if(!w)location.href=wazeUrl(a);}return;}
+    case 'call': {if(it.phone)location.href='tel:'+String(it.phone).replace(/[^\d+*#]/g,'');return;}
     case 'pick': {const {name}=contactFor(it);window.__pickItem=it;pickContact(name,async c=>{try{it.contact=c.id;await save(it);await render();}catch(e){logErr('קישור משימה לאיש קשר: '+(e&&e.message||e));}openContactActions(it,c);});return;}
   }
   render();
@@ -770,9 +778,12 @@ quick.addEventListener('input',()=>{const p=parseHebrew(quick.value);const parts
 quick.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();quickAdd();}});
 document.getElementById('addBtn').onclick=()=>{if(quick.value.trim())quickAdd();else openEdit(newItem({date:today()}),true);};
 const WA_TS=/\[\s*\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?,?\s+\d{1,2}:\d{2}(?::\d{2})?\s*\]\s*[^:\n]{1,40}:/; // WhatsApp timestamp + sender
+/* 0.24: does pasted text look like a forwarded notice (SMS / shop / clinic) rather than a typed task? */
+function looksLikeNotice(t){if(t.length<60)return false;return /https?:\/\//.test(t)||STREET_RE.test(t)||!!extractPhone(t)||/^(שלום|היי|לקוח)/.test(t)||t.split(/[.!?\n]+/).filter(x=>x.trim().length>3).length>=3;}
+quick.addEventListener('paste',e=>{const t=(e.clipboardData||window.clipboardData).getData('text')||'';if(quick.value.trim()||!(WA_TS.test(t)||looksLikeNotice(t)))return;e.preventDefault();quick.value='';hint.textContent='';openShared({title:'',text:t,url:''});}); // the single-line field would lose the newlines — take the clipboard text as-is
 async function quickAdd(source='manual'){
   const raw=quick.value.trim();if(!raw)return;
-  if(WA_TS.test(raw)){quick.value='';hint.textContent='';openShared({title:'',text:raw,url:''});return;} // 0.23.5: a pasted WhatsApp chat goes through the smart parser, not the plain one
+  if(WA_TS.test(raw)||looksLikeNotice(raw)){quick.value='';hint.textContent='';openShared({title:'',text:raw,url:''});return;} // 0.23.5: a pasted WhatsApp chat goes through the smart parser, not the plain one
   const it=buildFromText(raw,source);
   if(it.type==='topic'&&!it.date){openEdit(it,true);return;}
   const twin=findDup(it);
@@ -823,7 +834,8 @@ function openEdit(it,isNew=false){
   openSheet(`<h3>${isNew?'משימה חדשה':'עריכה'} ${SRC[it.source]||''}</h3>
     ${it.parentTitle?'<div class="small">↪ המשך ל: '+esc(it.parentTitle)+'</div>':''}
     <label class="lbl">כותרת</label><div class="row" style="margin:0"><input id="eTitle" value="${esc(it.title)}" placeholder="מה לעשות?"><button class="btn" id="eMic" style="flex:0 0 auto;font-size:20px" title="הקלטה">🎤</button></div>
-    ${it.raw&&it.raw!==it.title?'<div class="small">נאמר: '+esc(it.raw)+'</div>':''}
+    ${it.raw&&it.raw!==it.title?(it.source==='share'?'<details class="small"><summary>ההודעה המקורית</summary><div dir="auto" style="white-space:pre-wrap">'+esc(it.raw)+'</div></details>':'<div class="small">נאמר: '+esc(it.raw)+'</div>'):''}
+    <div class="row"><div><label class="lbl">📍 כתובת</label><input id="eAddr" value="${esc(it.addr||'')}" placeholder="רחוב, מספר, עיר"></div><div><label class="lbl">📞 טלפון</label><input id="ePhone" type="tel" value="${esc(it.phone||'')}" placeholder="05x-…"></div></div>
     <div class="chips"><button data-type="task" class="${it.type==='task'?'on':''}">משימה</button><button data-type="cond" class="${it.type==='cond'?'on':''}">תזכורת מותנית</button><button data-type="topic" class="${it.type==='topic'?'on':''}">תזכורת לנושא</button></div>
     <div id="condRow" style="${it.type==='cond'?'':'display:none'}"><label class="lbl">תנאי (השאלה שתישאל ביום היעד)</label><input id="eCond" value="${esc(it.condition||'')}" placeholder="אם ארגיש חלש"><label class="lbl">עד תאריך (חלון, לא חובה)</label><input id="eWin" type="date" value="${it.windowEnd||''}"></div>
     <div class="row"><div><label class="lbl">תאריך</label><input id="eDate" type="date" value="${it.date||''}"></div><div><label class="lbl">שעה</label><input id="eTime" type="time" value="${it.time||''}"></div></div>
@@ -876,6 +888,7 @@ function openEdit(it,isNew=false){
     it.type=sheet.querySelector('[data-type].on').dataset.type;
     it.condition=it.type==='cond'?$('eCond').value.trim():'';it.windowEnd=it.type==='cond'?($('eWin').value||null):null;
     it.date=$('eDate').value||null;it.time=$('eTime').value||null;it.list=$('eList').value||null;it.note=$('eNote').value.trim();it.contact=$('eContact').value||null;
+    it.addr=$('eAddr').value.trim();it.phone=$('ePhone').value.trim();
     const u=$('eRepU').value;
     if(u){it.repeat={every:+$('eRepN').value||1,unit:u,weekdays:[...sheet.querySelectorAll('[data-wd].on')].map(b=>+b.dataset.wd),skipSat:$('eSkip').checked};if(!it.date)it.date=today();}else it.repeat=null;
     const rows=[...$('chk').querySelectorAll('.check')].map(r=>({t:r.querySelector('input[type=text]').value.trim(),done:r.querySelector('input[type=checkbox]').checked})).filter(c=>c.t);
@@ -1124,6 +1137,38 @@ function scanDateTime(t){
   if(!out.date&&/סוף השבוע|בסופ"ש|בסופש/.test(t))out.date=nextWeekday(5);
   return out;
 }
+/* 0.24: rule-based extraction of phone + street address from free Hebrew text (works offline) */
+const STREET_RE=/(?:(?:רח'|רח׳|רח"|רחוב|שד'|שד׳|שדרות|דרך|סמטת|סמטה|כיכר|ככר|שכונת|קיבוץ|מושב)\s+)([א-ת"'׳״\-]{2,}(?:\s+[א-ת"'׳״\-]{2,}){0,3})\s+(\d{1,4}(?:\s?[א-ת](?![א-ת"'׳״])|\/\d{1,3})?)(?![\d:.\/])/;
+function extractPhone(t){
+  const cands=[];const re=/(?:\+?972[\s\-]?|0)(?:[23489]|5\d|7\d)[\s\-]?\d{3}[\s\-]?\d{4}\b|\*\d{3,5}\b/g;let m;
+  while((m=re.exec(t))){const s=m[0];const before=t.slice(Math.max(0,m.index-12),m.index);if(/קוד|מספר הזמנה|הזמנה\s*(?:מס|#)|\d$/.test(before))continue;const d=s.replace(/[^\d*+]/g,'');if(s.startsWith('*')){cands.push(s);continue;}const n=normPhone(d);if(validPhone(n))cands.push(n);}
+  // prefer mobiles, then anything
+  return cands.find(c=>/^9725/.test(c))||cands[0]||'';
+}
+function extractAddr(t){
+  const m=t.match(STREET_RE);if(!m)return {addr:'',span:null};
+  let a=m[0].replace(/\s+/g,' ').trim();
+  // city / complex that follows the number: " מתחם תל חנן,נשר" — stop at newline, sentence end, URL, long digits or a phone
+  const after=t.slice(m.index+m[0].length);
+  let rest=after.split(/\n|http|\d{5,}|(?:\+?972|0)[\s\-]?\d[\d\s\-]{7,}/)[0];
+  rest=rest.split(/[.!?;:]|\s(?:בנוסף|מגיעה|מגיע|קוד|טלפון|טל'|נייד|ליצירת|לפרטים|בשעה|ביום|קומה|שעות)(?![א-ת])/)[0];
+  const parts=rest.split(',').map(x=>x.trim());const tail=[];
+  for(const x of parts){if(!x)continue;if(x.length<=30&&/^[א-ת"'׳״\-\s\d]+$/.test(x)&&!/^\d+$/.test(x)&&!/\s(?:של|את|עם|על|ל[א-ת]+\s)/.test(x))tail.push(x);else break;if(tail.length===2)break;}
+  const used=tail.length?after.indexOf(tail[tail.length-1])+tail[tail.length-1].length:0;
+  if(tail.length)a+=', '+tail.join(', ');
+  return {addr:a.replace(/,\s*,/g,',').replace(/[,\s]+$/,'').slice(0,80),span:[m.index,m.index+m[0].length+used]};
+}
+function extractPlace(t){const s=String(t||'');const A=extractAddr(s);return {phone:extractPhone(s),addr:A.addr,span:A.span};}
+/* subject line for a pasted notice: strip greeting, address, phone, links, codes */
+function subjectFrom(body,place){
+  let s=body.replace(/https?:\/\/\S+/g,' ').replace(/\b(?:קוד(?:\s+[א-ת]+)?|מספר(?:\s+[א-ת]+)?|הזמנה(?:\s+מס'?)?)\s*[:#]?\s*\d{5,}\b/g,' ');
+  if(place.span){s=s.slice(0,place.span[0])+' '+s.slice(place.span[1]);}else if(place.addr){s=s.replace(place.addr.split(',')[0],' ');}
+  s=s.replace(/,(?=\S)/g,', ').replace(/[,\s]+([.!?])/g,'$1').replace(/(?:הכתובת|כתובת|בכתובת)\s*:?\s*(?=[.!?,\n]|$)/g,'');
+  if(place.phone)s=s.replace(/(?:\+?972[\s\-]?|0)(?:[23489]|5\d|7\d)[\s\-]?\d{3}[\s\-]?\d{4}\b/g,' ');
+  s=s.replace(/^(?:היי|הי|שלום(?:\s+רב)?|בוקר טוב|ערב טוב|צהריים טובים|לקוח\/ה יקר\/ה|לקוח יקר|לקוחה יקרה|מודי|יקירי)[^,.!:\n]{0,25}[,.!:]?\s*/,'');
+  const first=s.split(/(?<=[.!?])\s+|\n+/).map(x=>x.replace(/\s{2,}/g,' ').replace(/\s+,/g,',').replace(/,\s*(?:,\s*)+/g,', ').replace(/^[,\s]+|[,\s]+$/g,'').trim()).find(x=>x.length>=4&&!/^(תודה|בברכה|להתראות)/.test(x))||'';
+  return first.slice(0,90);
+}
 /* parse a shared payload {title,text,url} into a task; returns {it,sender,kind,body} */
 function smartShare(pl){
   let text=String(pl.text||'').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g,'').replace(/\r/g,'').trim();
@@ -1162,14 +1207,18 @@ function smartShare(pl){
   if(sender&&!/^(אני|me|you)$/i.test(sender)){const clean=sender.replace(/\s*\(.*?\)\s*/g,'').trim();const hy=/^[A-Za-z]/.test(clean)?'-':'';
     if(dt.date&&!subject&&!new RegExp(clean.split(' ')[0]).test(gist))gist=gist.replace(/[.!?]+$/,'')+' עם '+clean; // appointment / arrangement → 'X עם שם'
     else gist='לענות ל'+hy+clean+': '+gist;}
-  const it=newItem({title:gist.slice(0,140),raw:text.slice(0,300),date:dt.date||today(),time:dt.time,source:'share',url,note:(body.length>gist.length?body:text).slice(0,1500)});
+  // 0.24: a pasted notice (SMS / shop / clinic) → subject · address · phone; the original text is kept in `raw`, not in the note
+  const place=extractPlace(allText||text);
+  if(kind==='text'&&!subject&&(place.addr||place.phone)){const sj=subjectFrom(body,place);if(sj)gist=sj;}
+  if(place.addr&&gist.includes(place.addr.split(',')[0]))gist=gist.replace(place.addr.split(',')[0],'').replace(/\s{2,}/g,' ').replace(/[,\s]+$/,'').trim()||gist;
+  const it=newItem({title:gist.slice(0,140),raw:(allText||text).slice(0,1500),date:dt.date||today(),time:dt.time,source:'share',url,note:'',addr:place.addr,phone:place.phone?fmtPhone(place.phone):''});
   if(sender){const c=findContact(sender.replace(/\s*\(.*?\)\s*/g,'').trim());if(c)it.contact=c.id;}
   return {it,sender,kind,body,subject};
 }
 /* optional: let Claude read the message and propose title/date/time (needs the API key from settings) */
 async function refineShare(it,text,sender){
   if(!settings.apiKey)return {error:'אין מפתח API בהגדרות'};if(!navigator.onLine)return {error:'אין רשת'};if(!text||text.length<12)return {error:'הטקסט קצר מדי'};
-  const sys='אתה עוזר שהופך הודעת וואטסאפ או מייל שקיבל אדם ישראלי למשימה אחת קצרה באפליקציית משימות. ענה אך ורק ב-JSON תקין: {"title":"...", "date":"YYYY-MM-DD או null", "time":"HH:MM או null", "who":"שם האדם שצריך לענות לו או null"}. title: פעולה בעברית, עד 70 תווים, מתחילה בפועל בשם הפועל (לענות ל…, להזמין…, לשלם…, לאשר…, להביא…); אם יש אדם — "לענות ל<שם>: <העניין>". date: המועד שבו המשימה צריכה להתבצע לפי תוכן ההודעה (לא תאריך שליחת ההודעה); אם ההודעה מבקשת תשובה בלי מועד — התאריך של היום. היום: '+today()+'. השולח (אם ידוע): '+(sender||'לא ידוע')+'.';
+  const sys='אתה עוזר שהופך הודעת וואטסאפ, SMS או מייל שקיבל אדם ישראלי למשימה אחת קצרה באפליקציית משימות. ענה אך ורק ב-JSON תקין: {"title":"...", "date":"YYYY-MM-DD או null", "time":"HH:MM או null", "who":"שם האדם שצריך לענות לו או null", "address":"כתובת פיזית מלאה (רחוב, מספר, עיר) או null", "phone":"מספר טלפון ליצירת קשר או null"}. title: הנושא בלבד — פעולה בעברית, עד 60 תווים, מתחילה בפועל בשם הפועל (לאסוף…, לענות ל…, להזמין…, לשלם…, לאשר…, להביא…); אם יש אדם — "לענות ל<שם>: <העניין>". אל תכלול בכותרת כתובת, טלפון, קישור או קודים; שם העסק/המקום כן. address: רק אם מופיעה כתובת בהודעה, בלי המילה "בחנות"/"בסניף". phone: מספר טלפון ישראלי בלבד (05x/0x), לא קוד הטבה ולא מספר הזמנה. date: המועד שבו המשימה צריכה להתבצע לפי תוכן ההודעה (לא תאריך שליחת ההודעה); אם ההודעה מבקשת תשובה או איסוף בלי מועד — התאריך של היום. היום: '+today()+'. השולח (אם ידוע): '+(sender||'לא ידוע')+'.';
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':settings.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:settings.model||'claude-sonnet-5-5',max_tokens:300,system:sys,messages:[{role:'user',content:text.slice(0,4000)}]})});
@@ -1179,6 +1228,8 @@ async function refineShare(it,text,sender){
     if(o.date&&/^\d{4}-\d{2}-\d{2}$/.test(o.date))out.date=o.date;
     if(o.time&&/^\d{2}:\d{2}$/.test(o.time))out.time=o.time;
     if(o.who&&typeof o.who==='string')out.who=o.who.trim();
+    if(o.address&&typeof o.address==='string'&&o.address.length>3)out.address=o.address.replace(/\s{2,}/g,' ').trim().slice(0,80);
+    if(o.phone&&typeof o.phone==='string'){const n=normPhone(o.phone);if(validPhone(n))out.phone=fmtPhone(n);else if(/^\*\d{3,5}$/.test(o.phone.trim()))out.phone=o.phone.trim();}
     return out;
   }catch(e){return {error:e.message||String(e)};}
 }
@@ -1187,10 +1238,14 @@ function openShared(pl){
   const {it,sender,kind,body}=smartShare(pl);
   window.__shareIt=it;openEdit(it,true);
   if(kind!=='text')toast(kind==='whatsapp'?'זוהתה הודעת וואטסאפ'+(sender?' מ'+sender:''):'זוהה מייל'+(sender?' מ'+sender:''));
+  else if(it.addr||it.phone)toast('זוהו: '+[it.addr?'כתובת':'',it.phone?'טלפון':''].filter(Boolean).join(' + '));
+  // 0.24: method 2 (Claude) is the default; method 1 (rules) when the user chose it, or when there is no key / no network
+  if(settings.shareAI===false||!settings.apiKey||!navigator.onLine){if(settings.shareAI!==false&&!settings.apiKey)try{syncLog('הודעה נותחה לפי חוקים — אין מפתח API');}catch(e){}return;}
   const run=()=>refineShare(it,body||pl.text||'',sender).then(r=>{
     if(window.__shareIt!==it)return;const $=id=>document.getElementById(id);if(!$('eTitle'))return;
     if(!r||r.error){const msg='דיוק Claude נכשל: '+(r&&r.error||'?');try{syncLog(msg);}catch(e){}toast(msg,'נסה שוב',run);return;}
     if(r.title)$('eTitle').value=r.title;if(r.date&&$('eDate'))$('eDate').value=r.date;if(r.time&&$('eTime'))$('eTime').value=r.time;
+    if(r.address&&$('eAddr'))$('eAddr').value=r.address;if(r.phone&&$('ePhone'))$('ePhone').value=r.phone;
     document.querySelectorAll('.dt input').forEach(i=>i.dispatchEvent(new Event('change')));
     if(r.who&&!it.contact){const c=findContact(r.who);if(c&&$('eContact'))$('eContact').value=c.id;}
     toast('Claude דייק את המשימה — בדוק ושמור');
@@ -1208,7 +1263,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.23.6';
+const APP_VER='0.24';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
