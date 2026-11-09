@@ -948,6 +948,14 @@ document.querySelector('main').addEventListener('click',async e=>{
   render();
 });
 
+/* 0.25: what exactly was saved — title · time · date — with "בטל" for a new item */
+function savedToast(it,isNew,prefix='✓ נשמר'){
+  const l=it.list&&lists.find(x=>x.id===it.list);
+  const when=it.date?fmtDate(it.date):(l?'ללא תאריך · ברשימת '+l.name:'ללא תאריך');
+  const msg=prefix+': '+it.title.slice(0,48)+(it.time?' · '+it.time:'')+' · '+when;
+  if(isNew)toast(msg,'בטל',async()=>{it.status='trash';it.deletedAt=Date.now();await save(it);render();toast('בוטל');});
+  else toast(msg,'סגור',()=>{});
+}
 /* ===================== Quick add ===================== */
 const quick=document.getElementById('quick'),hint=document.getElementById('hint');
 quick.addEventListener('input',()=>{const p=parseHebrew(quick.value);const parts=[];{const tl=quickTargetList();if(tl&&!p.list)parts.push('לרשימת '+tl.name);}if(p.date)parts.push(fmtDate(p.date));if(p.time)parts.push(p.time);if(p.repeat)parts.push(repeatLabel(p.repeat));if(p.condition)parts.push('תנאי: '+p.condition);if(p.topic)parts.push('תזכורת לנושא');if(p.list)parts.push('רשימת '+(lists.find(l=>l.id===p.list)||{}).name);hint.textContent=quick.value.trim()?(parts.join(' · ')||'יתווסף להיום'):'';});
@@ -964,7 +972,7 @@ async function quickAdd(source='manual'){
   if(it.type==='topic'&&!it.date){openEdit(it,true);return;}
   const twin=findDup(it);
   if(twin){quick.value='';hint.textContent='';dupEvent(it,twin,'quick');toast('כבר קיימת: "'+twin.title.slice(0,40)+'"','הוסף בכל זאת',async()=>{await save(it);toast('נוסף: '+it.title);render();});return;}
-  await save(it);quick.value='';hint.textContent='';{const l=it.list&&lists.find(x=>x.id===it.list);toast('נוסף'+(l?' לרשימת '+l.name:'')+': '+it.title);}render();quickTarget();
+  await save(it);quick.value='';hint.textContent='';savedToast(it,true);render();quickTarget();
 }
 function buildFromText(raw,source){
   const p=parseHebrew(raw);
@@ -1074,7 +1082,7 @@ function openEdit(it,isNew=false){
   };
   $('eSave').onclick=async()=>{collect();
     if(isNew){const twin=findDup(it);if(twin&&!it.__force){it.__force=true;dupEvent(it,twin,'edit');toast('כבר קיימת משימה דומה: "'+twin.title.slice(0,40)+'" — לחץ שמור שוב כדי להוסיף בכל זאת');return;}}
-    delete it.__force;await save(it);closeSheet();toast('נשמר');render();};
+    delete it.__force;await save(it);closeSheet();if(window.__shareIt===it)savedShares.add(it.id);savedToast(it,isNew);render();};
   if($('eDone'))$('eDone').onclick=async()=>{collect();await save(it);closeSheet();await complete(it);};
   if($('eFollow'))$('eFollow').onclick=()=>{collect();save(it);openFollowUp(it);};
   if($('eTrash'))$('eTrash').onclick=async()=>{await trash(it);closeSheet();render();};
@@ -1410,6 +1418,7 @@ async function refineShare(it,text,sender){
   }catch(e){return {error:e.message||String(e)};}
 }
 /* open the edit sheet from a share, then improve it in the background if Claude is available */
+const savedShares=new Set();
 function openShared(pl){
   const {it,sender,kind,body}=smartShare(pl);
   window.__shareIt=it;openEdit(it,true);
@@ -1417,8 +1426,17 @@ function openShared(pl){
   else if(it.addr||it.phone)toast('זוהו: '+[it.addr?'כתובת':'',it.phone?'טלפון':''].filter(Boolean).join(' + '));
   // 0.24: method 2 (Claude) is the default; method 1 (rules) when the user chose it, or when there is no key / no network
   if(settings.shareAI===false||!settings.apiKey||!navigator.onLine){if(settings.shareAI!==false&&!settings.apiKey)try{syncLog('הודעה נותחה לפי חוקים — אין מפתח API');}catch(e){}return;}
-  const run=()=>refineShare(it,body||pl.text||'',sender).then(r=>{
-    if(window.__shareIt!==it)return;const $=id=>document.getElementById(id);if(!$('eTitle'))return;
+  const run=()=>refineShare(it,body||pl.text||'',sender).then(async r=>{
+    if(window.__shareIt!==it)return;const $=id=>document.getElementById(id);
+    if(!$('eTitle')){ // 0.25: the sheet is already closed — if the task was saved meanwhile, update it and say so
+      if(!savedShares.has(it.id)||!r||r.error)return;
+      const prev={title:it.title,date:it.date,time:it.time,addr:it.addr,phone:it.phone};
+      if(r.title)it.title=r.title;if(r.date)it.date=r.date;if(r.time)it.time=r.time;if(r.address)it.addr=r.address;if(r.phone)it.phone=r.phone;
+      if(r.who&&!it.contact){const c=findContact(r.who);if(c)it.contact=c.id;}
+      await save(it);render();
+      const msg='Claude עדכן: '+it.title.slice(0,48)+(it.time?' · '+it.time:'')+' · '+(it.date?fmtDate(it.date):'ללא תאריך');
+      toast(msg,'בטל',async()=>{Object.assign(it,prev);await save(it);render();});
+      return;}
     if(!r||r.error){const msg='דיוק Claude נכשל: '+(r&&r.error||'?');try{syncLog(msg);}catch(e){}toast(msg,'נסה שוב',run);return;}
     if(r.title)$('eTitle').value=r.title;if(r.date&&$('eDate'))$('eDate').value=r.date;if(r.time&&$('eTime'))$('eTime').value=r.time;
     if(r.address&&$('eAddr'))$('eAddr').value=r.address;if(r.phone&&$('ePhone'))$('ePhone').value=r.phone;
@@ -1439,7 +1457,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.24.2';
+const APP_VER='0.25';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
