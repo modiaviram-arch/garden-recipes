@@ -506,7 +506,19 @@ function quickTarget(){const l=quickTargetList();quick.placeholder=l?'הוספה
 function show(v){if(v==='more'&&view!=='more')moreSub=null;view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();quickTarget();}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(searchQ){searchQ='';searchIn.value='';searchRow.classList.remove('on');}show(b.dataset.v);});
 
-function placeBtns(it){if(it.status!=='open'||it.type!=='task'||(!it.addr&&!it.phone))return '';let h='<div class="btns">';if(it.addr)h+='<button class="btn" data-act="nav">🚗 Waze</button>';if(it.phone)h+='<button class="btn" data-act="call">📞 '+esc(fmtPhone(it.phone))+'</button>';return h+'</div>';}
+function placeBtns(it){if(it.status!=='open'||it.type!=='task')return '';const notice=it.source==='share';if(!it.addr&&!it.phone&&!notice)return '';let h='<div class="btns">';
+  if(it.addr)h+='<button class="btn" data-act="nav">🚗 Waze</button>';else if(notice)h+='<button class="btn" data-act="addAddr" style="border-style:dashed;opacity:.75">+ כתובת</button>';
+  if(it.phone)h+='<button class="btn" data-act="call">📞 '+esc(fmtPhone(it.phone))+'</button>';else if(notice)h+='<button class="btn" data-act="addPhone" style="border-style:dashed;opacity:.75">+ טלפון</button>';
+  return h+'</div>';}
+/* 0.24.1: fill a missing address / phone straight from the card (one tap + typing) */
+function openFillField(it,field){const isA=field==='addr';
+  openSheet(`<h3>${isA?'📍 כתובת':'📞 טלפון'}</h3><div class="small" dir="auto">${esc(it.title)}</div>
+    <input id="fillVal" ${isA?'':'type="tel"'} placeholder="${isA?'רחוב, מספר, עיר':'05x-…'}" value="${esc(it[field]||'')}">
+    <div class="btns" style="margin-top:10px"><button class="btn p" id="fillSave">שמור</button><button class="btn" id="fillCancel">ביטול</button></div>`);
+  const inp=document.getElementById('fillVal');setTimeout(()=>inp.focus(),50);
+  const doSave=async()=>{const v=inp.value.trim();if(!isA&&v){const n=normPhone(v);if(!validPhone(n)&&!/^\*\d{3,5}$/.test(v)){toast('מספר לא תקין');return;}it.phone=validPhone(n)?fmtPhone(n):v;}else it[field]=v;await save(it);closeSheet();render();toast(v?'נשמר':'נמחק');};
+  document.getElementById('fillSave').onclick=doSave;inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doSave();}});
+  document.getElementById('fillCancel').onclick=closeSheet;}
 function fmtPhone(p){const d=String(p||'').replace(/\D/g,'');if(/^972\d{8,9}$/.test(d)){const l='0'+d.slice(3);return l.length===10?l.slice(0,3)+'-'+l.slice(3):l.slice(0,2)+'-'+l.slice(2);}if(/^0\d{8,9}$/.test(d))return d.length===10?d.slice(0,3)+'-'+d.slice(3):d.slice(0,2)+'-'+d.slice(2);return p;}
 function contactBtns(it){if(it.status!=='open'||it.type!=='task')return '';const {c,name}=contactFor(it);if(c)return '<div class="btns"><button class="btn o" data-act="contact">📲 '+esc(c.name)+': וואטסאפ · טלפון'+(c.address?' · Waze':'')+'</button></div>';if(name)return '<div class="btns"><button class="btn" data-act="pick">👤 בחר איש קשר: '+esc(name)+'</button></div>';return '';}
 function taskCard(it,opts={}){
@@ -767,6 +779,8 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'waze': {const {c}=contactFor(it);if(c&&c.address)window.open(wazeUrl(c.address),'_blank');return;}
     case 'nav': {const a=it.addr||((contactFor(it).c||{}).address);if(a){const w=window.open(wazeUrl(a),'_blank');if(!w)location.href=wazeUrl(a);}return;}
     case 'call': {if(it.phone)location.href='tel:'+String(it.phone).replace(/[^\d+*#]/g,'');return;}
+    case 'addAddr': openFillField(it,'addr');return;
+    case 'addPhone': openFillField(it,'phone');return;
     case 'pick': {const {name}=contactFor(it);window.__pickItem=it;pickContact(name,async c=>{try{it.contact=c.id;await save(it);await render();}catch(e){logErr('קישור משימה לאיש קשר: '+(e&&e.message||e));}openContactActions(it,c);});return;}
   }
   render();
@@ -1263,7 +1277,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.24';
+const APP_VER='0.24.1';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
