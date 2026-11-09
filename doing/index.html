@@ -696,9 +696,12 @@ function listTopicCard(l){
     <div class="btns"><button class="btn p" data-lact="open">פתח</button><button class="btn" data-lact="snooze7">דחה שבוע</button><button class="btn" data-lact="snooze30">דחה חודש</button><button class="btn" data-lact="off">בטל תזכורת</button></div></div></div>`;
 }
 
+const todayGroups=(()=>{try{return Object.assign({ev:true,deliv:true,today:true,tmrw:false,week:false,done:true},JSON.parse(localStorage.getItem('todayGroups')||'{}'));}catch(e){return {ev:true,deliv:true,today:true,tmrw:false,week:false,done:true};}})();
+function grp(key,label,inner,count,cls=''){return `<details class="grp ${cls}" data-g="${key}" ${todayGroups[key]?'open':''}><summary><span>${label}<span class="cnt">${count}</span></span></summary>${inner}</details>`;}
 async function renderToday(){
   const T=today(),T1=addDays(T,1),T7=addDays(T,7);
-  const open=items.filter(i=>i.status==='open');
+  const open=items.filter(i=>i.status==='open'||pendingDone.has(i.id));
+  const doneToday=items.filter(i=>i.status==='done'&&!pendingDone.has(i.id)&&i.doneAt&&ymd(new Date(i.doneAt))===T).sort((a,b)=>b.doneAt-a.doneAt);
   const calAll=(await DB.kget('calendar'))||[];const cal=calAll.filter(e=>e.date===T);
   const hidden=new Set((await DB.kget('hiddenEvents'))||[]);
   const conds=open.filter(i=>i.type==='cond'&&i.date&&i.date<=T);
@@ -708,17 +711,19 @@ async function renderToday(){
   const tasks=open.filter(i=>i.type==='task'&&i.source!=='delivery'&&i.date&&i.date<=T).sort((a,b)=>(b.rollovers||0)-(a.rollovers||0)||(a.time||'99').localeCompare(b.time||'99')||a.createdAt-b.createdAt);
   const tomorrow=open.filter(i=>i.type==='task'&&i.date===T1);
   const week=open.filter(i=>i.type==='task'&&i.date>T1&&i.date<=T7).sort((a,b)=>a.date.localeCompare(b.date));
-  let h='';
+  let h='';const TC=i=>taskCard(i,{today:true});
+  const evCard=e=>`<div class="card ev" data-ev="${esc(e.id)}"><div class="evicon" style="width:40px;flex:none;text-align:center;font-size:22px">📅</div><div class="t"><div class="n">${esc(e.title)}</div><div class="m">${e.start?'<span class="pill" dir="ltr">'+esc(e.start)+(e.end?'–'+esc(e.end):'')+'</span>':'<span>כל היום</span>'}${e.location?'<span>📍 '+esc(e.location)+'</span>':''}</div></div><button class="more" data-act="hideEv" title="הסתר">✕</button></div>`;
   const calV=cal.filter(e=>!hidden.has(e.id));
-  if(calV.length){h+=`<h2>📅 ביומן היום <span class="cnt">${calV.length}</span></h2>`;for(const e of calV)h+=`<div class="card ev" data-ev="${esc(e.id)}"><div class="t"><div class="n">${esc(e.title)}</div><div class="m">${e.start?'<span dir="ltr">'+esc(e.start)+(e.end?'–'+esc(e.end):'')+'</span>':'כל היום'}${e.location?' · '+esc(e.location):''}</div></div><button class="x" data-act="hideEv">✕</button></div>`;}
+  if(calV.length)h+=grp('ev','📅 ביומן היום',calV.map(evCard).join(''),calV.length);
   if(conds.length||topics.length||listRem.length){h+=`<h2>🔔 תזכורות</h2>`;conds.forEach(i=>h+=condCard(i));topics.forEach(i=>h+=topicCard(i));listRem.forEach(l=>h+=listTopicCard(l));}
-  if(deliv.length){h+=`<h2>📦 דואר ומשלוחים לאסוף <span class="cnt">${deliv.length}</span></h2>`;deliv.forEach(i=>h+=taskCard(i));}
-  h+=`<h2>✅ משימות היום <span class="cnt">${tasks.length}</span></h2>`;
-  if(tasks.length)tasks.forEach(i=>h+=taskCard(i));else h+=`<div class="empty"><b>🌤️</b>אין משימות להיום. הוסף למעלה — בהקלדה או בקול.</div>`;
+  if(deliv.length)h+=grp('deliv','📦 דואר ומשלוחים לאסוף',deliv.map(TC).join(''),deliv.length);
+  h+=grp('today','✅ משימות היום',tasks.length?tasks.map(TC).join(''):`<div class="empty"><b>🌤️</b>אין משימות להיום. הוסף למעלה — בהקלדה או בקול.</div>`,tasks.filter(i=>!pendingDone.has(i.id)).length);
   const calT1=calAll.filter(e=>e.date===T1&&!hidden.has(e.id));
-  if(tomorrow.length||calT1.length){h+=`<details><summary>מחר (${tomorrow.length+calT1.length})</summary>`;for(const e of calT1)h+=`<div class="card ev" data-ev="${esc(e.id)}"><div class="t"><div class="n">📅 ${esc(e.title)}</div><div class="m">${e.start?'<span dir="ltr">'+esc(e.start)+(e.end?'–'+esc(e.end):'')+'</span>':'כל היום'}${e.location?' · '+esc(e.location):''}</div></div></div>`;tomorrow.forEach(i=>h+=taskCard(i));h+='</details>';}
-  if(week.length){h+=`<details><summary>השבוע (${week.length})</summary>`;week.forEach(i=>h+=taskCard(i,{showDate:true}));h+='</details>';}
-  document.getElementById('v-today').innerHTML=h;
+  if(tomorrow.length||calT1.length)h+=grp('tmrw','מחר',calT1.map(evCard).join('')+tomorrow.map(TC).join(''),tomorrow.length+calT1.length,'sub');
+  if(week.length)h+=grp('week','השבוע',week.map(i=>taskCard(i,{today:true,showDate:true})).join(''),week.length,'sub');
+  if(doneToday.length)h+=grp('done','✓ בוצעו היום',doneToday.map(doneTodayCard).join(''),doneToday.length,'sub done');
+  const v=document.getElementById('v-today');v.innerHTML=h;
+  v.querySelectorAll('details.grp').forEach(d=>d.addEventListener('toggle',()=>{todayGroups[d.dataset.g]=d.open;try{localStorage.setItem('todayGroups',JSON.stringify(todayGroups));}catch(e){}}));
 }
 function renderLists(){
   const T=today(),T1=addDays(T,1),T7=addDays(T,7);
@@ -842,11 +847,30 @@ document.getElementById('searchClear').onclick=()=>{searchRow.classList.remove('
 let searchT;searchIn.addEventListener('input',()=>{clearTimeout(searchT);searchT=setTimeout(()=>{searchQ=searchIn.value;render();},150);});
 
 /* ===================== Actions ===================== */
+/* 0.25: "done" = saved at once; the card turns green for 5 s with "בטל", then moves to "בוצעו היום".
+   The outbox event and the next occurrence of a repeating task are written only when the 5 s pass, so an undo leaves no trace. */
+const pendingDone=new Map();
 async function complete(it){
-  it.status='done';it.doneAt=Date.now();await save(it);
+  if(pendingDone.has(it.id))return;
+  it.status='done';it.doneAt=Date.now();it.updatedAt=Date.now();
+  await DB.put(it);markDirty();               // saved immediately (survives leaving the screen or the app)
+  pendingDone.set(it.id,setTimeout(()=>finishDone(it.id),5000));
+  if(view!=='today'){toast('בוצע ✓');}
+  render();
+}
+async function finishDone(id){
+  pendingDone.delete(id);
+  const it=items.find(x=>x.id===id);if(!it||it.status!=='done')return;
+  trackEvent(it);                              // outbox: 'done' event
   if(it.repeat){const nd=nextOccurrence(it,today());const nx=newItem({title:it.title,note:it.note,time:it.time,list:it.list,source:it.source,repeat:it.repeat,date:nd});await save(nx);}
-  toast('בוצע ✓');
-  if(it.type==='task')openFollowUp(it);
+  const el=document.querySelector('#v-today .card.pend[data-id="'+id+'"]');
+  if(el&&view==='today'){el.classList.add('leaving');await new Promise(r=>setTimeout(r,300));}
+  render();
+}
+async function undoDone(it){
+  const t=pendingDone.get(it.id);if(t){clearTimeout(t);pendingDone.delete(it.id);}
+  it.status='open';it.doneAt=null;it.updatedAt=Date.now();
+  await DB.put(it);markDirty();render();
 }
 /* follow-up: no pre-written content — the user adds it now, typed or spoken */
 function openFollowUp(parent){
@@ -1051,7 +1075,7 @@ function openEdit(it,isNew=false){
   $('eSave').onclick=async()=>{collect();
     if(isNew){const twin=findDup(it);if(twin&&!it.__force){it.__force=true;dupEvent(it,twin,'edit');toast('כבר קיימת משימה דומה: "'+twin.title.slice(0,40)+'" — לחץ שמור שוב כדי להוסיף בכל זאת');return;}}
     delete it.__force;await save(it);closeSheet();toast('נשמר');render();};
-  if($('eDone'))$('eDone').onclick=async()=>{collect();it.status='done';it.doneAt=Date.now();await save(it);if(it.repeat){const nd=nextOccurrence(it,today());await save(newItem({title:it.title,note:it.note,time:it.time,list:it.list,source:it.source,repeat:it.repeat,date:nd}));}closeSheet();render();openFollowUp(it);};
+  if($('eDone'))$('eDone').onclick=async()=>{collect();await save(it);closeSheet();await complete(it);};
   if($('eFollow'))$('eFollow').onclick=()=>{collect();save(it);openFollowUp(it);};
   if($('eTrash'))$('eTrash').onclick=async()=>{await trash(it);closeSheet();render();};
   if($('eCal'))$('eCal').onclick=()=>{collect();const d=it.date.replace(/-/g,''),t=it.time.replace(':','');const end=pad((+it.time.slice(0,2)+1)%24)+it.time.slice(3);const u='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('⏰ '+it.title)+'&dates='+d+'T'+t+'00/'+d+'T'+end.replace(':','')+'00&details='+encodeURIComponent('תזכורת מ-My Doing');window.open(u,'_blank');};
