@@ -509,7 +509,16 @@ document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(searchQ){s
 function placeBtns(it){if(it.status!=='open'||it.type!=='task')return '';const notice=it.source==='share';if(!it.addr&&!it.phone&&!notice)return '';let h='<div class="btns">';
   if(it.addr)h+='<button class="btn" data-act="nav">🚗 Waze</button>';else if(notice)h+='<button class="btn" data-act="addAddr" style="border-style:dashed;opacity:.75">+ כתובת</button>';
   if(it.phone)h+='<button class="btn" data-act="call">📞 '+esc(fmtPhone(it.phone))+'</button>';else if(notice)h+='<button class="btn" data-act="addPhone" style="border-style:dashed;opacity:.75">+ טלפון</button>';
+  if(it.phone&&!contactFor(it).c&&!contacts.some(c=>c.phone===normPhone(it.phone)))h+='<button class="btn" data-act="toContact" title="שמור כאיש קשר">📇 שמור כאיש קשר</button>'; // 0.24.2: the reverse move — task → contact book
   return h+'</div>';}
+/* 0.24.2: guess a contact name from a notice title: "…בחנות סטימצקי, נשר" → "סטימצקי נשר"; "מרפאת שיניים ד"ר כהן" → as is */
+function guessContactName(it){const t=(it.title||'').replace(/[.!?]+$/,'');
+  const STOPW=/\s+(?:נקבע|נקבעה|ממתינ[הת]?|מחכ[הה]?|ליום|בשעה|ב-?\d|מחר|היום|עד|לפרטים|טלפון|בתאריך)(?![א-ת])[\s\S]*$/;
+  let m=t.match(/(?:^|\s)ב(מרפאת|מרפאה|חנות|סניף|קליניקת|מסעדת|קפה|מעבדת|משרד)\s+([^,.:]{2,40})(?:,\s*([א-ת\s"']{2,20}))?/);
+  if(m)return (m[1]+' '+m[2].replace(STOPW,'')+(m[3]?' '+m[3]:'')).replace(/\s{2,}/g,' ').trim();
+  m=t.match(/(?:^|\s)(?:בנקודת האיסוף|אצל|של|מ)\s+([^,.:]{2,40})(?:,\s*([א-ת\s"']{2,20}))?/);
+  if(m)return (m[1].replace(STOPW,'')+(m[2]?' '+m[2]:'')).replace(/\s{2,}/g,' ').trim();
+  const d=detectName(t);if(d)return d;return t.replace(STOPW,'').slice(0,30).trim();}
 /* 0.24.1: fill a missing address / phone straight from the card (one tap + typing) */
 function openFillField(it,field){const isA=field==='addr';
   openSheet(`<h3>${isA?'📍 כתובת':'📞 טלפון'}</h3><div class="small" dir="auto">${esc(it.title)}</div>
@@ -781,6 +790,7 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'call': {if(it.phone)location.href='tel:'+String(it.phone).replace(/[^\d+*#]/g,'');return;}
     case 'addAddr': openFillField(it,'addr');return;
     case 'addPhone': openFillField(it,'phone');return;
+    case 'toContact': {const c={name:guessContactName(it),phone:normPhone(it.phone),aliases:[],address:it.addr||''};openContactSheet(c,async cc=>{it.contact=cc.id;await save(it);await render();toast('נשמר איש קשר: '+cc.name);});return;}
     case 'pick': {const {name}=contactFor(it);window.__pickItem=it;pickContact(name,async c=>{try{it.contact=c.id;await save(it);await render();}catch(e){logErr('קישור משימה לאיש קשר: '+(e&&e.message||e));}openContactActions(it,c);});return;}
   }
   render();
@@ -1277,7 +1287,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.24.1';
+const APP_VER='0.24.2';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
