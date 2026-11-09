@@ -16,11 +16,11 @@
 <style>
 :root{
   --blue:#1E5A96;--blue2:#2B6FB3;--accent:#D9822B;--ok:#2E8B57;--warn:#C0392B;
-  --bg:#F3F5F9;--card:#FFFFFF;--line:#D8DFE8;--ink:#1C2430;--muted:#66717F;--soft:#E8EEF6;
+  --bg:#F3F5F9;--card:#FFFFFF;--line:#D8DFE8;--ink:#1C2430;--muted:#66717F;--soft:#E8EEF6;--muted2:#4A5563;--latebg:#FFF7EE;--lateline:#F0C9A0;--okbg:#E6F4EC;--okline:#9FD3B4;
   --fs:17px;--pad-b:env(safe-area-inset-bottom,0px);--pad-t:env(safe-area-inset-top,0px);
 }
 @media (prefers-color-scheme: dark){
-  :root{--bg:#121820;--card:#1B2430;--line:#2C3847;--ink:#E7ECF2;--muted:#9AA7B6;--soft:#233040;--blue:#7FB0E6;--blue2:#5E93CC}
+  :root{--bg:#121820;--card:#1B2430;--line:#2C3847;--ink:#E7ECF2;--muted:#9AA7B6;--soft:#233040;--blue:#7FB0E6;--blue2:#5E93CC;--muted2:#B5C0CC;--latebg:#2A2218;--lateline:#6B4A22;--okbg:#17302A;--okline:#2E6B4F}
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -97,6 +97,61 @@ details summary{cursor:pointer;color:var(--blue);font-weight:600;padding:6px 2px
 .toast.on{pointer-events:auto}
 .toast button{color:#FFD166;font-weight:700;font-size:15px;padding:4px 6px;background:none;border:0}
 .toast.on{opacity:1}
+/* ===== 0.25: Today screen — new card, collapsible groups, floating menu (scoped to #v-today) ===== */
+#v-today .card{padding:8px 8px 8px 10px;margin:6px 0;position:relative;overflow:hidden;transition:background .25s,border-color .25s,transform .3s,opacity .3s,max-height .3s}
+#v-today .card::before{content:"";position:absolute;top:0;bottom:0;right:0;width:4px;background:transparent}
+#v-today .card.stuck{border-color:var(--line)}
+#v-today .card.stuck::before{background:var(--warn)}
+#v-today .card.late{background:var(--latebg);border-color:var(--lateline)}
+#v-today .card.late::before{background:var(--accent)}
+#v-today .card.ev::before{background:var(--blue2)}
+#v-today .card.pend{background:var(--okbg);border-color:var(--okline)}
+#v-today .card.pend::before{background:var(--ok)}
+#v-today .card.leaving{opacity:0;transform:translateX(-30px);max-height:0;margin:0;padding-top:0;padding-bottom:0;border-width:0}
+#v-today .circle{width:40px;height:40px;border-width:2.5px;font-size:20px;margin-top:1px;background:var(--card);transition:background .2s,border-color .2s,transform .15s}
+#v-today .circle:active{transform:scale(.92)}
+#v-today .card.late .circle{border-color:var(--accent)}
+#v-today .card.pend .circle{background:var(--ok);border-color:var(--ok)}
+#v-today .card .n{line-height:1.3;max-height:2.6em;overflow:hidden}
+#v-today .card.pend .n{text-decoration:line-through;color:var(--muted)}
+#v-today .card .m{font-size:14.5px;color:var(--muted2);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+#v-today .m .pill{background:var(--soft);color:var(--blue);border-radius:999px;padding:0 9px;font-weight:600;font-size:13.5px;line-height:22px}
+#v-today .m .st{font-weight:600}
+#v-today .m .st.late{color:#9B5A14}
+#v-today .m .st.stuck{color:var(--warn)}
+#v-today .m .note{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;width:100%}
+#v-today .btns{margin-top:6px}
+#v-today .btns .btn{min-height:40px;display:inline-flex;align-items:center}
+.more{width:36px;height:40px;flex:none;border-radius:10px;color:var(--muted);font-size:22px;display:flex;align-items:center;justify-content:center;line-height:1}
+.more:active,.more.on{background:var(--soft);color:var(--blue)}
+.donebar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;color:var(--ok);font-weight:600;font-size:15px}
+.donebar .undo{background:var(--card);color:var(--ok);border:1.5px solid var(--okline);border-radius:10px;padding:0 14px;min-height:38px;font-weight:700}
+.fu{color:var(--muted2);font-weight:400;font-size:13.5px;text-decoration:underline;padding:4px 0}
+.prog{position:absolute;bottom:0;left:0;height:3px;background:var(--ok);width:100%;transform-origin:left;animation:shrink 5s linear forwards}
+@keyframes shrink{to{transform:scaleX(0)}}
+#v-today .card.mini{padding:8px 10px}
+#v-today .card.mini .circle{width:30px;height:30px;font-size:15px}
+#v-today .card.mini .n{font-size:15px;max-height:1.3em}
+details.grp{margin-top:6px}
+details.grp>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;min-height:44px;padding:6px 4px 4px;color:var(--blue);font-weight:700;font-size:15.5px;border-bottom:2px solid var(--line);margin-bottom:4px}
+details.grp>summary::-webkit-details-marker{display:none}
+details.grp>summary .cnt{font-weight:400;color:var(--muted);font-size:13px;margin-inline-start:8px}
+details.grp>summary::after{content:"‹";font-size:22px;color:var(--muted);transition:transform .2s;margin-inline-start:8px}
+details.grp[open]>summary::after{transform:rotate(-90deg)}
+details.grp.sub>summary{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:48px}
+details.grp.done>summary{color:var(--ok)}
+.pop{position:fixed;z-index:35;background:var(--card);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.22);border:1px solid var(--line);min-width:220px;padding:4px;display:none}
+.pop.on{display:block}
+.pop button{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:0 12px;border-radius:10px;font-size:16px;text-align:right}
+.pop button:active{background:var(--soft)}
+.pop button .ic{width:26px;text-align:center;font-size:19px}
+.pop button+button{border-top:1px solid var(--line);border-radius:0}
+.pop button.danger{color:var(--warn)}
+.pop::before{content:"";position:absolute;top:-7px;left:14px;width:12px;height:12px;background:var(--card);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.pop.up::before{top:auto;bottom:-7px;transform:rotate(225deg)}
+.scrim{position:fixed;inset:0;z-index:34;display:none}
+.scrim.on{display:block}
+
 .small{font-size:13px;color:var(--muted)}
 .src{font-size:14px;margin-inline-start:4px}
 .listhead{display:flex;align-items:center;gap:8px}
@@ -137,6 +192,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet"></div>
+<div id="scrim" class="scrim"></div><div id="pop" class="pop"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -531,6 +587,7 @@ function openFillField(it,field){const isA=field==='addr';
 function fmtPhone(p){const d=String(p||'').replace(/\D/g,'');if(/^972\d{8,9}$/.test(d)){const l='0'+d.slice(3);return l.length===10?l.slice(0,3)+'-'+l.slice(3):l.slice(0,2)+'-'+l.slice(2);}if(/^0\d{8,9}$/.test(d))return d.length===10?d.slice(0,3)+'-'+d.slice(3):d.slice(0,2)+'-'+d.slice(2);return p;}
 function contactBtns(it){if(it.status!=='open'||it.type!=='task')return '';const {c,name}=contactFor(it);if(c)return '<div class="btns"><button class="btn o" data-act="contact">📲 '+esc(c.name)+': וואטסאפ · טלפון'+(c.address?' · Waze':'')+'</button></div>';if(name)return '<div class="btns"><button class="btn" data-act="pick">👤 בחר איש קשר: '+esc(name)+'</button></div>';return '';}
 function taskCard(it,opts={}){
+  if(opts.today)return todayCard(it,opts);
   const src=SRC[it.source]||'';
   const stuck=it.type==='task'&&(it.rollovers||0)>=3;
   const meta=[];
@@ -552,6 +609,74 @@ function taskCard(it,opts={}){
     </div>
     ${it.status==='open'&&it.type==='task'?'<button class="zz" data-act="snooze" title="דחה">⏰</button>':''}<button class="x" data-act="trash" title="מחק">✕</button></div>`;
 }
+
+/* ===== 0.25: Today-screen card — one primary action (circle), ⋮ for the rest ===== */
+function todayCard(it,opts={}){
+  const src=SRC[it.source]||'';
+  const stuck=it.type==='task'&&(it.rollovers||0)>=3;
+  const late=!stuck&&(it.rollovers||0)>0;
+  if(pendingDone.has(it.id)){
+    return `<div class="card pend" data-id="${it.id}">
+      <button class="circle" data-act="undo" aria-label="בטל">✓</button>
+      <div class="t"><div class="n">${esc(it.title)}</div>
+        <div class="donebar"><span>המשימה בוצעה ✓${it.repeat?' · הבאה: '+fmtDate(nextOccurrence(it,today())):''}</span><button class="undo" data-act="undo">בטל</button></div>
+        <button class="fu" data-act="followup">↪ משימת המשך</button>
+      </div><div class="prog"></div></div>`;
+  }
+  const m=[];
+  if(stuck)m.push('<span class="st stuck">⚠️ תקועה · '+it.rollovers+' ימים</span>');
+  else if(late)m.push('<span class="st late">⏳ באיחור מאתמול</span>');
+  if(it.time)m.push('<span class="pill" dir="ltr">'+esc(it.time)+'</span>');
+  if(opts.showDate&&it.date)m.push('<span>📅 '+esc(fmtDate(it.date))+'</span>');
+  if(it.list){const l=lists.find(x=>x.id===it.list);if(l)m.push('<span>📋 '+esc(l.name)+'</span>');}
+  if(it.repeat)m.push('<span>🔁 '+esc(repeatLabel(it.repeat))+'</span>');
+  if(it.parentTitle)m.push('<span>↪ '+esc(it.parentTitle)+'</span>');
+  if(it.addr)m.push('<span>📍 '+esc(it.addr)+'</span>');
+  if(it.note)m.push('<span class="note">📝 '+esc(it.note)+'</span>');
+  return `<div class="card ${stuck?'stuck':''} ${late?'late':''}" data-id="${it.id}">
+    <button class="circle" data-act="done" aria-label="סמן כבוצע"></button>
+    <div class="t"><div class="n" data-act="edit">${esc(it.title)}${src?' <span class="src">'+src+'</span>':''}</div>
+    ${m.length?'<div class="m">'+m.join('')+'</div>':''}
+    ${contactBtns(it)}${placeBtns(it)}
+    ${it.checklist&&it.checklist.length?'<div class="btns"><button class="btn" data-act="checklist">🛒 רשימה '+it.checklist.filter(c=>c.done).length+'/'+it.checklist.length+'</button></div>':(it.photo?'<div class="btns"><button class="btn p" data-act="decode">🔍 פענח רשימה מהצילום</button></div>':'')}
+    </div>
+    <button class="more" data-act="menu" aria-label="עוד פעולות">⋮</button></div>`;
+}
+function doneTodayCard(it){
+  return `<div class="card pend mini" data-id="${it.id}"><button class="circle" data-act="reopen" title="החזר למשימות">✓</button>
+    <div class="t"><div class="n">${esc(it.title)}</div><div class="m"><span>בוצע ${new Date(it.doneAt||Date.now()).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</span><button class="fu" data-act="reopen" style="padding:0">↩ החזר למשימות</button><button class="fu" data-act="followup" style="padding:0">↪ משימת המשך</button></div></div></div>`;
+}
+/* floating 4-command menu, anchored to the card's ⋮ */
+function closePop(){const p=document.getElementById('pop');p.classList.remove('on');document.getElementById('scrim').classList.remove('on');document.querySelectorAll('.more.on').forEach(b=>b.classList.remove('on'));}
+function openCardMenu(it,btn){
+  const pop=document.getElementById('pop');
+  if(pop.classList.contains('on')&&pop.dataset.id===it.id){closePop();return;}
+  closePop();btn.classList.add('on');pop.dataset.id=it.id;openCardMenu.t=Date.now();
+  pop.innerHTML=`<button data-m="edit"><span class="ic">✏️</span>ערוך משימה</button>
+    <button data-m="snooze"><span class="ic">📅</span>דחה / שנה מועד</button>
+    <button data-m="tolist"><span class="ic">⇄</span>העבר לרשימה</button>
+    <button data-m="trash" class="danger"><span class="ic">🗑</span>מחק</button>`;
+  pop.className='pop on';
+  const b=btn.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;
+  const h=pop.offsetHeight||230,w=pop.offsetWidth||220;
+  pop.style.left=Math.max(8,Math.min(b.left-6,vw-w-8))+'px';
+  if(b.bottom+6+h>vh-80){pop.style.top=(b.top-h-6)+'px';pop.classList.add('up');}else pop.style.top=(b.bottom+6)+'px';
+  document.getElementById('scrim').classList.add('on');
+  pop.onclick=async e=>{const x=e.target.closest('[data-m]');if(!x)return;const k=x.dataset.m;closePop();
+    if(k==='edit')openEdit(it);else if(k==='snooze')openSnooze(it);else if(k==='tolist')openMoveToList(it);else if(k==='trash'){await trash(it);render();}};
+}
+function openMoveToList(it){
+  openSheet(`<h3>⇄ העבר לרשימה</h3><div class="small" style="margin-bottom:10px">${esc(it.title)}<br>המשימה עוברת לרשימה ולא נמחקת</div>
+    <div class="btns">${lists.map(l=>`<button class="btn ${it.list===l.id?'p':''}" data-ml="${l.id}">📋 ${esc(l.name)}</button>`).join('')}</div>
+    <div class="btns" style="margin-top:12px"><button class="btn" id="mlCancel">סגור</button></div>`);
+  document.getElementById('mlCancel').onclick=closeSheet;
+  sheet.querySelectorAll('[data-ml]').forEach(b=>b.onclick=async()=>{const prev={list:it.list,date:it.date};const l=lists.find(x=>x.id===b.dataset.ml);
+    it.list=l.id;it.date=null;await save(it);closeSheet();render();
+    toast('הועבר לרשימת '+l.name+' · המשימה לא נמחקה','בטל',async()=>{it.list=prev.list;it.date=prev.date;await save(it);render();});});
+}
+document.getElementById('scrim').onclick=closePop;
+window.addEventListener('scroll',()=>{if(Date.now()-(openCardMenu.t||0)>400)closePop();},{passive:true});
+
 function condCard(it){
   return `<div class="card q" data-id="${it.id}">
     <div class="t"><div class="n">❓ ${esc(it.condition||'תנאי')}?</div><div class="m">${esc(it.title)}${it.windowEnd?' · עד '+fmtDate(it.windowEnd):''}</div>
@@ -768,7 +893,10 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(a==='hideEv'){const id=b.closest('[data-ev]').dataset.ev;const hid=new Set((await DB.kget('hiddenEvents'))||[]);hid.add(id);await DB.kset('hiddenEvents',[...hid]);render();return;}
   const card=b.closest('[data-id]');if(!card)return;const it=items.find(x=>x.id===card.dataset.id);if(!it)return;
   switch(a){
-    case 'done': if(it.status==='done'){it.status='open';it.doneAt=null;await save(it);}else await complete(it);break;
+    case 'done': if(it.status==='done'&&!pendingDone.has(it.id)){it.status='open';it.doneAt=null;await save(it);}else if(pendingDone.has(it.id)){await undoDone(it);return;}else await complete(it);return;
+    case 'undo': await undoDone(it);return;
+    case 'menu': openCardMenu(it,b);return;
+    case 'followup': openFollowUp(it);return;
     case 'edit': openEdit(it);return;
     case 'checklist': openChecklist(it);return;
     case 'decode': openEdit(it);setTimeout(()=>{const b=document.getElementById('decodeBtn');if(b)b.click();},150);return;
