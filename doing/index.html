@@ -145,6 +145,13 @@ details.grp.list>summary>span{display:flex;align-items:center;gap:6px;flex-wrap:
 details.grp.list>summary .more{margin-inline-start:auto;margin-inline-end:2px}
 details.grp.list .empty{padding:14px}
 details.grp.list .empty b{font-size:24px}
+.nc .card.log .n{text-decoration:none;color:var(--ink)}
+.nc .card.log .circle{pointer-events:none}
+.nc .card.log.closed{background:var(--soft);border-color:var(--line)}
+.nc .card.log.closed::before{background:var(--muted)}
+.nc .card.log.closed .circle{background:var(--muted);border-color:var(--muted)}
+.nc .card.log .m .st.ok{color:var(--ok)}
+.nc .card.log .m .st.closed{color:var(--muted)}
 .pop{position:fixed;z-index:35;background:var(--card);border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.22);border:1px solid var(--line);min-width:220px;padding:4px;display:none}
 .pop.on{display:block}
 .pop button{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:0 12px;border-radius:10px;font-size:16px;text-align:right}
@@ -182,7 +189,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
   <main>
     <section id="v-today" class="view on nc"></section>
     <section id="v-lists" class="view nc"></section>
-    <section id="v-log" class="view"></section>
+    <section id="v-log" class="view nc"></section>
     <section id="v-more" class="view"></section>
     <section id="v-search" class="view"></section>
   </main>
@@ -767,13 +774,54 @@ function openListMenu(l,btn){
   pop.onclick=e=>{const x=e.target.closest('[data-m]');if(!x)return;const k=x.dataset.m;closePop();
     if(k==='addto')openEdit(newItem({list:l.id,source:'manual'}),true);else if(k==='rename')openListSheet(l);else openListRemind(l);};
 }
+function logCard(it){
+  const closed=it.status==='closed';const l=it.list&&lists.find(x=>x.id===it.list);
+  return `<div class="card pend mini log ${closed?'closed':''}" data-id="${it.id}"><div class="circle">${closed?'–':'✓'}</div>
+    <div class="t"><div class="n" data-act="openLog">${esc(it.title)}${SRC[it.source]?' <span class="src">'+SRC[it.source]+'</span>':''}</div>
+      <div class="m"><span class="pill" dir="ltr">${new Date(it.doneAt||it.updatedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}</span><span class="st ${closed?'closed':'ok'}">${closed?'נסגר — לא נדרש':'בוצע'}</span>${l?'<span>'+(LIST_ICON[l.name]||'📋')+' '+esc(l.name)+'</span>':''}</div></div>
+    <button class="more" data-act="logMenu" aria-label="פעולות">⋮</button></div>`;
+}
 function renderLog(){
-  const done=items.filter(i=>i.status==='done'||i.status==='closed').sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
-  let h='',last='';
+  const done=items.filter(i=>(i.status==='done'||i.status==='closed')&&!pendingDone.has(i.id)).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));
+  const T=today(),Y=addDays(T,-1);
+  let h='';
   if(!done.length)h=`<div class="empty"><b>📖</b>היומן ריק. כל מה שתסמן "בוצע" יופיע כאן לפי ימים.</div>`;
-  for(const it of done){const d=ymd(new Date(it.doneAt||it.updatedAt));if(d!==last){h+=`<h2>${fmtDate(d)}</h2>`;last=d;}
-    h+=`<div class="card" data-id="${it.id}"><div class="circle done">${it.status==='closed'?'–':'✓'}</div><div class="t" data-act="edit"><div class="n">${esc(it.title)}<span class="src">${SRC[it.source]||''}</span>${it.status==='closed'?'<span class="badge">לא נדרש</span>':''}</div><div class="m">${new Date(it.doneAt||it.updatedAt).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}${it.list?' · '+((lists.find(l=>l.id===it.list)||{}).name||''):''}</div><div class="btns"><button class="btn" data-act="reopen">החזר למשימות</button></div></div><button class="x" data-act="trash">✕</button></div>`;}
-  document.getElementById('v-log').innerHTML=h;
+  const byDay=new Map();
+  for(const it of done){const d=ymd(new Date(it.doneAt||it.updatedAt));if(!byDay.has(d))byDay.set(d,[]);byDay.get(d).push(it);}
+  for(const [d,arr] of byDay){const key='lg_'+d;if(todayGroups[key]===undefined)todayGroups[key]=(d===T||d===Y);
+    const label=d===T?'היום':d===Y?'אתמול':fmtDate(d);
+    h+=grp(key,label+'&nbsp;',arr.map(logCard).join(''),arr.length,'sub');}
+  const v=document.getElementById('v-log');v.innerHTML=h;
+  v.querySelectorAll('details.grp').forEach(d=>d.addEventListener('toggle',()=>{todayGroups[d.dataset.g]=d.open;try{localStorage.setItem('todayGroups',JSON.stringify(todayGroups));}catch(e){}}));
+}
+/* 0.27: log item — secondary actions in ⋮ and in the opened card; the ✓ itself does nothing (no accidental reopen) */
+async function reopenTask(it){
+  const prev={status:it.status,doneAt:it.doneAt};
+  it.status='open';it.doneAt=null;await save(it);render();
+  toast('הוחזר למשימות היום','בטל',async()=>{it.status=prev.status;it.doneAt=prev.doneAt;await save(it);render();});
+}
+function openLogMenu(it,btn){
+  const pop=document.getElementById('pop');
+  if(pop.classList.contains('on')&&pop.dataset.id===it.id){closePop();return;}
+  closePop();btn.classList.add('on');pop.dataset.id=it.id;openCardMenu.t=Date.now();
+  pop.innerHTML=`<button data-m="reopen"><span class="ic">↩</span>החזר למשימות</button>
+    <button data-m="followup"><span class="ic">↪</span>משימת המשך</button>
+    <button data-m="edit"><span class="ic">✏️</span>פתח / ערוך</button>
+    <button data-m="trash" class="danger"><span class="ic">🗑</span>מחק מהיומן</button>`;
+  pop.className='pop on';
+  const b=btn.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;const h=pop.offsetHeight||230,w=pop.offsetWidth||220;
+  pop.style.left=Math.max(8,Math.min(b.left-6,vw-w-8))+'px';
+  if(b.bottom+6+h>vh-80){pop.style.top=(b.top-h-6)+'px';pop.classList.add('up');}else pop.style.top=(b.bottom+6)+'px';
+  document.getElementById('scrim').classList.add('on');
+  pop.onclick=async e=>{const x=e.target.closest('[data-m]');if(!x)return;const k=x.dataset.m;closePop();
+    if(k==='reopen')await reopenTask(it);else if(k==='followup')openFollowUp(it);else if(k==='edit')openEdit(it);else if(k==='trash'){await trash(it);render();}};
+}
+function openLogCard(it){
+  const closed=it.status==='closed';const l=it.list&&lists.find(x=>x.id===it.list);const d=new Date(it.doneAt||it.updatedAt);
+  openSheet(`<h3>${esc(it.title)}</h3><div class="small" style="margin-bottom:10px">${closed?'נסגר — לא נדרש':'בוצע'} · ${fmtDate(ymd(d))} ${d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})}${l?' · 📋 '+esc(l.name):''}</div>
+    ${it.note?'<div class="small" style="background:var(--bg);border-radius:10px;padding:10px;margin-bottom:10px;white-space:pre-wrap">'+esc(it.note)+'</div>':''}
+    <div class="btns"><button class="btn p" data-la="reopen">↩ החזר למשימות</button><button class="btn" data-la="followup">↪ משימת המשך</button><button class="btn" data-la="edit">✏️ ערוך</button><button class="btn" data-la="close">סגור</button></div>`);
+  sheet.querySelectorAll('[data-la]').forEach(b=>b.onclick=async()=>{const k=b.dataset.la;closeSheet();if(k==='reopen')await reopenTask(it);else if(k==='followup')openFollowUp(it);else if(k==='edit')setTimeout(()=>openEdit(it),200);});
 }
 let moreSub=null; // null = menu · 'trash' | 'contacts' | 'settings'
 function moreHead(title){return `<div class="row" style="align-items:center;gap:8px;margin:4px 0 6px"><button class="btn" data-more="menu" style="flex:0 0 auto">› חזרה</button><h2 style="margin:0;flex:1">${title}</h2></div>`;}
@@ -952,7 +1000,9 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'trash': await trash(it);break;
     case 'restore': it.status='open';it.deletedAt=null;await save(it);toast('שוחזר');break;
     case 'purge': await purgeItem(it.id);break;
-    case 'reopen': it.status='open';it.doneAt=null;await save(it);break;
+    case 'reopen': await reopenTask(it);return;
+    case 'logMenu': openLogMenu(it,b);return;
+    case 'openLog': openLogCard(it);return;
     case 'snooze': openSnooze(it);return;
     case 'snooze7': it.date=addDays(today(),7);it.rollovers=0;await save(it);break;
     case 'snooze30': it.date=addDays(today(),30);await save(it);break;
@@ -1482,7 +1532,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.26';
+const APP_VER='0.27';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
