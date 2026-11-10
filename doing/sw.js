@@ -1,4 +1,4 @@
-const CACHE = 'my-doing-v0.30-2026-11-10';
+const CACHE = 'my-doing-v0.31-2026-11-10';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));

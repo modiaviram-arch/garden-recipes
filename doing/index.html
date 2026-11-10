@@ -125,6 +125,10 @@ details summary{cursor:pointer;color:var(--blue);font-weight:600;padding:6px 2px
 .toast{position:fixed;bottom:calc(70px + var(--pad-b));left:50%;transform:translateX(-50%);background:#1C2430;color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:14px}
 .toast.on{pointer-events:auto}
 .toast button{color:#FFD166;font-weight:700;font-size:15px;padding:4px 6px;background:none;border:0}
+/* 0.31: four message families */
+.toast.ok{background:#DCFCE7;color:#15803D}.toast.ok button{color:#15803D}
+.toast.err{background:#FEE2E2;color:#B91C1C;white-space:normal;width:calc(100% - 24px);border-radius:14px;justify-content:space-between;text-align:right}.toast.err button{color:#B91C1C;white-space:nowrap;flex:none}
+.fnote{border-radius:12px;padding:10px 12px;font-size:14px;margin:10px 0;display:flex;flex-direction:column;gap:8px;line-height:1.4}.fnote.warn{background:#FEF3C7;color:#B45309;border:1px solid #FCD34D}.fnote.err{background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5}.fnote b{font-size:15px}.fnote .btns{margin:0}
 .toast.on{opacity:1}
 /* ===== 0.25: Today screen — new card, collapsible groups, floating menu (scoped to #v-today) ===== */
 .nc .card{padding:8px 8px 8px 10px;margin:6px 0;position:relative;overflow:hidden;transition:background .25s,border-color .25s,transform .3s,opacity .3s,max-height .3s}
@@ -267,7 +271,15 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 window.addEventListener('error',e=>{try{logErr('JS: '+(e.message||e));}catch(_){}});
 window.addEventListener('unhandledrejection',e=>{try{logErr('Promise: '+(e.reason&&(e.reason.message||e.reason)));}catch(_){}});
 function logErr(m){const L=JSON.parse(localStorage.getItem('errlog')||'[]');L.unshift(new Date().toLocaleTimeString('he-IL')+' '+m);localStorage.setItem('errlog',JSON.stringify(L.slice(0,20)));toast('שגיאה: '+m);}
-let toastT;function toast(m,actLabel,actFn){const t=document.getElementById('toast');t.textContent=m;if(actLabel){const b=document.createElement('button');b.textContent=actLabel;b.onclick=async()=>{t.classList.remove('on');await actFn();};t.appendChild(b);}t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),actLabel?(m.includes('גרסה חדשה')?120000:6000):2200);}
+let toastT,toastKind=null;
+/* 0.31: ok (✓, 2.5s) · undo (✓ + בטל, 6s) · err (⚠ + נסה שוב, 8s) · info (3s). An info message never replaces a pending בטל. */
+function toastKindOf(m,actLabel,kind){if(kind)return kind;if(/^⚠|נכשל|שגיאה/.test(m))return 'err';if(actLabel==='בטל')return 'undo';if(/^✓/.test(m))return 'ok';return 'info';}
+function toast(m,actLabel,actFn,kind){const t=document.getElementById('toast');kind=toastKindOf(m,actLabel,kind);
+  if(toastKind==='undo'&&kind==='info'&&t.classList.contains('on'))return;
+  t.className='toast on '+(kind==='undo'?'ok':kind);toastKind=kind;t.textContent=m;
+  if(actLabel){const b=document.createElement('button');b.textContent=actLabel;b.onclick=async()=>{t.classList.remove('on');toastKind=null;await actFn();};t.appendChild(b);}
+  const ms=m.includes('גרסה חדשה')?120000:{ok:2500,undo:6000,err:8000,info:3000}[kind];
+  clearTimeout(toastT);toastT=setTimeout(()=>{t.classList.remove('on');toastKind=null;},ms);}
 const SRC={manual:'',voice:'🎤',share:'💬',email:'📧',calendar:'📅',delivery:'📦',ticktick:'📥',claude:'🤖'};
 
 /* ===================== State ===================== */
@@ -595,7 +607,7 @@ async function dedupExisting(){
 /* ===================== Inbox from Claude ===================== */
 async function pullInbox(){
   try{
-    const res=await fetch('inbox.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)return;
+    const res=await fetch('inbox.json?ts='+Date.now(),{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);
     const data=await res.json();
     const imported=importedSet;let n=0,dups=0;
     for(const t of (data.tasks||[])){
@@ -607,10 +619,10 @@ async function pullInbox(){
       if(t.repeat)it.repeat=t.repeat;
       await save(it);imported.add(t.id);n++;
     }
-    await DB.kset('imported',[...imported]);
+    await DB.kset('imported',[...imported]);await DB.kset('lastInboxErr','');
     if(data.calendar){await DB.kset('calendar',data.calendar);await DB.kset('calendarAt',data.generated||Date.now());}
-    if(n||dups)toast('נקלטו '+n+' פריטים חדשים'+(dups?' · דולגו '+dups+' כפולים':''));
-  }catch(e){/* offline */}
+    if(n||dups)toast('✓ נקלטו '+n+' פריטים חדשים'+(dups?' · דולגו '+dups+' כפולים':''));
+  }catch(e){if(navigator.onLine){const m=(e&&e.message)||String(e);try{await DB.kset('lastInboxErr',m);}catch(_){}syncLog('קליטה מ-Claude נכשלה: '+m);updateStatus();}}
 }
 
 /* ===================== Rendering ===================== */
@@ -730,7 +742,7 @@ function openMoveToList(it){
   document.getElementById('mlCancel').onclick=closeSheet;
   sheet.querySelectorAll('[data-ml]').forEach(b=>b.onclick=async()=>{const prev={list:it.list,date:it.date};const l=lists.find(x=>x.id===b.dataset.ml);
     it.list=l.id;it.date=null;await save(it);closeSheet();render();
-    toast('הועבר לרשימת '+l.name+' · המשימה לא נמחקה','בטל',async()=>{it.list=prev.list;it.date=prev.date;await save(it);render();});});
+    toast('✓ הועבר לרשימת '+l.name,'בטל',async()=>{it.list=prev.list;it.date=prev.date;await save(it);render();});});
 }
 document.getElementById('scrim').onclick=closePop;
 window.addEventListener('scroll',()=>{if(Date.now()-(openCardMenu.t||0)>400)closePop();},{passive:true});
@@ -844,7 +856,7 @@ function renderLog(){
 async function reopenTask(it){
   const prev={status:it.status,doneAt:it.doneAt};
   it.status='open';it.doneAt=null;await save(it);render();
-  toast('הוחזר למשימות היום','בטל',async()=>{it.status=prev.status;it.doneAt=prev.doneAt;await save(it);render();});
+  toast('✓ הוחזר למשימות היום','בטל',async()=>{it.status=prev.status;it.doneAt=prev.doneAt;await save(it);render();});
 }
 function openLogMenu(it,btn){
   const pop=document.getElementById('pop');
@@ -876,6 +888,7 @@ function goBack(){if(history.state&&history.state.sub){history.back();}else{more
 window.addEventListener('popstate',()=>{if(moreSub){moreSub=null;render();}});
 const settingsOpen=(()=>{try{return Object.assign({gen:true,ai:false,gh:false,dev:false,adv:false},JSON.parse(localStorage.getItem('settingsOpen')||'{}'));}catch(e){return {gen:true,ai:false,gh:false,dev:false,adv:false};}})();
 function openWhatsNew(){openSheet(`<h3>✨ מה חדש</h3><div class="small" style="line-height:1.6">
+<b>0.31</b> — הודעות אחידות (ירוק ✓ / אדום ⚠ + "נסה שוב"); "בטל" לדחייה, העברה ושחזור; הצעת כפילות בתוך הטופס; טופס לא נסגר כששמירה נכשלת; אחרי חזרת רשת נשלח לבד; פעולות סנכרון בתור; כשל קליטה מ-Claude מדווח בשורת המצב.<br>
 <b>0.30</b> — "עוד" בחמישה מסכים + אודות; "חזרה" מסך אחד (גם בכפתור של הטלפון); בלי דוגמאות בשדות.<br>
 <b>0.29</b> — אנשי קשר והגדרות בשפה החדשה; קובץ vCard.<br>
 <b>0.28</b> — מסך "עוד" ושורת מצב סנכרון בכותרת.<br>
@@ -905,7 +918,7 @@ function renderMore(){
     const sec=(k,ic,t,sub,inner)=>`<details class="grp sub set" data-s="${k}" ${settingsOpen[k]?'open':''}><summary><span style="display:flex;flex-direction:column;align-items:flex-start"><span>${ic} ${t}</span><small style="font-weight:400;color:var(--muted);font-size:13px">${sub}</small></span></summary><div class="setbody">${inner}</div></details>`;
     const ex=t=>`<div class="ex">${t}</div>`;
     const row=(ic,t,sub,attrs)=>`<button class="mrow" ${attrs}><span class="mic">${ic}</span><span class="mt"><b>${t}</b><small>${sub}</small></span><span class="chev">‹</span></button>`;
-    h+=`<div class="card stat ok" id="statCard"><div class="n">…</div><div class="m">…</div><div class="btns" style="margin-top:8px"><button class="btn" id="syncBtn2">🔁 סנכרן עכשיו</button></div></div>
+    h+=`<div class="card stat ok" id="statCard"><div class="n">…</div><div class="m">…</div><div class="btns" style="margin-top:8px"><button class="btn p" id="retryBtn" style="display:none">נסה שוב</button><button class="btn" id="syncBtn2">🔁 סנכרן עכשיו</button></div></div>
     <h2 class="msec">פעולות</h2>
     ${row('⬆️','שלח ל-Claude וגבה','כותב outbox וגיבוי מוצפן ל-GitHub — קורה לבד פעם ביום','id="syncBtn2b"')}
     ${row('🔁','סנכרן מכשירים','טלפון ↔ מחשב — קורה לבד 30 שניות אחרי שינוי','id="devSyncBtn2"')}
@@ -961,7 +974,7 @@ function renderMore(){
   }else{
     const trashN=items.filter(i=>i.status==='trash').length;
     const row=(ic,t,sub,attrs)=>`<button class="mrow big" ${attrs}><span class="mic">${ic}</span><span class="mt"><b>${t}</b><small>${sub}</small></span><span class="chev">‹</span></button>`;
-    h+=`<div class="card stat ok" id="statCard" style="margin-bottom:10px"><div class="n">…</div><div class="m">…</div></div>
+    h+=`<div class="card stat ok" id="statCard" style="margin-bottom:10px"><div class="n">…</div><div class="m">…</div><div class="btns" id="retryRow" style="margin-top:8px;display:none"><button class="btn p" id="retryBtn">נסה שוב</button></div></div>
     ${row('📇','אנשי קשר',(contacts.length?contacts.length+' אנשי קשר':'עדיין אין')+' · סיכום היום','data-more="contacts"')}
     ${row('☁️','גיבוי וסנכרון','שלח ל-Claude · מכשירים · שחזור · טוקן וסיסמה','data-more="backup"')}
     ${row('⚙️','הגדרות','שבת · זיהוי הודעות · Claude · ייצוא וייבוא','data-more="settings"')}
@@ -1014,7 +1027,7 @@ async function complete(it){
   it.status='done';it.doneAt=Date.now();it.updatedAt=Date.now();
   await DB.put(it);markDirty();               // saved immediately (survives leaving the screen or the app)
   pendingDone.set(it.id,setTimeout(()=>finishDone(it.id),5000));
-  if(view!=='today'&&view!=='lists'){toast('בוצע ✓');}
+  if(view!=='today'&&view!=='lists'){toast('✓ בוצע');}
   render();
 }
 async function finishDone(id){
@@ -1050,13 +1063,13 @@ function openSnooze(it){
     <div class="chips">${lists.map(l=>`<button data-snl="${l.id}" class="${it.list===l.id?'on':''}">${esc(l.name)}</button>`).join('')}</div>
     <div class="btns" style="margin-top:12px"><button class="btn" id="snClose">סגור</button></div>`);
   const sh=document.getElementById('sheet');
-  const apply=async(d,msg)=>{it.date=d;it.rollovers=0;await save(it);closeSheet();await render();toast(msg);};
+  const apply=async(d,msg)=>{const prev={date:it.date,rollovers:it.rollovers};it.date=d;it.rollovers=0;await save(it);closeSheet();await render();toast('✓ '+msg,'בטל',async()=>{it.date=prev.date;it.rollovers=prev.rollovers;await save(it);render();toast('✓ חזר למקומו');});};
   sh.querySelectorAll('[data-sn]').forEach(b=>b.onclick=()=>{const v=b.dataset.sn;if(v==='none')apply(null,'הוסר התאריך — נמצא ברשימות');else apply(v,'נדחה ל'+fmtDate(v));});
-  sh.querySelectorAll('[data-snl]').forEach(b=>b.onclick=async()=>{it.list=b.dataset.snl;if(!it.date||it.date<=T)it.date=null;it.rollovers=0;await save(it);closeSheet();await render();toast('הועבר לרשימת '+(lists.find(l=>l.id===it.list)||{}).name);});
+  sh.querySelectorAll('[data-snl]').forEach(b=>b.onclick=async()=>{const prev={list:it.list,date:it.date,rollovers:it.rollovers};it.list=b.dataset.snl;if(!it.date||it.date<=T)it.date=null;it.rollovers=0;await save(it);closeSheet();await render();toast('✓ הועבר לרשימת '+(lists.find(l=>l.id===it.list)||{}).name,'בטל',async()=>{Object.assign(it,prev);await save(it);render();toast('✓ חזר למקומו');});});
   const di=document.getElementById('snDate');di.onchange=()=>{if(di.value)apply(di.value,'נדחה ל'+fmtDate(di.value));};di.parentElement.onclick=()=>{try{di.showPicker();}catch(e){di.style.display='inline-block';}};
   document.getElementById('snClose').onclick=closeSheet;
 }
-async function trash(it){const prev=it.status;it.status='trash';it.deletedAt=Date.now();await save(it);toast('הועבר לסל','בטל',async()=>{it.status=prev==='trash'?'open':prev;it.deletedAt=null;await save(it);await render();toast('שוחזר');});}
+async function trash(it){const prev=it.status;it.status='trash';it.deletedAt=Date.now();await save(it);toast('✓ הועבר לסל','בטל',async()=>{it.status=prev==='trash'?'open':prev;it.deletedAt=null;await save(it);await render();toast('✓ שוחזר');});}
 document.querySelector('main').addEventListener('click',async e=>{
   const mo=e.target.closest('[data-more]');if(mo){const k=mo.dataset.more;if(k==='menu'||k==='back')goBack();else if(k==='whatsnew')openWhatsNew();else goSub(k);return;}
   const b=e.target.closest('[data-act],[data-lact],[data-set],[data-cact]');if(!b)return;
@@ -1085,14 +1098,13 @@ document.querySelector('main').addEventListener('click',async e=>{
     case 'checklist': openChecklist(it);return;
     case 'decode': openEdit(it);setTimeout(()=>{const b=document.getElementById('decodeBtn');if(b)b.click();},150);return;
     case 'trash': await trash(it);break;
-    case 'restore': it.status='open';it.deletedAt=null;await save(it);toast('שוחזר');break;
+    case 'restore': it.status='open';it.deletedAt=null;await save(it);toast('✓ חזר למשימות','בטל',async()=>{it.status='trash';it.deletedAt=Date.now();await save(it);render();});break;
     case 'purge': await purgeItem(it.id);break;
     case 'reopen': await reopenTask(it);return;
     case 'logMenu': openLogMenu(it,b);return;
     case 'openLog': openLogCard(it);return;
     case 'snooze': openSnooze(it);return;
-    case 'snooze7': it.date=addDays(today(),7);it.rollovers=0;await save(it);break;
-    case 'snooze30': it.date=addDays(today(),30);await save(it);break;
+    case 'snooze7': case 'snooze30': {const prev={date:it.date,rollovers:it.rollovers};it.date=addDays(today(),a==='snooze7'?7:30);it.rollovers=0;await save(it);toast('✓ נדחה ל'+fmtDate(it.date),'בטל',async()=>{Object.assign(it,prev);await save(it);render();});break;}
     case 'tolist': openEdit(it);return;
     case 'condYes': it.type='task';it.condition='';it.date=today();await save(it);toast('נוצרה משימה');break;
     case 'condNo': it.status='closed';it.doneAt=Date.now();await save(it);toast('נרשם ביומן: לא נדרש');break;
@@ -1134,7 +1146,8 @@ async function quickAdd(source='manual'){
   if(it.type==='topic'&&!it.date){openEdit(it,true);return;}
   const twin=findDup(it);
   if(twin){quick.value='';hint.textContent='';dupEvent(it,twin,'quick');toast('כבר קיימת: "'+twin.title.slice(0,40)+'"','הוסף בכל זאת',async()=>{await save(it);toast('נוסף: '+it.title);render();});return;}
-  await save(it);quick.value='';hint.textContent='';savedToast(it,true);render();quickTarget();
+  try{await save(it);}catch(e){const msg=(e&&e.message)||String(e);try{syncLog('שמירה נכשלה: '+msg);}catch(_){}toast('⚠ השמירה נכשלה: '+msg.slice(0,70)+' — הטקסט נשאר בשורה','נסה שוב',()=>quickAdd(source));return;}
+  quick.value='';hint.textContent='';savedToast(it,true);render();quickTarget();
 }
 function buildFromText(raw,source){
   const p=parseHebrew(raw);
@@ -1200,6 +1213,7 @@ function openEdit(it,isNew=false){
     <div id="ocrMsg" class="small"></div>
     <div id="photoBox">${it.photo?'<div class="btns"><button class="btn p" id="decodeBtn">🔍 פענח רשימה מהצילום</button><button class="btn" id="photoRm">הסר צילום</button></div><img class="thumb" src="'+it.photo+'">':''}</div>
     <hr>
+    <div id="eErr"></div>
     <div class="btns"><button class="btn p" id="eSave">שמור</button>${it.time?'<button class="btn" id="eCal">⏰ תזכורת ביומן Google</button>':''}${!isNew&&it.status==='open'?'<button class="btn o" id="eDone">בוצע</button><button class="btn" id="eFollow">↪ משימת המשך</button>':''}${!isNew?'<button class="btn d" id="eTrash">מחק</button>':''}<button class="btn" id="eCancel">ביטול</button></div>`);
   const $=id=>document.getElementById(id);
   sheet.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{sheet.querySelectorAll('[data-type]').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('condRow').style.display=b.dataset.type==='cond'?'':'none';});
@@ -1242,9 +1256,16 @@ function openEdit(it,isNew=false){
     if(it.type==='task'&&!it.date&&!it.list)it.date=today();
     if(it.type!=='task'&&!it.date)it.date=today();
   };
-  $('eSave').onclick=async()=>{collect();
-    if(isNew){const twin=findDup(it);if(twin&&!it.__force){it.__force=true;dupEvent(it,twin,'edit');toast('כבר קיימת משימה דומה: "'+twin.title.slice(0,40)+'" — לחץ שמור שוב כדי להוסיף בכל זאת');return;}}
-    delete it.__force;await save(it);closeSheet();if(window.__shareIt===it)savedShares.add(it.id);savedToast(it,isNew);render();};
+  $('eSave').onclick=async()=>{collect();const errBox=$('eErr');if(errBox)errBox.innerHTML='';
+    if(isNew){const twin=findDup(it);if(twin&&!it.__force){dupEvent(it,twin,'edit'); // 0.31: the suggestion lives inside the form; nothing is saved until the user chooses
+      errBox.innerHTML='<div class="fnote warn"><b>כבר קיימת משימה דומה</b><span>"'+esc(twin.title.slice(0,60))+'"'+(twin.date?' · '+fmtDate(twin.date):'')+(twin.time?' · '+twin.time:'')+'</span><div class="btns"><button class="btn p" id="dupOpen">פתח את הקיימת</button><button class="btn" id="dupForce">הוסף בכל זאת</button></div></div>';
+      $('dupOpen').onclick=()=>{closeSheet();openEdit(twin);};$('dupForce').onclick=()=>{it.__force=true;$('eSave').click();};errBox.scrollIntoView({block:'nearest'});return;}}
+    delete it.__force;
+    try{await save(it);}
+    catch(e){const msg=(e&&e.message)||String(e);try{syncLog('שמירה נכשלה: '+msg);}catch(_){}
+      errBox.innerHTML='<div class="fnote err"><b>⚠ השמירה נכשלה</b><span>'+esc(msg.slice(0,120))+' · הטקסט שלך עדיין כאן — שום דבר לא אבד</span><div class="btns"><button class="btn p" id="saveRetry">נסה שוב</button></div></div>';
+      $('saveRetry').onclick=()=>$('eSave').click();errBox.scrollIntoView({block:'nearest'});return;}
+    closeSheet();if(window.__shareIt===it)savedShares.add(it.id);savedToast(it,isNew);render();};
   if($('eDone'))$('eDone').onclick=async()=>{collect();await save(it);closeSheet();await complete(it);};
   if($('eFollow'))$('eFollow').onclick=()=>{collect();save(it);openFollowUp(it);};
   if($('eTrash'))$('eTrash').onclick=async()=>{await trash(it);closeSheet();render();};
@@ -1349,31 +1370,37 @@ function buildOutbox(lastSyncAt){
 let offeredPass='';
 async function offerPasswordSave(){try{if(!settings.backupPass||settings.backupPass===offeredPass)return;offeredPass=settings.backupPass;if(window.PasswordCredential&&navigator.credentials){const c=new PasswordCredential({id:'my-doing-backup',name:'My Doing – סיסמת גיבוי',password:settings.backupPass});await navigator.credentials.store(c);}}catch(e){}}
 let syncing=false;
-async function syncNow(manual){
-  if(syncing)return;if(!settings.ghToken){if(manual)toast('קודם הזן טוקן GitHub ושמור');return;}
-  if(!navigator.onLine){if(manual)toast('אין רשת');return;}
+/* 0.31: sync jobs run one after another instead of being dropped while another is in flight */
+let syncChain=Promise.resolve();
+function withSync(fn){const p=syncChain.then(fn,fn);syncChain=p.then(()=>{},()=>{});return p;}
+function syncNow(manual){return withSync(()=>_syncNow(manual));}
+async function _syncNow(manual){
+  if(!settings.ghToken){if(manual)toast('קודם הזן טוקן GitHub ושמור');return;}
+  if(!navigator.onLine){if(manual)toast('אין רשת — נשמר בטלפון, יישלח כשתחזור');return;}
   syncing=true;const line=document.getElementById('syncLine');if(line)line.textContent='מסנכרן…';
   try{
     const lastSync=await DB.kget('lastSync');
     const stamp=new Date().toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'});
-    try{await pullDevices(true);}catch(e){syncLog('משיכת מכשירים לפני outbox נכשלה: '+(e.message||e));}
+    try{await _pullDevices(true);}catch(e){syncLog('משיכת מכשירים לפני outbox נכשלה: '+(e.message||e));}
     await ghPut(GH.outbox,JSON.stringify(buildOutbox(lastSync),null,1),'outbox: '+stamp);
     let backed=false;
     if(settings.backupPass){const env=await encryptJSON(exportData(),settings.backupPass);env.exported=new Date().toISOString();env.app=APP_VER;env.items=items.filter(i=>i.status!=='trash').length;await ghPut(GH.backup,JSON.stringify(env,null,1),'backup: '+stamp);backed=true;}
     await DB.kset('lastSync',Date.now());await DB.kset('lastSyncErr','');
-    if(settings.backupPass){try{await pushDevice(true);}catch(e){syncLog('דחיפת קובץ המכשיר נכשלה: '+(e.message||e));}}
-    if(manual)toast(backed?'נשלח ל-Claude והגיבוי הועלה ✓':'נשלח ל-Claude ✓ (בלי גיבוי — אין סיסמה)');
-  }catch(e){await DB.kset('lastSyncErr',(e&&e.message)||String(e));if(manual)toast('הסנכרון נכשל: '+((e&&e.message)||e));else logErr('סנכרון: '+((e&&e.message)||e));}
+    if(settings.backupPass){try{await _pushDevice(true);}catch(e){syncLog('דחיפת קובץ המכשיר נכשלה: '+(e.message||e));}}
+    if(manual)toast(backed?'✓ נשלח ל-Claude · הגיבוי הועלה':'✓ נשלח ל-Claude (בלי גיבוי — אין סיסמה)');
+  }catch(e){await DB.kset('lastSyncErr',(e&&e.message)||String(e));if(manual)toast('⚠ הסנכרון נכשל: '+((e&&e.message)||e),'נסה שוב',()=>syncNow(true));else logErr('סנכרון: '+((e&&e.message)||e));}
   syncing=false;updateStatus();if(view==='more')render();
 }
-async function autoSync(){try{if(!settings.ghToken||!settings.syncAuto)return;const last=(await DB.kget('lastSync'))||0;if(Date.now()-last>20*3600e3)await syncNow(false);}catch(e){}}
+async function autoSync(){try{if(!settings.ghToken||!settings.syncAuto)return;const last=(await DB.kget('lastSync'))||0;if(Date.now()-last>20*3600e3)await syncNow(false);}catch(e){syncLog('סנכרון אוטומטי: '+((e&&e.message)||e));updateStatus();}}
 function syncStatusLine(){return '<span id="syncInfo">…</span>';}
 /* 0.28: one sentence about saving/sync, shown in the header on every screen and as a card in "עוד" */
 async function syncStatus(){
   const hhmm=t=>new Date(t).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  if(!navigator.onLine)return {k:'pend',line:'✓ נשמר בטלפון · אין רשת — '+(canDevSync()&&dirtyN?dirtyN+' שינויים ממתינים':'יסונכרן כשתחזור'),card:'אין רשת'+(canDevSync()&&dirtyN?' · '+dirtyN+' שינויים ממתינים':''),sub:'הכול שמור בטלפון; כשהרשת תחזור — יישלח לבד'};
+  const lie=await DB.kget('lastInboxErr');
+  if(lie)return {k:'warn',line:'⚠ קליטה מ-Claude נכשלה — לחץ לפרטים',card:'⚠ קליטה מ-Claude נכשלה',sub:String(lie).slice(0,100)+' · הנתונים שלך בטלפון בסדר'};
   if(!settings.ghToken)return {k:'off',line:'✓ נשמר בטלפון · ללא סנכרון',card:'נשמר בטלפון בלבד',sub:'כדי לגבות ולסנכרן — הזן טוקן GitHub וסיסמה בהגדרות'};
   const [ls,lse,lp,lpe,lpl]=await Promise.all([DB.kget('lastSync'),DB.kget('lastSyncErr'),DB.kget('lastPushDev'),DB.kget('lastPushDevErr'),DB.kget('lastPullDevErr')]);
-  if(!navigator.onLine)return {k:'pend',line:'✓ נשמר בטלפון · אין רשת — יסונכרן כשתחזור',card:'אין רשת',sub:'הכול שמור בטלפון; הסנכרון יתבצע כשהרשת תחזור'};
   if(lse||lpe)return {k:'warn',line:'⚠ נדרשת פעולה — הגדרות סנכרון',card:'⚠ הסנכרון נכשל',sub:(lse||lpe).slice(0,120)+' · הנתונים שמורים בטלפון'};
   if(syncing||pushing)return {k:'pend',line:'✓ נשמר בטלפון · מסנכרן…',card:'⏳ מסנכרן…',sub:'שולח ל-GitHub'};
   if(dirty)return {k:'pend',line:'✓ נשמר בטלפון · ממתין לסנכרון',card:'⏳ ממתין לסנכרון',sub:'שינויים אחרונים יישלחו אוטומטית תוך 30 שניות'};
@@ -1382,9 +1409,9 @@ async function syncStatus(){
 }
 let statusT=null;
 function updateStatus(){clearTimeout(statusT);statusT=setTimeout(async()=>{try{const st=await syncStatus();const e=document.getElementById('statusLine');if(e){e.textContent=st.line;e.className='status'+(st.k==='warn'?' warn':'');}
-  const c=document.getElementById('statCard');if(c){c.className='card stat '+st.k;c.querySelector('.n').textContent=st.card;c.querySelector('.m').textContent=st.sub;}}catch(e){}},50);}
+  const c=document.getElementById('statCard');if(c){c.className='card stat '+st.k;c.querySelector('.n').textContent=st.card;c.querySelector('.m').textContent=st.sub;const rb=c.querySelector('#retryRow')||c.querySelector('#retryBtn');if(rb)rb.style.display=st.k==='warn'?'':'none';}}catch(e){}},50);}
 document.addEventListener('click',e=>{if(e.target.closest('#statusLine')){moreSub=null;show('more');}});
-window.addEventListener('online',updateStatus);window.addEventListener('offline',updateStatus);
+window.addEventListener('online',()=>{updateStatus();setTimeout(async()=>{try{await pullInbox();await render();}catch(e){}flushPush();autoSync();},1500);});window.addEventListener('offline',updateStatus);
 async function fillSyncLine(){const e=document.getElementById('syncInfo');if(!e)return;const last=await DB.kget('lastSync'),err=await DB.kget('lastSyncErr');e.textContent=(settings.ghToken?'':'לא מוגדר טוקן. ')+(last?'סנכרון אחרון: '+new Date(last).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}):'עדיין לא סונכרן')+(settings.backupPass?' · גיבוי מוצפן פעיל':' · אין סיסמת גיבוי — נשלח רק דיווח')+(err?' · שגיאה אחרונה: '+err:'');}
 async function restoreFromGitHub(){
   let env=null;
@@ -1416,10 +1443,11 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='pullBtn'){await pullInbox();render();}
   if(e.target.closest&&e.target.closest('[data-eye]')){const i=document.getElementById(e.target.closest('[data-eye]').dataset.eye);i.type=i.type==='password'?'text':'password';return;}
   if(e.target.id==='saveSync'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await offerPasswordSave();toast('נשמר');}
-  if(e.target.id==='saveDev'){await saveDeviceName();toast('נשמר');return;}
+  if(e.target.id==='saveDev'){await saveDeviceName();toast('✓ נשמר');return;}
   if(e.target.id==='devSyncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await devSyncNow();}
   if(e.target.id==='syncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await offerPasswordSave();await syncNow(true);}
   if(e.target.id==='restoreBtn'||e.target.closest('#restoreBtn')){await restoreFromGitHub();}
+  if(e.target.id==='retryBtn'){await DB.kset('lastInboxErr','');await DB.kset('lastSyncErr','');await DB.kset('lastPushDevErr','');await DB.kset('lastPullDevErr','');await pullInbox();await syncNow(true);try{await pullDevices(true);}catch(_){}render();return;}
   if(e.target.id==='syncBtn2'||e.target.closest('#syncBtn2b')){await syncNow(true);}
   if(e.target.id==='devSyncBtn2'||e.target.closest('#devSyncBtn2')){await devSyncNow();}
   if(e.target.id==='shareBtn'){await shareBackup();}
@@ -1637,7 +1665,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.30';
+const APP_VER='0.31';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
@@ -1695,8 +1723,9 @@ async function mergeRemote(d,who){
 }
 async function ghRaw(path){const r=await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,{headers:{Authorization:'Bearer '+settings.ghToken,Accept:'application/vnd.github.raw+json'},cache:'no-store'});if(r.status===404)return null;if(!r.ok)throw new Error('GitHub '+r.status);return r.text();}
 let pullingDev=false;
-async function pullDevices(force){
-  if(!canDevSync()||!navigator.onLine||pullingDev)return 0;
+function pullDevices(force){return withSync(()=>_pullDevices(force));}
+async function _pullDevices(force){
+  if(!canDevSync()||!navigator.onLine)return 0;
   const last=(await DB.kget('lastPullDev'))||0;if(!force&&Date.now()-last<5*60e3)return 0;
   pullingDev=true;let total=0;
   try{
@@ -1714,29 +1743,30 @@ async function pullDevices(force){
       devs[f.name]={name:d.deviceName||f.name,generated:d.generated,app:d.app,mergedAt:Date.now(),received:n,items:(d.items||[]).length};
     }
     await DB.kset('devShas',shas);await DB.kset('devices',devs);await DB.kset('lastPullDev',Date.now());await DB.kset('lastPullDevErr','');
-    if(total){await maintenance();toast('התקבלו '+total+' עדכונים ממכשיר אחר');}
+    if(total){await maintenance();toast('✓ התקבלו '+total+' עדכונים ממכשיר אחר');}
   }catch(e){await DB.kset('lastPullDevErr',(e&&e.message)||String(e));syncLog('משיכה: '+((e&&e.message)||e));throw e;}
   finally{pullingDev=false;if(view==='more')fillDevLine();}
   return total;
 }
-let dirty=false,pushT=null,pushing=false;
-function markDirty(){dirty=true;updateStatus();if(!canDevSync())return;clearTimeout(pushT);pushT=setTimeout(()=>pushDevice(false).catch(()=>{}),30000);}
+let dirty=false,dirtyN=0,pushT=null,pushing=false;
+function markDirty(){dirty=true;dirtyN++;updateStatus();if(!canDevSync())return;clearTimeout(pushT);pushT=setTimeout(()=>pushDevice(false).catch(()=>{}),30000);}
 function flushPush(){if(dirty&&canDevSync()){clearTimeout(pushT);pushDevice(false).catch(()=>{});}}
-async function pushDevice(force){
-  if(!canDevSync()||!navigator.onLine||pushing)return false;if(!dirty&&!force)return false;
+function pushDevice(force){return withSync(()=>_pushDevice(force));}
+async function _pushDevice(force){
+  if(!canDevSync()||!navigator.onLine)return false;if(!dirty&&!force)return false;
   pushing=true;
   try{
     const env=await encryptJSON(syncPayload(),settings.backupPass);env.v=1;env.deviceId=device.id;env.deviceName=device.name;env.generated=new Date().toISOString();env.app=APP_VER;env.items=items.filter(i=>i.status!=='trash').length;
     await ghPut(GH.syncDir+'/'+device.id+'.json',JSON.stringify(env),'sync '+device.name+': '+new Date().toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}));
-    dirty=false;await DB.kset('lastPushDev',Date.now());await DB.kset('lastPushDevErr','');return true;
+    dirty=false;dirtyN=0;await DB.kset('lastPushDev',Date.now());await DB.kset('lastPushDevErr','');return true;
   }catch(e){await DB.kset('lastPushDevErr',(e&&e.message)||String(e));syncLog('דחיפה: '+((e&&e.message)||e));throw e;}
   finally{pushing=false;updateStatus();if(view==='more')fillDevLine();}
 }
 async function devSyncNow(){
   if(!settings.ghToken){toast('קודם הזן טוקן GitHub');return;}if(!settings.backupPass){toast('סנכרון בין מכשירים דורש סיסמת הצפנה (זהה בשני המכשירים)');return;}if(!navigator.onLine){toast('אין רשת');return;}
   const line=document.getElementById('devLine');if(line)line.textContent='מסנכרן מכשירים…';
-  try{const n=await pullDevices(true);await pushDevice(true);await render();toast(n?'התקבלו '+n+' עדכונים · הקובץ שלך נשלח ✓':'אין עדכונים חדשים · הקובץ שלך נשלח ✓');}
-  catch(e){toast('סנכרון מכשירים נכשל: '+((e&&e.message)||e));}
+  try{const n=await withSync(async()=>{const n=await _pullDevices(true);await _pushDevice(true);return n;});await render();toast(n?'✓ התקבלו '+n+' עדכונים · הקובץ שלך נשלח':'✓ אין עדכונים חדשים · הקובץ שלך נשלח');}
+  catch(e){toast('⚠ סנכרון מכשירים נכשל: '+((e&&e.message)||e),'נסה שוב',devSyncNow);}
 }
 async function fillDevLine(){const e=document.getElementById('devLine');if(!e)return;
   if(!canDevSync()){e.textContent='סנכרון בין מכשירים: לא פעיל (דרושים טוקן וסיסמת הצפנה).';return;}
