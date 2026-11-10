@@ -48,6 +48,9 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--blue2)}
 .mrow .mt b{font-size:16px;font-weight:600}
 .mrow .mt small{font-size:13.5px;color:var(--muted);line-height:1.3}
 .mrow .chev{color:var(--muted);font-size:20px;flex:none}
+.mrow.big{min-height:64px;padding:10px 12px}
+.mrow.big .mic{font-size:26px;width:36px}
+.mrow.big .mt b{font-size:17px}
 #v-more h2.msec{font-size:15px;margin:14px 2px 4px}
 .card.sum{display:block;background:var(--soft);border-color:transparent}
 .card.sum .m{font-size:15px;display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px}
@@ -203,7 +206,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
   <header class="top">
     <h1><span>My Doing</span><span style="display:flex;align-items:center;gap:10px"><small id="dateLine"></small><button id="exitBtn" title="יציאה" style="font-size:14px;font-weight:600;background:rgba(255,255,255,.2);border-radius:10px;padding:4px 10px">יציאה ⏻</button></span></h1>
     <div class="quick">
-      <input id="quick" placeholder="הוספה מהירה… (למשל: מחר ב-10 להתקשר לדני)" autocomplete="off" enterkeyhint="done">
+      <input id="quick" placeholder="הוספה מהירה…" autocomplete="off" enterkeyhint="done">
       <button id="micBtn" title="הקלטה קולית">🎤</button>
       <button id="searchBtn" title="חיפוש">🔍</button>
       <button id="addBtn" title="הוסף">＋</button>
@@ -613,7 +616,7 @@ async function pullInbox(){
 /* ===================== Rendering ===================== */
 let view='today';let openListId=null; // 0.22: the list currently expanded in the lists view — quick add goes there
 function quickTargetList(){return (view==='lists'&&openListId&&lists.find(l=>l.id===openListId))||null;}
-function quickTarget(){const l=quickTargetList();quick.placeholder=l?'הוספה לרשימת '+l.name+'…':'הוספה מהירה… (למשל: מחר ב-10 להתקשר לדני)';if(!quick.value.trim())hint.textContent=l?'← נכנס לרשימת '+l.name:'';}
+function quickTarget(){const l=quickTargetList();quick.placeholder=l?'הוספה לרשימת '+l.name+'…':'הוספה מהירה…';if(!quick.value.trim())hint.textContent=l?'← נכנס לרשימת '+l.name:'';}
 function show(v){if(v==='more'&&view!=='more')moreSub=null;view=v;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));render();quickTarget();}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{if(searchQ){searchQ='';searchIn.value='';searchRow.classList.remove('on');}show(b.dataset.v);});
 
@@ -633,7 +636,7 @@ function guessContactName(it){const t=(it.title||'').replace(/[.!?]+$/,'');
 /* 0.24.1: fill a missing address / phone straight from the card (one tap + typing) */
 function openFillField(it,field){const isA=field==='addr';
   openSheet(`<h3>${isA?'📍 כתובת':'📞 טלפון'}</h3><div class="small" dir="auto">${esc(it.title)}</div>
-    <input id="fillVal" ${isA?'':'type="tel"'} placeholder="${isA?'רחוב, מספר, עיר':'05x-…'}" value="${esc(it[field]||'')}">
+    <input id="fillVal" ${isA?'':'type="tel"'} placeholder="" value="${esc(it[field]||'')}">
     <div class="btns" style="margin-top:10px"><button class="btn p" id="fillSave">שמור</button><button class="btn" id="fillCancel">ביטול</button></div>`);
   const inp=document.getElementById('fillVal');setTimeout(()=>inp.focus(),50);
   const doSave=async()=>{const v=inp.value.trim();if(!isA&&v){const n=normPhone(v);if(!validPhone(n)&&!/^\*\d{3,5}$/.test(v)){toast('מספר לא תקין');return;}it.phone=validPhone(n)?fmtPhone(n):v;}else it[field]=v;await save(it);closeSheet();render();toast(v?'נשמר':'נמחק');};
@@ -866,9 +869,21 @@ function openLogCard(it){
     <div class="btns"><button class="btn p" data-la="reopen">↩ החזר למשימות</button><button class="btn" data-la="followup">↪ משימת המשך</button><button class="btn" data-la="edit">✏️ ערוך</button><button class="btn" data-la="close">סגור</button></div>`);
   sheet.querySelectorAll('[data-la]').forEach(b=>b.onclick=async()=>{const k=b.dataset.la;closeSheet();if(k==='reopen')await reopenTask(it);else if(k==='followup')openFollowUp(it);else if(k==='edit')setTimeout(()=>openEdit(it),200);});
 }
-let moreSub=null; // null = menu · 'trash' | 'contacts' | 'settings'
+let moreSub=null; // null = menu · 'contacts' | 'backup' | 'settings' | 'about' | 'trash'
+/* 0.30: entering a sub-screen pushes a history entry, so the phone's Back returns one screen instead of closing the app */
+function goSub(k){moreSub=k;try{history.pushState({sub:k},'');}catch(e){}render();window.scrollTo(0,0);}
+function goBack(){if(history.state&&history.state.sub){history.back();}else{moreSub=null;render();}}
+window.addEventListener('popstate',()=>{if(moreSub){moreSub=null;render();}});
 const settingsOpen=(()=>{try{return Object.assign({gen:true,ai:false,gh:false,dev:false,adv:false},JSON.parse(localStorage.getItem('settingsOpen')||'{}'));}catch(e){return {gen:true,ai:false,gh:false,dev:false,adv:false};}})();
-function moreHead(title){return `<div class="row" style="align-items:center;gap:8px;margin:4px 0 6px"><button class="btn" data-more="menu" style="flex:0 0 auto">› חזרה</button><h2 style="margin:0;flex:1">${title}</h2></div>`;}
+function openWhatsNew(){openSheet(`<h3>✨ מה חדש</h3><div class="small" style="line-height:1.6">
+<b>0.30</b> — "עוד" בחמישה מסכים + אודות; "חזרה" מסך אחד (גם בכפתור של הטלפון); בלי דוגמאות בשדות.<br>
+<b>0.29</b> — אנשי קשר והגדרות בשפה החדשה; קובץ vCard.<br>
+<b>0.28</b> — מסך "עוד" ושורת מצב סנכרון בכותרת.<br>
+<b>0.27</b> — יומן לפי ימים; "החזר למשימות" כפעולה משנית.<br>
+<b>0.26</b> — רשימות: שורות עם מונה, תפריט ⋮ לרשימה.<br>
+<b>0.25</b> — מסך "היום" החדש: תפריט ⋮, "בוצע" עם ביטול 5 שניות ו"בוצעו היום", אישור אחרי שמירה.</div>
+<div class="btns" style="margin-top:10px"><button class="btn" onclick="closeSheet()">סגור</button></div>`);}
+function moreHead(title){return `<div class="row" style="align-items:center;gap:8px;margin:4px 0 6px"><button class="btn" data-more="back" style="flex:0 0 auto">‹ חזרה</button><h2 style="margin:0;flex:1">${title}</h2></div>`;}
 function renderMore(){
   let h='';
   if(moreSub==='trash'){
@@ -879,10 +894,41 @@ function renderMore(){
   for(const it of trash)h+=`<div class="card" data-id="${it.id}"><div class="t"><div class="n">${esc(it.title)}</div><div class="m">נמחק ${fmtDate(ymd(new Date(it.deletedAt)))} · יימחק סופית בעוד ${Math.max(0,7-Math.floor((Date.now()-it.deletedAt)/864e5))} ימים</div><div class="btns"><button class="btn o" data-act="restore">שחזר</button><button class="btn d" data-act="purge">מחק לצמיתות</button></div></div></div>`;
   }else if(moreSub==='contacts'){
     h+=moreHead('📇 אנשי קשר');
+    {const T=today();const openT=items.filter(i=>i.status==='open'&&i.type==='task'&&i.date&&i.date<=T);const lateN=openT.filter(i=>(i.rollovers||0)>0).length;const doneN=items.filter(i=>i.status==='done'&&i.doneAt&&ymd(new Date(i.doneAt))===T).length;
+    h+=`<div class="card sum" style="margin-bottom:10px"><div class="n">היום</div><div class="m"><span><b>${openT.length}</b> פתוחות</span><span style="color:#9B5A14">⏳ <b>${lateN}</b> באיחור</span><span style="color:var(--ok)">✓ <b>${doneN}</b> בוצעו</span></div></div>`;}
     h+=`<div class="btns" style="margin:0 0 8px"><button class="btn p" data-cact="new">+ איש קשר</button></div>
   ${contacts.length?contacts.map(c=>`<button class="mrow" data-cact="open" data-cid="${c.id}"><span class="mic">👤</span><span class="mt"><b>${esc(c.name)}</b><small><span dir="ltr">${esc(fmtPhone(c.phone))}</span>${c.aliases&&c.aliases.length?' · '+esc(c.aliases.join(', ')):''}${c.address?' · 📍 '+esc(c.address):''}</small></span><span class="chev">‹</span></button>`).join(''):'<div class="empty"><b>📇</b>עדיין אין אנשי קשר.<br>כשתכתוב משימה "עם ביאטריס" — האפליקציה תציע לבחור איש קשר, או הוסף כאן.</div>'}
   <div class="small" style="padding:8px 8px 0">לחיצה על שורה פותחת את הכרטיס עם וואטסאפ · חיוג · Waze · העתקה · עריכה.</div>
 `;
+  }else if(moreSub==='backup'){
+    h+=moreHead('☁️ גיבוי וסנכרון');
+    const sec=(k,ic,t,sub,inner)=>`<details class="grp sub set" data-s="${k}" ${settingsOpen[k]?'open':''}><summary><span style="display:flex;flex-direction:column;align-items:flex-start"><span>${ic} ${t}</span><small style="font-weight:400;color:var(--muted);font-size:13px">${sub}</small></span></summary><div class="setbody">${inner}</div></details>`;
+    const ex=t=>`<div class="ex">${t}</div>`;
+    const row=(ic,t,sub,attrs)=>`<button class="mrow" ${attrs}><span class="mic">${ic}</span><span class="mt"><b>${t}</b><small>${sub}</small></span><span class="chev">‹</span></button>`;
+    h+=`<div class="card stat ok" id="statCard"><div class="n">…</div><div class="m">…</div><div class="btns" style="margin-top:8px"><button class="btn" id="syncBtn2">🔁 סנכרן עכשיו</button></div></div>
+    <h2 class="msec">פעולות</h2>
+    ${row('⬆️','שלח ל-Claude וגבה','כותב outbox וגיבוי מוצפן ל-GitHub — קורה לבד פעם ביום','id="syncBtn2b"')}
+    ${row('🔁','סנכרן מכשירים','טלפון ↔ מחשב — קורה לבד 30 שניות אחרי שינוי','id="devSyncBtn2"')}
+    ${row('⬇️','שחזר מ-GitHub','מיזוג מהגיבוי האחרון, בלי למחוק דבר','id="restoreBtn"')}
+    <h2 class="msec">הגדרות הגיבוי</h2>`;
+    h+=sec('gh','🔑','טוקן GitHub וסיסמת הצפנה','נשמרים בטלפון בלבד',`
+    ${ex('פעם ביום (ובלחיצה) האפליקציה שולחת למאגר מה בוצע, נדחה ונמחק — כך Claude יודע מה קרה — ומעלה גיבוי מלא מוצפן. אותם טוקן וסיסמה מאפשרים גם סנכרון בין טלפון למחשב.')}
+    <form id="syncForm" action="#" method="post" onsubmit="return false" style="margin:0">
+    <input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none" tabindex="-1" aria-hidden="true">
+    <label class="lbl">טוקן GitHub</label>${ex('מאפשר לאפליקציה לכתוב למאגר. Fine-grained, הרשאת Contents על garden-recipes בלבד.')}
+    <div class="row" style="gap:4px"><input id="ghToken" type="password" value="${esc(settings.ghToken||'')}" autocomplete="off"><button type="button" class="btn" data-eye="ghToken" style="flex:0 0 auto">👁</button></div>
+    <label class="lbl">סיסמת הצפנה לגיבוי</label>${ex('הגיבוי וקובצי הסנכרון מוצפנים בסיסמה הזו; בלעדיה הגיבוי לא נשלח. אין לה שחזור — אותה סיסמה בטלפון ובמחשב; תן לגוגל לשמור אותה כשהוא מציע.')}
+    <div class="row" style="gap:4px"><input id="backupPass" name="password" type="password" value="${esc(settings.backupPass||'')}" autocomplete="current-password"><button type="button" class="btn" data-eye="backupPass" style="flex:0 0 auto">👁</button></div>
+    </form>
+    <label class="lbl">גיבוי אוטומטי</label>${ex('פעם ביום כשהאפליקציה פתוחה.')}
+    <div class="chips"><button data-set="syncAuto" data-val="1" class="${settings.syncAuto?'on':''}">פעיל</button><button data-set="syncAuto" data-val="0" class="${!settings.syncAuto?'on':''}">ידני בלבד</button></div>
+    <div class="btns"><button class="btn p" id="saveSync">שמור</button></div>
+    <div class="small" style="margin-top:8px" id="syncLine">${syncStatusLine()}</div>`);
+    h+=sec('dev','📱','מכשירים','שם המכשיר · מצב הסנכרון בין טלפון למחשב',`
+    <label class="lbl">שם המכשיר הזה</label>${ex('מופיע ביומן הסנכרון ובמכשיר השני.')}
+    <input id="deviceName" value="${esc(device?device.name:'')}" autocomplete="off">
+    <div class="btns"><button class="btn p" id="saveDev">שמור</button></div>
+    <div class="small" style="margin-top:8px" id="devLine">…</div>`);
   }else if(moreSub==='settings'){
     h+=moreHead('⚙️ הגדרות');
     const sec=(k,ic,t,sub,inner)=>`<details class="grp sub set" data-s="${k}" ${settingsOpen[k]?'open':''}><summary><span style="display:flex;flex-direction:column;align-items:flex-start"><span>${ic} ${t}</span><small style="font-weight:400;color:var(--muted);font-size:13px">${sub}</small></span></summary><div class="setbody">${inner}</div></details>`;
@@ -894,59 +940,36 @@ function renderMore(){
     <div class="chips"><button data-set="shareAI" data-val="1" class="${settings.shareAI!==false?'on':''}">דיוק עם Claude</button><button data-set="shareAI" data-val="0" class="${settings.shareAI===false?'on':''}">חוקים בלבד (בלי רשת)</button></div>`);
     h+=sec('ai','🤖','Claude','מפתח API · מודל',`
     <label class="lbl">מפתח Claude API</label>${ex('משמש לפענוח רשימת קניות מצולמת ולדיוק הודעות. נשמר בטלפון בלבד ולא נכלל בגיבוי.')}
-    <input id="apiKey" type="password" placeholder="sk-ant-…" value="${esc(settings.apiKey||'')}">
+    <input id="apiKey" type="password" value="${esc(settings.apiKey||'')}">
     <label class="lbl">מודל</label>${ex('אין צורך לשנות.')}
     <input id="model" value="${esc(settings.model||'claude-sonnet-5-5')}">
     <div class="btns"><button class="btn p" id="saveSettings">שמור</button></div>`);
-    h+=sec('gh','☁️','GitHub — גיבוי וסנכרון','טוקן · סיסמת הצפנה · גיבוי אוטומטי',`
-    ${ex('פעם ביום (ובלחיצה) האפליקציה שולחת למאגר מה בוצע, נדחה ונמחק — כך Claude יודע מה קרה — ומעלה גיבוי מלא מוצפן. אותם טוקן וסיסמה מאפשרים גם סנכרון בין טלפון למחשב.')}
-    <form id="syncForm" action="#" method="post" onsubmit="return false" style="margin:0">
-    <input type="text" name="username" value="my-doing-backup" autocomplete="username" readonly style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0);pointer-events:none" tabindex="-1" aria-hidden="true">
-    <label class="lbl">טוקן GitHub</label>${ex('מאפשר לאפליקציה לכתוב למאגר. Fine-grained, הרשאת Contents על garden-recipes בלבד. נשמר בטלפון.')}
-    <div class="row" style="gap:4px"><input id="ghToken" type="password" placeholder="github_pat_…" value="${esc(settings.ghToken||'')}" autocomplete="off"><button type="button" class="btn" data-eye="ghToken" style="flex:0 0 auto">👁</button></div>
-    <label class="lbl">סיסמת הצפנה לגיבוי</label>${ex('הגיבוי וקובצי הסנכרון מוצפנים בסיסמה הזו; בלעדיה הגיבוי לא נשלח. אין לה שחזור — אותה סיסמה בטלפון ובמחשב; תן לגוגל לשמור אותה כשהוא מציע.')}
-    <div class="row" style="gap:4px"><input id="backupPass" name="password" type="password" placeholder="סיסמה חזקה" value="${esc(settings.backupPass||'')}" autocomplete="current-password"><button type="button" class="btn" data-eye="backupPass" style="flex:0 0 auto">👁</button></div>
-    </form>
-    <label class="lbl">גיבוי אוטומטי</label>${ex('פעם ביום כשהאפליקציה פתוחה.')}
-    <div class="chips"><button data-set="syncAuto" data-val="1" class="${settings.syncAuto?'on':''}">פעיל</button><button data-set="syncAuto" data-val="0" class="${!settings.syncAuto?'on':''}">ידני בלבד</button></div>
-    <div class="btns"><button class="btn p" id="saveSync">שמור</button><button class="btn" id="syncBtn">⬆️ שלח ל-Claude וגבה עכשיו</button><button class="btn" id="restoreBtn">⬇️ שחזר מגיבוי</button></div>
-    <div class="small" style="margin-top:8px" id="syncLine">${syncStatusLine()}</div>`);
-    h+=sec('dev','📱','מכשירים','שם המכשיר · סנכרון בין טלפון למחשב',`
-    <label class="lbl">שם המכשיר הזה</label>${ex('מופיע ביומן הסנכרון ובמכשיר השני.')}
-    <input id="deviceName" value="${esc(device?device.name:'')}" placeholder="טלפון / מחשב" autocomplete="off">
-    <div class="btns"><button class="btn p" id="saveDev">שמור</button><button class="btn" id="devSyncBtn">🔁 סנכרן מכשירים עכשיו</button></div>
-    <div class="small" style="margin-top:8px" id="devLine">…</div>`);
-    h+=sec('adv','🧰','מתקדם','ייצוא / ייבוא · כלים · גרסה',`
+    h+=sec('adv','💾','ייצוא, ייבוא וכלים','קובץ מקומי · משיכה מ-Claude',`
     ${ex('ייצוא — קובץ JSON מקומי עם כל המשימות (לא מוצפן). ייבוא — מיזוג מקובץ כזה, בלי למחוק. שיתוף — אותו קובץ דרך תפריט השיתוף.')}
     <div class="btns"><button class="btn" id="exportBtn">ייצוא לקובץ</button><label class="btn" style="display:inline-block">ייבוא מקובץ<input type="file" id="importFile" accept="application/json" style="display:none"></label><button class="btn" id="shareBtn">שתף גיבוי…</button></div>
-    ${ex('כלים: משיכה ידנית של משימות מ-Claude, בדיקת עדכון ויומני שגיאות וסנכרון.')}
-    <div class="btns"><button class="btn" id="pullBtn">משוך מ-Claude עכשיו</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button></div>
-    <div class="small" style="margin-top:8px">פריטים: ${items.length} · קליטה אחרונה מ-Claude: <span id="lastPull">—</span></div>
-    <div class="small" style="margin-top:4px">My Doing · גרסה ${APP_VER} · מכשיר: ${esc(device?device.name:'')} · הנתונים נשמרים במכשיר; גיבוי וסנכרון מוצפנים ל-GitHub כשמוגדרים טוקן וסיסמה.</div>`);
+    ${ex('משיכה ידנית של משימות חדשות מ-Claude (קורה לבד בכל פתיחה).')}
+    <div class="btns"><button class="btn" id="pullBtn">⬇️ משוך מ-Claude עכשיו</button></div>`);
+  }else if(moreSub==='about'){
+    h+=moreHead('ℹ️ אודות');
+    const row=(ic,t,sub,attrs)=>`<button class="mrow" ${attrs}><span class="mic">${ic}</span><span class="mt"><b>${t}</b><small>${sub}</small></span><span class="chev">‹</span></button>`;
+    h+=`<div class="card" style="display:block"><div class="n" style="font-size:18px">My Doing <span style="background:var(--soft);color:var(--blue);border-radius:999px;padding:0 10px;font-size:14px;font-weight:600">גרסה ${APP_VER}</span></div>
+      <div class="small" style="margin-top:6px;line-height:1.45">אפליקציה אישית לניהול ההווה והעתיד הקרוב: היום, מחר והחודש הקרוב. הנתונים נשמרים בטלפון; Claude מוסיף משימות ממייל ומהיומן וקורא מה בוצע; גיבוי וסנכרון בין מכשירים — מוצפנים — דרך GitHub.</div></div>
+    ${row('🔄','בדוק עדכון','גרסה '+APP_VER+' מותקנת','id="updBtn"')}
+    ${row('✨','מה חדש','השינויים בגרסאות האחרונות','data-more="whatsnew"')}
+    ${row('🐞','יומן שגיאות וסנכרון','לבדיקה עם Claude כשמשהו לא עובד','id="errBtn"')}
+    <div class="card" style="display:block"><div class="small" style="line-height:1.5">מכשיר: <b>${esc(device?device.name:'')}</b> · ${items.filter(i=>i.status!=='trash').length} פריטים · קליטה אחרונה מ-Claude: <span id="lastPull">—</span><br>מאגר: ${esc(GH.owner)}/${esc(GH.repo)} · אפיון: My_Doing_Spec (במאגר)<br>פותח עם Claude · 2026</div></div>`;
   }else{
     const trashN=items.filter(i=>i.status==='trash').length;
-    const T=today();const openT=items.filter(i=>i.status==='open'&&i.type==='task'&&i.date&&i.date<=T);
-    const lateN=openT.filter(i=>(i.rollovers||0)>0).length;
-    const doneN=items.filter(i=>i.status==='done'&&i.doneAt&&ymd(new Date(i.doneAt))===T).length;
-    const row=(ic,t,sub,attrs)=>`<button class="mrow" ${attrs}><span class="mic">${ic}</span><span class="mt"><b>${t}</b>${sub?'<small>'+sub+'</small>':''}</span><span class="chev">‹</span></button>`;
-    h+=`<div class="card sum"><div class="n">היום</div><div class="m"><span><b>${openT.length}</b> פתוחות</span><span style="color:#9B5A14">⏳ <b>${lateN}</b> באיחור</span><span style="color:var(--ok)">✓ <b>${doneN}</b> בוצעו</span></div></div>
-    <div class="card stat ok" id="statCard"><div class="n">…</div><div class="m">…</div>
-      <div class="btns" style="margin-top:8px"><button class="btn" id="syncBtn2">🔁 סנכרן עכשיו</button><button class="btn" data-more="settings">הגדרות סנכרון</button></div></div>
-    <h2 class="msec">יומיומי</h2>
+    const row=(ic,t,sub,attrs)=>`<button class="mrow big" ${attrs}><span class="mic">${ic}</span><span class="mt"><b>${t}</b><small>${sub}</small></span><span class="chev">‹</span></button>`;
+    h+=`<div class="card stat ok" id="statCard" style="margin-bottom:10px"><div class="n">…</div><div class="m">…</div></div>
+    ${row('📇','אנשי קשר',(contacts.length?contacts.length+' אנשי קשר':'עדיין אין')+' · סיכום היום','data-more="contacts"')}
+    ${row('☁️','גיבוי וסנכרון','שלח ל-Claude · מכשירים · שחזור · טוקן וסיסמה','data-more="backup"')}
+    ${row('⚙️','הגדרות','שבת · זיהוי הודעות · Claude · ייצוא וייבוא','data-more="settings"')}
+    ${row('ℹ️','אודות','גרסה '+APP_VER+' · בדיקת עדכון · מה חדש · יומן שגיאות','data-more="about"')}
     ${row('🗑️','סל',trashN?trashN+' פריטים · מחיקה סופית אחרי 7 ימים':'ריק','data-more="trash"')}
-    ${row('📇','אנשי קשר',contacts.length?contacts.length+' אנשי קשר':'עדיין אין','data-more="contacts"')}
-    <h2 class="msec">גיבוי וסנכרון</h2>
-    ${row('⬆️','שלח ל-Claude וגבה','כותב outbox וגיבוי מוצפן ל-GitHub — קורה לבד פעם ביום','id="syncBtn2b"')}
-    ${row('🔁','סנכרן מכשירים','טלפון ↔ מחשב — קורה לבד 30 שניות אחרי שינוי','id="devSyncBtn2"')}
-    ${row('⬇️','שחזר מ-GitHub','מיזוג מהגיבוי האחרון, בלי למחוק דבר','id="restoreBtn"')}
-    <h2 class="msec">מתקדם</h2>
-    ${row('⚙️','הגדרות','שבת · Claude API · טוקן GitHub וסיסמה · ייצוא/ייבוא · מכשירים','data-more="settings"')}
-    ${row('🔄','בדוק עדכון','גרסה '+APP_VER+' · מעדכן את האפליקציה בטלפון','id="updBtn"')}
-    ${row('🐞','יומן שגיאות וסנכרון','לבדיקה עם Claude כשמשהו לא עובד','id="errBtn"')}
-    <div class="small" style="padding:8px 8px 0" id="devLine">…</div>
-    <div class="small" style="padding:4px 8px">My Doing · גרסה ${APP_VER} · מכשיר: ${esc(device?device.name:'')} · הנתונים נשמרים בטלפון; גיבוי וסנכרון דרך GitHub</div>`;
+    <div class="small" style="padding:8px 8px 0">My Doing · גרסה ${APP_VER} · מכשיר: ${esc(device?device.name:'')}</div>`;
   }
-  document.getElementById('v-more').innerHTML=h;
+  document.getElementById('v-more').innerHTML=h;updateStatus();
   document.querySelectorAll('#v-more details.set').forEach(d=>d.addEventListener('toggle',()=>{settingsOpen[d.dataset.s]=d.open;try{localStorage.setItem('settingsOpen',JSON.stringify(settingsOpen));}catch(e){}}));
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});fillSyncLine();fillDevLine();window.scrollTo(0,0);
 }
@@ -1035,7 +1058,7 @@ function openSnooze(it){
 }
 async function trash(it){const prev=it.status;it.status='trash';it.deletedAt=Date.now();await save(it);toast('הועבר לסל','בטל',async()=>{it.status=prev==='trash'?'open':prev;it.deletedAt=null;await save(it);await render();toast('שוחזר');});}
 document.querySelector('main').addEventListener('click',async e=>{
-  const mo=e.target.closest('[data-more]');if(mo){moreSub=mo.dataset.more==='menu'?null:mo.dataset.more;render();return;}
+  const mo=e.target.closest('[data-more]');if(mo){const k=mo.dataset.more;if(k==='menu'||k==='back')goBack();else if(k==='whatsnew')openWhatsNew();else goSub(k);return;}
   const b=e.target.closest('[data-act],[data-lact],[data-set],[data-cact]');if(!b)return;
   if(b.dataset.cact){if(b.dataset.cact==='new')openContactSheet({});else{const c=contacts.find(x=>x.id===b.closest('[data-cid]').dataset.cid);if(c){if(b.dataset.cact==='open')openContactCard(c);else openContactSheet(c);}}return;}
   if(b.dataset.set){settings[b.dataset.set]=b.dataset.val==='1';await saveSettings();render();return;}
@@ -1156,11 +1179,11 @@ function openEdit(it,isNew=false){
   const repUnit=rep.unit||'';
   openSheet(`<h3>${isNew?'משימה חדשה':'עריכה'} ${SRC[it.source]||''}</h3>
     ${it.parentTitle?'<div class="small">↪ המשך ל: '+esc(it.parentTitle)+'</div>':''}
-    <label class="lbl">כותרת</label><div class="row" style="margin:0"><input id="eTitle" value="${esc(it.title)}" placeholder="מה לעשות?"><button class="btn" id="eMic" style="flex:0 0 auto;font-size:20px" title="הקלטה">🎤</button></div>
+    <label class="lbl">כותרת</label><div class="row" style="margin:0"><input id="eTitle" value="${esc(it.title)}" placeholder=""><button class="btn" id="eMic" style="flex:0 0 auto;font-size:20px" title="הקלטה">🎤</button></div>
     ${it.raw&&it.raw!==it.title?(it.source==='share'?'<details class="small"><summary>ההודעה המקורית</summary><div dir="auto" style="white-space:pre-wrap">'+esc(it.raw)+'</div></details>':'<div class="small">נאמר: '+esc(it.raw)+'</div>'):''}
-    <div class="row"><div><label class="lbl">📍 כתובת</label><input id="eAddr" value="${esc(it.addr||'')}" placeholder="רחוב, מספר, עיר"></div><div><label class="lbl">📞 טלפון</label><input id="ePhone" type="tel" value="${esc(it.phone||'')}" placeholder="05x-…"></div></div>
+    <div class="row"><div><label class="lbl">📍 כתובת</label><input id="eAddr" value="${esc(it.addr||'')}" placeholder=""></div><div><label class="lbl">📞 טלפון</label><input id="ePhone" type="tel" value="${esc(it.phone||'')}" placeholder=""></div></div>
     <div class="chips"><button data-type="task" class="${it.type==='task'?'on':''}">משימה</button><button data-type="cond" class="${it.type==='cond'?'on':''}">תזכורת מותנית</button><button data-type="topic" class="${it.type==='topic'?'on':''}">תזכורת לנושא</button></div>
-    <div id="condRow" style="${it.type==='cond'?'':'display:none'}"><label class="lbl">תנאי (השאלה שתישאל ביום היעד)</label><input id="eCond" value="${esc(it.condition||'')}" placeholder="אם ארגיש חלש"><label class="lbl">עד תאריך (חלון, לא חובה)</label><input id="eWin" type="date" value="${it.windowEnd||''}"></div>
+    <div id="condRow" style="${it.type==='cond'?'':'display:none'}"><label class="lbl">תנאי (השאלה שתישאל ביום היעד)</label><input id="eCond" value="${esc(it.condition||'')}" placeholder=""><label class="lbl">עד תאריך (חלון, לא חובה)</label><input id="eWin" type="date" value="${it.windowEnd||''}"></div>
     <div class="row"><div><label class="lbl">תאריך</label><input id="eDate" type="date" value="${it.date||''}"></div><div><label class="lbl">שעה</label><input id="eTime" type="time" value="${it.time||''}"></div></div>
     <div class="chips"><button data-d="0">היום</button><button data-d="1">מחר</button><button data-d="7">בעוד שבוע</button><button data-d="x">בלי תאריך</button></div>
     <label class="lbl">רשימה</label><select id="eList">${listOpts}</select>
@@ -1614,7 +1637,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.29';
+const APP_VER='0.30';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
