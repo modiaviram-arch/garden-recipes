@@ -38,6 +38,26 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--blue2)}
 .rec,.quick button.rec{background:#C0392B;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.6}}
 .hint{font-size:12.5px;opacity:.9;margin-top:6px;min-height:16px}
+.hint:empty{display:none}
+.status{display:block;width:100%;text-align:right;font-size:12.5px;opacity:.9;margin-top:4px;padding:0;color:#fff;min-height:16px}
+.status.warn{opacity:1;font-weight:600;color:#FFD9B0}
+.mrow{display:flex;align-items:center;gap:12px;width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:6px 0;min-height:52px;text-align:right;box-shadow:0 1px 2px rgba(0,0,0,.05);color:var(--ink)}
+.mrow:active{background:var(--soft)}
+.mrow .mic{font-size:22px;width:32px;text-align:center;flex:none}
+.mrow .mt{flex:1;min-width:0;display:flex;flex-direction:column}
+.mrow .mt b{font-size:16px;font-weight:600}
+.mrow .mt small{font-size:13.5px;color:var(--muted);line-height:1.3}
+.mrow .chev{color:var(--muted);font-size:20px;flex:none}
+#v-more h2.msec{font-size:15px;margin:14px 2px 4px}
+.card.sum{display:block;background:var(--soft);border-color:transparent}
+.card.sum .m{font-size:15px;display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px}
+.card.stat{display:block}
+.card.stat.ok{background:var(--okbg);border-color:var(--okline)}
+.card.stat.pend{background:#FFF9E8;border-color:#F0DCA0}
+.card.stat.warn{background:#FBE3DF;border-color:#F0B0A6}
+@media (prefers-color-scheme:dark){.card.stat.pend{background:#2E2910;border-color:#6B5A22}.card.stat.warn{background:#3A1F1C;border-color:#7A3A33}}
+.card.stat .n{font-size:16px}
+.card.stat .m{font-size:14.5px;color:var(--muted2);margin-top:3px}
 main{flex:1;padding:10px 12px calc(84px + var(--pad-b));max-width:760px;width:100%;margin:0 auto}
 .view{display:none}.view.on{display:block}
 h2{display:flex;justify-content:space-between;align-items:baseline;font-size:16px;color:var(--blue);margin:16px 2px 6px;padding-bottom:3px;border-bottom:2px solid var(--line)}
@@ -183,6 +203,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
       <button id="addBtn" title="הוסף">＋</button>
     </div>
     <div class="hint" id="hint"></div>
+    <button class="status" id="statusLine" title="מצב שמירה וסנכרון"></button>
     <div class="search" id="searchRow"><input id="search" placeholder="חיפוש בכל המשימות, הרשימות והיומן…" autocomplete="off" enterkeyhint="search"><button id="searchClear" title="סגור">✕</button></div>
   </header>
 
@@ -876,13 +897,26 @@ function renderMore(){
   <h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · 9.11.2026 · מכשיר: ${esc(device?device.name:'')} · הנתונים נשמרים במכשיר; גיבוי וסנכרון מוצפנים ל-GitHub כשמוגדרים טוקן וסיסמה.</div>`;
   }else{
     const trashN=items.filter(i=>i.status==='trash').length;
-    h+=`<h2>עוד</h2>
-    <div class="card" data-more="trash" style="cursor:pointer"><div class="t"><div class="n">🗑️ סל</div><div class="m">${trashN?trashN+' פריטים · מחיקה סופית אחרי 7 ימים':'ריק'}</div></div><div class="m" style="font-size:22px">‹</div></div>
-    <div class="card" data-more="contacts" style="cursor:pointer"><div class="t"><div class="n">📇 אנשי קשר</div><div class="m">${contacts.length?contacts.length+' אנשי קשר':'עדיין אין'}</div></div><div class="m" style="font-size:22px">‹</div></div>
-    <div class="card" data-more="settings" style="cursor:pointer"><div class="t"><div class="n">⚙️ הגדרות וגיבוי</div><div class="m">שבת, מפתח API, סנכרון בין מכשירים, גיבוי ושחזור, ייצוא/ייבוא</div></div><div class="m" style="font-size:22px">‹</div></div>
-    <div class="card" style="display:block"><div class="btns"><button class="btn" id="syncBtn2">⬆️ שלח ל-Claude וגבה</button><button class="btn" id="devSyncBtn2">🔁 סנכרן מכשירים</button><button class="btn" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן</button></div>
-    <div class="small" style="margin-top:8px" id="devLine">…</div></div>
-    <div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER} · מכשיר: ${esc(device?device.name:'')}</div>`;
+    const T=today();const openT=items.filter(i=>i.status==='open'&&i.type==='task'&&i.date&&i.date<=T);
+    const lateN=openT.filter(i=>(i.rollovers||0)>0).length;
+    const doneN=items.filter(i=>i.status==='done'&&i.doneAt&&ymd(new Date(i.doneAt))===T).length;
+    const row=(ic,t,sub,attrs)=>`<button class="mrow" ${attrs}><span class="mic">${ic}</span><span class="mt"><b>${t}</b>${sub?'<small>'+sub+'</small>':''}</span><span class="chev">‹</span></button>`;
+    h+=`<div class="card sum"><div class="n">היום</div><div class="m"><span><b>${openT.length}</b> פתוחות</span><span style="color:#9B5A14">⏳ <b>${lateN}</b> באיחור</span><span style="color:var(--ok)">✓ <b>${doneN}</b> בוצעו</span></div></div>
+    <div class="card stat ok" id="statCard"><div class="n">…</div><div class="m">…</div>
+      <div class="btns" style="margin-top:8px"><button class="btn" id="syncBtn2">🔁 סנכרן עכשיו</button><button class="btn" data-more="settings">הגדרות סנכרון</button></div></div>
+    <h2 class="msec">יומיומי</h2>
+    ${row('🗑️','סל',trashN?trashN+' פריטים · מחיקה סופית אחרי 7 ימים':'ריק','data-more="trash"')}
+    ${row('📇','אנשי קשר',contacts.length?contacts.length+' אנשי קשר':'עדיין אין','data-more="contacts"')}
+    <h2 class="msec">גיבוי וסנכרון</h2>
+    ${row('⬆️','שלח ל-Claude וגבה','כותב outbox וגיבוי מוצפן ל-GitHub — קורה לבד פעם ביום','id="syncBtn2b"')}
+    ${row('🔁','סנכרן מכשירים','טלפון ↔ מחשב — קורה לבד 30 שניות אחרי שינוי','id="devSyncBtn2"')}
+    ${row('⬇️','שחזר מ-GitHub','מיזוג מהגיבוי האחרון, בלי למחוק דבר','id="restoreBtn"')}
+    <h2 class="msec">מתקדם</h2>
+    ${row('⚙️','הגדרות','שבת · Claude API · טוקן GitHub וסיסמה · ייצוא/ייבוא · מכשירים','data-more="settings"')}
+    ${row('🔄','בדוק עדכון','גרסה '+APP_VER+' · מעדכן את האפליקציה בטלפון','id="updBtn"')}
+    ${row('🐞','יומן שגיאות וסנכרון','לבדיקה עם Claude כשמשהו לא עובד','id="errBtn"')}
+    <div class="small" style="padding:8px 8px 0" id="devLine">…</div>
+    <div class="small" style="padding:4px 8px">My Doing · גרסה ${APP_VER} · מכשיר: ${esc(device?device.name:'')} · הנתונים נשמרים בטלפון; גיבוי וסנכרון דרך GitHub</div>`;
   }
   document.getElementById('v-more').innerHTML=h;
   DB.kget('calendarAt').then(v=>{const e=document.getElementById('lastPull');if(e&&v)e.textContent=new Date(v).toLocaleString('he-IL');});fillSyncLine();fillDevLine();window.scrollTo(0,0);
@@ -907,6 +941,7 @@ async function render(){
   document.getElementById('dateLine').textContent=fmtDate(today())+' · '+new Date().getDate()+'.'+(new Date().getMonth()+1);
   if(searchQ.trim()){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-search'));renderSearch();updateBadge();return;}
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+view));
+  updateStatus();
   try{if(view==='today')await renderToday();else if(view==='lists')renderLists();else if(view==='log')renderLog();else renderMore();}
   catch(e){const msg=(e&&e.message)||String(e);try{logErr('render '+view+': '+msg);}catch(_){}
     if(view==='more')document.getElementById('v-more').innerHTML=`<h2>⚠️ שגיאה בטעינת המסך</h2><div class="card" style="display:block"><div class="small" dir="auto">${esc(msg)}</div><div class="btns" style="margin-top:8px"><button class="btn p" id="updBtn">🔄 בדוק עדכון</button><button class="btn" id="errBtn">🐞 יומן שגיאות</button><button class="btn" id="exportBtn">ייצוא לקובץ</button></div></div><h2>ℹ️ אודות</h2><div class="small" style="padding:0 8px">My Doing · גרסה ${APP_VER}</div>`;
@@ -1277,10 +1312,27 @@ async function syncNow(manual){
     if(settings.backupPass){try{await pushDevice(true);}catch(e){syncLog('דחיפת קובץ המכשיר נכשלה: '+(e.message||e));}}
     if(manual)toast(backed?'נשלח ל-Claude והגיבוי הועלה ✓':'נשלח ל-Claude ✓ (בלי גיבוי — אין סיסמה)');
   }catch(e){await DB.kset('lastSyncErr',(e&&e.message)||String(e));if(manual)toast('הסנכרון נכשל: '+((e&&e.message)||e));else logErr('סנכרון: '+((e&&e.message)||e));}
-  syncing=false;if(view==='more')render();
+  syncing=false;updateStatus();if(view==='more')render();
 }
 async function autoSync(){try{if(!settings.ghToken||!settings.syncAuto)return;const last=(await DB.kget('lastSync'))||0;if(Date.now()-last>20*3600e3)await syncNow(false);}catch(e){}}
 function syncStatusLine(){return '<span id="syncInfo">…</span>';}
+/* 0.28: one sentence about saving/sync, shown in the header on every screen and as a card in "עוד" */
+async function syncStatus(){
+  const hhmm=t=>new Date(t).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  if(!settings.ghToken)return {k:'off',line:'✓ נשמר בטלפון · ללא סנכרון',card:'נשמר בטלפון בלבד',sub:'כדי לגבות ולסנכרן — הזן טוקן GitHub וסיסמה בהגדרות'};
+  const [ls,lse,lp,lpe,lpl]=await Promise.all([DB.kget('lastSync'),DB.kget('lastSyncErr'),DB.kget('lastPushDev'),DB.kget('lastPushDevErr'),DB.kget('lastPullDevErr')]);
+  if(!navigator.onLine)return {k:'pend',line:'✓ נשמר בטלפון · אין רשת — יסונכרן כשתחזור',card:'אין רשת',sub:'הכול שמור בטלפון; הסנכרון יתבצע כשהרשת תחזור'};
+  if(lse||lpe)return {k:'warn',line:'⚠ נדרשת פעולה — הגדרות סנכרון',card:'⚠ הסנכרון נכשל',sub:(lse||lpe).slice(0,120)+' · הנתונים שמורים בטלפון'};
+  if(syncing||pushing)return {k:'pend',line:'✓ נשמר בטלפון · מסנכרן…',card:'⏳ מסנכרן…',sub:'שולח ל-GitHub'};
+  if(dirty)return {k:'pend',line:'✓ נשמר בטלפון · ממתין לסנכרון',card:'⏳ ממתין לסנכרון',sub:'שינויים אחרונים יישלחו אוטומטית תוך 30 שניות'};
+  const t=Math.max(ls||0,lp||0);
+  return {k:'ok',line:'✓ נשמר בטלפון'+(t?' · סונכרן '+hhmm(t):' · עדיין לא סונכרן'),card:t?'✓ הכול מסונכרן':'עדיין לא סונכרן',sub:(ls?'נשלח ל-Claude '+new Date(ls).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}):'עוד לא נשלח ל-Claude')+(canDevSync()?' · סנכרון מכשירים פעיל':'')+(lpl?' · משיכה אחרונה נכשלה':'')};
+}
+let statusT=null;
+function updateStatus(){clearTimeout(statusT);statusT=setTimeout(async()=>{try{const st=await syncStatus();const e=document.getElementById('statusLine');if(e){e.textContent=st.line;e.className='status'+(st.k==='warn'?' warn':'');}
+  const c=document.getElementById('statCard');if(c){c.className='card stat '+st.k;c.querySelector('.n').textContent=st.card;c.querySelector('.m').textContent=st.sub;}}catch(e){}},50);}
+document.addEventListener('click',e=>{if(e.target.closest('#statusLine')){moreSub=null;show('more');}});
+window.addEventListener('online',updateStatus);window.addEventListener('offline',updateStatus);
 async function fillSyncLine(){const e=document.getElementById('syncInfo');if(!e)return;const last=await DB.kget('lastSync'),err=await DB.kget('lastSyncErr');e.textContent=(settings.ghToken?'':'לא מוגדר טוקן. ')+(last?'סנכרון אחרון: '+new Date(last).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}):'עדיין לא סונכרן')+(settings.backupPass?' · גיבוי מוצפן פעיל':' · אין סיסמת גיבוי — נשלח רק דיווח')+(err?' · שגיאה אחרונה: '+err:'');}
 async function restoreFromGitHub(){
   let env=null;
@@ -1314,12 +1366,12 @@ document.querySelector('main').addEventListener('click',async e=>{
   if(e.target.id==='saveSync'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await offerPasswordSave();toast('נשמר');}
   if(e.target.id==='devSyncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await devSyncNow();}
   if(e.target.id==='syncBtn'){settings.ghToken=document.getElementById('ghToken').value.trim();settings.backupPass=document.getElementById('backupPass').value;await saveDeviceName();await saveSettings();await offerPasswordSave();await syncNow(true);}
-  if(e.target.id==='restoreBtn'){await restoreFromGitHub();}
-  if(e.target.id==='syncBtn2'){await syncNow(true);}
-  if(e.target.id==='devSyncBtn2'){await devSyncNow();}
+  if(e.target.id==='restoreBtn'||e.target.closest('#restoreBtn')){await restoreFromGitHub();}
+  if(e.target.id==='syncBtn2'||e.target.closest('#syncBtn2b')){await syncNow(true);}
+  if(e.target.id==='devSyncBtn2'||e.target.closest('#devSyncBtn2')){await devSyncNow();}
   if(e.target.id==='shareBtn'){await shareBackup();}
-  if(e.target.id==='updBtn'){checkUpdate(true);}
-  if(e.target.id==='errBtn'){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';const S=JSON.parse(localStorage.getItem('synclog')||'[]');openSheet('<h3>יומן שגיאות</h3><div class="small" style="white-space:pre-wrap"><b>סנכרון:</b>\n'+esc(S.join('\n')||'(ריק)')+'</div><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\npick state: '+esc(localStorage.getItem('pickstate')||'(אין)')+'\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
+  if(e.target.id==='updBtn'||e.target.closest('#updBtn')){checkUpdate(true);}
+  if(e.target.id==='errBtn'||e.target.closest('#errBtn')){const L=JSON.parse(localStorage.getItem('errlog')||'[]');const lp=localStorage.getItem('lastpick')||'(אין)';const S=JSON.parse(localStorage.getItem('synclog')||'[]');openSheet('<h3>יומן שגיאות</h3><div class="small" style="white-space:pre-wrap"><b>סנכרון:</b>\n'+esc(S.join('\n')||'(ריק)')+'</div><div class="small" dir="ltr" style="white-space:pre-wrap;text-align:left;font-family:monospace">'+esc(L.join('\n')||'(ריק)')+'\n\npick state: '+esc(localStorage.getItem('pickstate')||'(אין)')+'\nlast pick: '+esc(lp)+'</div><div class="btns" style="margin-top:10px"><button class="btn" id="errClear">נקה</button><button class="btn" id="errClose">סגור</button></div>');document.getElementById('errClear').onclick=()=>{localStorage.removeItem('errlog');localStorage.removeItem('lastpick');closeSheet();};document.getElementById('errClose').onclick=closeSheet;}
 });
 document.querySelector('main').addEventListener('change',async e=>{
   if(e.target.id==='importFile'){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());for(const it of (d.items||[]))await save(it);if(d.lists){lists=d.lists;await saveLists();}if(d.contacts){contacts=d.contacts;await saveContacts();}if(d.imported)await DB.kset('imported',d.imported);toast('יובאו '+(d.items||[]).length+' פריטים');render();}catch(err){toast('קובץ לא תקין');}}
@@ -1532,7 +1584,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.27';
+const APP_VER='0.28';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
@@ -1615,7 +1667,7 @@ async function pullDevices(force){
   return total;
 }
 let dirty=false,pushT=null,pushing=false;
-function markDirty(){dirty=true;if(!canDevSync())return;clearTimeout(pushT);pushT=setTimeout(()=>pushDevice(false).catch(()=>{}),30000);}
+function markDirty(){dirty=true;updateStatus();if(!canDevSync())return;clearTimeout(pushT);pushT=setTimeout(()=>pushDevice(false).catch(()=>{}),30000);}
 function flushPush(){if(dirty&&canDevSync()){clearTimeout(pushT);pushDevice(false).catch(()=>{});}}
 async function pushDevice(force){
   if(!canDevSync()||!navigator.onLine||pushing)return false;if(!dirty&&!force)return false;
@@ -1625,7 +1677,7 @@ async function pushDevice(force){
     await ghPut(GH.syncDir+'/'+device.id+'.json',JSON.stringify(env),'sync '+device.name+': '+new Date().toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}));
     dirty=false;await DB.kset('lastPushDev',Date.now());await DB.kset('lastPushDevErr','');return true;
   }catch(e){await DB.kset('lastPushDevErr',(e&&e.message)||String(e));syncLog('דחיפה: '+((e&&e.message)||e));throw e;}
-  finally{pushing=false;if(view==='more')fillDevLine();}
+  finally{pushing=false;updateStatus();if(view==='more')fillDevLine();}
 }
 async function devSyncNow(){
   if(!settings.ghToken){toast('קודם הזן טוקן GitHub');return;}if(!settings.backupPass){toast('סנכרון בין מכשירים דורש סיסמת הצפנה (זהה בשני המכשירים)');return;}if(!navigator.onLine){toast('אין רשת');return;}
