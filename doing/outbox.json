@@ -1,62 +1,72 @@
 {
- "generated": "2026-11-10T08:04:54.018Z",
- "app": "0.28",
+ "generated": "2026-11-11T05:45:30.235Z",
+ "app": "0.31",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-09T09:29:40.020Z",
+ "since_last_sync": "2026-11-10T08:05:00.233Z",
  "events_since_last_sync": [
   {
-   "ts": "2026-11-09T09:29:40.227Z",
-   "type": "added",
-   "id": "mw9285mqj4zt5",
-   "device": "טלפון",
-   "extId": null,
-   "title": "שלום,ההזמנה שביצעת באתר האינטרנט ממתינה לך בחנות סטימצקי,נשר,רחוב בר יהודה 147 מתחם תל חנן,נשר בנוסף מגיעה לך הטבה בסניף לפרטי ההטבה קישור http://lp6.me/l4XMw קוד הטבה 917226992100",
-   "list": null,
-   "date": "2026-11-09"
-  },
-  {
-   "ts": "2026-11-09T13:11:23.857Z",
+   "ts": "2026-11-10T08:06:24.350Z",
    "type": "done",
-   "id": "mw9285mqj4zt5",
+   "id": "mw8ul513mri9u",
    "device": "טלפון",
    "extId": null,
-   "title": "שלום,ההזמנה שביצעת באתר האינטרנט ממתינה לך בחנות סטימצקי,נשר,רחוב בר יהודה 147 מתחם תל חנן,נשר בנוסף מגיעה לך הטבה בסניף לפרטי ההטבה קישור http://lp6.me/l4XMw קוד הטבה 917226992100",
+   "title": "היום בשעה 18:00",
    "list": null,
-   "date": "2026-11-09"
+   "date": "2026-11-10"
   },
   {
-   "ts": "2026-11-09T13:12:01.337Z",
-   "type": "added",
-   "id": "mw9a5vo1ej2wi",
-   "device": "טלפון",
-   "extId": null,
-   "title": "לאסוף הזמנה מסטימצקי נשר",
-   "list": null,
-   "date": "2026-11-09"
-  },
-  {
-   "ts": "2026-11-09T17:52:15.744Z",
+   "ts": "2026-11-10T08:07:48.234Z",
    "type": "done",
-   "id": "mw8umq4796ijl",
+   "id": "mw4xrlqxwnm4u",
    "device": "טלפון",
-   "extId": null,
-   "title": "באטריס , 18:00",
+   "extId": "tt-6ae616c08f08415c287f05c7",
+   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
    "list": null,
-   "date": "2026-11-09"
+   "date": "2026-11-11"
   },
   {
-   "ts": "2026-11-09T17:52:24.864Z",
+   "ts": "2026-11-10T08:28:11.322Z",
+   "type": "reopened",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T12:10:12.339Z",
    "type": "done",
-   "id": "mw9a5vo1ej2wi",
+   "id": "mw4xrlqvathde",
    "device": "טלפון",
-   "extId": null,
-   "title": "לאסוף הזמנה מסטימצקי נשר",
+   "extId": "tt-6ae98ca648f474e51ba5a3f3",
+   "title": "לנסות לתקן מחשב קטן",
    "list": null,
-   "date": "2026-11-09"
+   "date": "2026-11-10"
   },
   {
-   "ts": "2026-11-09T20:10:01.887Z",
-   "type": "added",
+   "ts": "2026-11-10T12:10:21.233Z",
+   "type": "done",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:38:49.031Z",
+   "type": "done",
+   "id": "mwaemyqvvoq30",
+   "device": "טלפון",
+   "extId": "cl-garden-20261110-1",
+   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
+   "list": "גינה",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:38:56.011Z",
+   "type": "done",
    "id": "mw9p1hfw1ijps",
    "device": "טלפון",
    "extId": null,
@@ -65,14 +75,196 @@
    "date": "2026-11-10"
   },
   {
-   "ts": "2026-11-09T20:11:42.832Z",
-   "type": "added",
+   "ts": "2026-11-10T15:38:56.695Z",
+   "type": "done",
    "id": "mw9p500jahpqa",
    "device": "טלפון",
    "extId": null,
    "title": "לקנות כרובית בינונית",
    "list": "קניות",
    "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:40:57.563Z",
+   "type": "deleted",
+   "id": "mw9p500jahpqa",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקנות כרובית בינונית",
+   "list": "קניות",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:41:00.260Z",
+   "type": "deleted",
+   "id": "mw9p1hfw1ijps",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקנות בטריות 9 וולט × 4, לקנות בטריות AA × 8",
+   "list": "קניות",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:41:03.056Z",
+   "type": "deleted",
+   "id": "mwaemyqvvoq30",
+   "device": "טלפון",
+   "extId": "cl-garden-20261110-1",
+   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
+   "list": "גינה",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:41:05.515Z",
+   "type": "deleted",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:41:12.820Z",
+   "type": "deleted",
+   "id": "mw4xrlqvathde",
+   "device": "טלפון",
+   "extId": "tt-6ae98ca648f474e51ba5a3f3",
+   "title": "לנסות לתקן מחשב קטן",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:42:08.314Z",
+   "type": "added",
+   "id": "mwauy7hh717bc",
+   "device": "טלפון",
+   "extId": null,
+   "title": "המשך מחר",
+   "list": null,
+   "date": "2026-11-17"
+  },
+  {
+   "ts": "2026-11-10T15:42:15.309Z",
+   "type": "reopened",
+   "id": "mw4xrlqxwnm4u",
+   "device": "טלפון",
+   "extId": "tt-6ae616c08f08415c287f05c7",
+   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
+   "list": null,
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-10T15:42:44.217Z",
+   "type": "deleted",
+   "id": "mw9285mqj4zt5",
+   "device": "טלפון",
+   "extId": null,
+   "title": "שלום,ההזמנה שביצעת באתר האינטרנט ממתינה לך בחנות סטימצקי,נשר,רחוב בר יהודה 147 מתחם תל חנן,נשר בנוסף מגיעה לך הטבה בסניף לפרטי ההטבה קישור http://lp6.me/l4XMw קוד הטבה 917226992100",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:46.344Z",
+   "type": "deleted",
+   "id": "mw8umq4796ijl",
+   "device": "טלפון",
+   "extId": null,
+   "title": "באטריס , 18:00",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:48.717Z",
+   "type": "deleted",
+   "id": "mw9a5vo1ej2wi",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לאסוף הזמנה מסטימצקי נשר",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:51.524Z",
+   "type": "deleted",
+   "id": "mw6c94crzvgfv",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:54.576Z",
+   "type": "deleted",
+   "id": "mw7p7i5ofnmiq",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "list": "נסיעות",
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:58.449Z",
+   "type": "deleted",
+   "id": "mw89fifmv41k6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "אפרת",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:43:09.008Z",
+   "type": "deleted",
+   "id": "mw4xrlqueevh1",
+   "device": "טלפון",
+   "extId": "tt-6aec2478adf4bec7a85c3d98",
+   "title": "לסגור השקייה, לפני הגשם",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-10T15:43:14.041Z",
+   "type": "deleted",
+   "id": "mw4zcao8vswlr",
+   "device": "טלפון",
+   "extId": null,
+   "title": "להזמין שלט למאוורר סטאר שבע",
+   "list": null,
+   "date": "2026-11-07"
+  },
+  {
+   "ts": "2026-11-10T15:43:21.776Z",
+   "type": "deleted",
+   "id": "mw6amof90zty7",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-07"
+  },
+  {
+   "ts": "2026-11-10T15:44:10.712Z",
+   "type": "added",
+   "id": "mwav1mmvi26s6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק לימון לאחר ריסוס",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:44:54.998Z",
+   "type": "snoozed",
+   "id": "mwav1mmvi26s6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק לימון לאחר ריסוס",
+   "list": null,
+   "date": "2026-11-17",
+   "from": "2026-11-10",
+   "to": "2026-11-17"
   }
  ],
  "recent_events": [
@@ -387,34 +579,287 @@
    "title": "לקנות כרובית בינונית",
    "list": "קניות",
    "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T08:06:24.350Z",
+   "type": "done",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T08:07:48.234Z",
+   "type": "done",
+   "id": "mw4xrlqxwnm4u",
+   "device": "טלפון",
+   "extId": "tt-6ae616c08f08415c287f05c7",
+   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
+   "list": null,
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-10T08:28:11.322Z",
+   "type": "reopened",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T12:10:12.339Z",
+   "type": "done",
+   "id": "mw4xrlqvathde",
+   "device": "טלפון",
+   "extId": "tt-6ae98ca648f474e51ba5a3f3",
+   "title": "לנסות לתקן מחשב קטן",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T12:10:21.233Z",
+   "type": "done",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:38:49.031Z",
+   "type": "done",
+   "id": "mwaemyqvvoq30",
+   "device": "טלפון",
+   "extId": "cl-garden-20261110-1",
+   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
+   "list": "גינה",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:38:56.011Z",
+   "type": "done",
+   "id": "mw9p1hfw1ijps",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקנות בטריות 9 וולט × 4, לקנות בטריות AA × 8",
+   "list": "קניות",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:38:56.695Z",
+   "type": "done",
+   "id": "mw9p500jahpqa",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקנות כרובית בינונית",
+   "list": "קניות",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:40:57.563Z",
+   "type": "deleted",
+   "id": "mw9p500jahpqa",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקנות כרובית בינונית",
+   "list": "קניות",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:41:00.260Z",
+   "type": "deleted",
+   "id": "mw9p1hfw1ijps",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקנות בטריות 9 וולט × 4, לקנות בטריות AA × 8",
+   "list": "קניות",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:41:03.056Z",
+   "type": "deleted",
+   "id": "mwaemyqvvoq30",
+   "device": "טלפון",
+   "extId": "cl-garden-20261110-1",
+   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
+   "list": "גינה",
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:41:05.515Z",
+   "type": "deleted",
+   "id": "mw8ul513mri9u",
+   "device": "טלפון",
+   "extId": null,
+   "title": "היום בשעה 18:00",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:41:12.820Z",
+   "type": "deleted",
+   "id": "mw4xrlqvathde",
+   "device": "טלפון",
+   "extId": "tt-6ae98ca648f474e51ba5a3f3",
+   "title": "לנסות לתקן מחשב קטן",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:42:08.314Z",
+   "type": "added",
+   "id": "mwauy7hh717bc",
+   "device": "טלפון",
+   "extId": null,
+   "title": "המשך מחר",
+   "list": null,
+   "date": "2026-11-17"
+  },
+  {
+   "ts": "2026-11-10T15:42:15.309Z",
+   "type": "reopened",
+   "id": "mw4xrlqxwnm4u",
+   "device": "טלפון",
+   "extId": "tt-6ae616c08f08415c287f05c7",
+   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
+   "list": null,
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-10T15:42:44.217Z",
+   "type": "deleted",
+   "id": "mw9285mqj4zt5",
+   "device": "טלפון",
+   "extId": null,
+   "title": "שלום,ההזמנה שביצעת באתר האינטרנט ממתינה לך בחנות סטימצקי,נשר,רחוב בר יהודה 147 מתחם תל חנן,נשר בנוסף מגיעה לך הטבה בסניף לפרטי ההטבה קישור http://lp6.me/l4XMw קוד הטבה 917226992100",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:46.344Z",
+   "type": "deleted",
+   "id": "mw8umq4796ijl",
+   "device": "טלפון",
+   "extId": null,
+   "title": "באטריס , 18:00",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:48.717Z",
+   "type": "deleted",
+   "id": "mw9a5vo1ej2wi",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לאסוף הזמנה מסטימצקי נשר",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:51.524Z",
+   "type": "deleted",
+   "id": "mw6c94crzvgfv",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:54.576Z",
+   "type": "deleted",
+   "id": "mw7p7i5ofnmiq",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "list": "נסיעות",
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:42:58.449Z",
+   "type": "deleted",
+   "id": "mw89fifmv41k6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "אפרת",
+   "list": null,
+   "date": "2026-11-09"
+  },
+  {
+   "ts": "2026-11-10T15:43:09.008Z",
+   "type": "deleted",
+   "id": "mw4xrlqueevh1",
+   "device": "טלפון",
+   "extId": "tt-6aec2478adf4bec7a85c3d98",
+   "title": "לסגור השקייה, לפני הגשם",
+   "list": null,
+   "date": "2026-11-08"
+  },
+  {
+   "ts": "2026-11-10T15:43:14.041Z",
+   "type": "deleted",
+   "id": "mw4zcao8vswlr",
+   "device": "טלפון",
+   "extId": null,
+   "title": "להזמין שלט למאוורר סטאר שבע",
+   "list": null,
+   "date": "2026-11-07"
+  },
+  {
+   "ts": "2026-11-10T15:43:21.776Z",
+   "type": "deleted",
+   "id": "mw6amof90zty7",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-07"
+  },
+  {
+   "ts": "2026-11-10T15:44:10.712Z",
+   "type": "added",
+   "id": "mwav1mmvi26s6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק לימון לאחר ריסוס",
+   "list": null,
+   "date": "2026-11-10"
+  },
+  {
+   "ts": "2026-11-10T15:44:54.998Z",
+   "type": "snoozed",
+   "id": "mwav1mmvi26s6",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק לימון לאחר ריסוס",
+   "list": null,
+   "date": "2026-11-17",
+   "from": "2026-11-10",
+   "to": "2026-11-17"
   }
  ],
  "open_tasks": [
   {
-   "id": "mw4xrlqvathde",
-   "extId": "tt-6ae98ca648f474e51ba5a3f3",
-   "title": "לנסות לתקן מחשב קטן",
-   "date": "2026-11-10",
-   "list": null,
-   "rollovers": 5,
-   "overdue": false
-  },
-  {
    "id": "mw4xrlqwtt5xg",
    "extId": "tt-6ade36175a56b43b4e289e09",
    "title": "להתחיל לעשות תרגילי כח",
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "list": null,
-   "rollovers": 5,
+   "rollovers": 6,
    "overdue": false
   },
   {
    "id": "mw4xrlqwtx2bd",
    "extId": "tt-6ade35ea5a56b43b4e289dfa",
    "title": "להוסיף שיעור פלדנקרייז מהאינטרנט",
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "list": null,
-   "rollovers": 5,
+   "rollovers": 6,
    "overdue": false
   },
   {
@@ -430,9 +875,9 @@
    "id": "mw4zcw9f2gf9w",
    "extId": null,
    "title": "לבדוק לורד מפריז תוכניות בניין עיר",
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "list": null,
-   "rollovers": 4,
+   "rollovers": 5,
    "overdue": false
   },
   {
@@ -511,9 +956,9 @@
    "id": "mw7p7i5ovefmo",
    "extId": "cl-nyc-20261108-2",
    "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "list": "נסיעות",
-   "rollovers": 0,
+   "rollovers": 1,
    "overdue": false
   },
   {
@@ -538,9 +983,9 @@
    "id": "mw7p7i5pruk6r",
    "extId": "cl-nyc-20261108-3",
    "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "list": "נסיעות",
-   "rollovers": 0,
+   "rollovers": 1,
    "overdue": false
   },
   {
@@ -616,42 +1061,6 @@
    "overdue": false
   },
   {
-   "id": "mw8ul513mri9u",
-   "extId": null,
-   "title": "היום בשעה 18:00",
-   "date": "2026-11-10",
-   "list": null,
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw9p1hfw1ijps",
-   "extId": null,
-   "title": "לקנות בטריות 9 וולט × 4, לקנות בטריות AA × 8",
-   "date": "2026-11-10",
-   "list": "קניות",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw9p500jahpqa",
-   "extId": null,
-   "title": "לקנות כרובית בינונית",
-   "date": "2026-11-10",
-   "list": "קניות",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mwaemyqvvoq30",
-   "extId": "cl-garden-20261110-1",
-   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
-   "date": "2026-11-10",
-   "list": "גינה",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
    "id": "mwaemyqxph0wy",
    "extId": "cl-garden-20261110-2",
    "title": "לימון (מכל 1) – בדיקה חוזרת: כנימות לבנות ושבילים חדשים",
@@ -659,86 +1068,31 @@
    "list": "גינה",
    "rollovers": 0,
    "overdue": false
+  },
+  {
+   "id": "mwahr7dy1i507",
+   "extId": "cl-rachel-ct-20261113",
+   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
+   "date": "2026-11-13",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mwauy7hh717bc",
+   "extId": null,
+   "title": "המשך מחר",
+   "date": "2026-11-17",
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
   }
  ],
- "done_last_14_days": [
-  {
-   "id": "mw4xrlqueevh1",
-   "extId": "tt-6aec2478adf4bec7a85c3d98",
-   "title": "לסגור השקייה, לפני הגשם",
-   "status": "done",
-   "doneAt": "2026-11-08T13:17:51.564Z",
-   "list": null
-  },
-  {
-   "id": "mw4zcao8vswlr",
-   "extId": null,
-   "title": "להזמין שלט למאוורר סטאר שבע",
-   "status": "done",
-   "doneAt": "2026-11-07T19:39:15.060Z",
-   "list": null
-  },
-  {
-   "id": "mw6amof90zty7",
-   "extId": null,
-   "title": "לקבוע טיפול עם באטריס",
-   "status": "done",
-   "doneAt": "2026-11-07T11:18:23.433Z",
-   "list": null
-  },
-  {
-   "id": "mw6c94crzvgfv",
-   "extId": null,
-   "title": "לקבוע טיפול עם באטריס",
-   "status": "done",
-   "doneAt": "2026-11-09T05:55:45.905Z",
-   "list": null
-  },
-  {
-   "id": "mw7p7i5ofnmiq",
-   "extId": "cl-nyc-20261108-1",
-   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
-   "status": "done",
-   "doneAt": "2026-11-09T05:55:31.790Z",
-   "list": "נסיעות"
-  },
-  {
-   "id": "mw89fifmv41k6",
-   "extId": null,
-   "title": "אפרת",
-   "status": "done",
-   "doneAt": "2026-11-09T06:40:37.591Z",
-   "list": null
-  },
-  {
-   "id": "mw8umq4796ijl",
-   "extId": null,
-   "title": "באטריס , 18:00",
-   "status": "done",
-   "doneAt": "2026-11-09T17:52:10.735Z",
-   "list": null
-  },
-  {
-   "id": "mw9285mqj4zt5",
-   "extId": null,
-   "title": "שלום,ההזמנה שביצעת באתר האינטרנט ממתינה לך בחנות סטימצקי,נשר,רחוב בר יהודה 147 מתחם תל חנן,נשר בנוסף מגיעה לך הטבה בסניף לפרטי ההטבה קישור http://lp6.me/l4XMw קוד הטבה 917226992100",
-   "status": "done",
-   "doneAt": "2026-11-09T13:11:23.856Z",
-   "list": null
-  },
-  {
-   "id": "mw9a5vo1ej2wi",
-   "extId": null,
-   "title": "לאסוף הזמנה מסטימצקי נשר",
-   "status": "done",
-   "doneAt": "2026-11-09T17:52:19.858Z",
-   "list": null
-  }
- ],
+ "done_last_14_days": [],
  "stats": {
-  "open": 30,
+  "open": 27,
   "overdue": 0,
-  "stuck": 4,
+  "stuck": 3,
   "lists": [
    {
     "name": "רעיונות",
@@ -758,11 +1112,11 @@
    },
    {
     "name": "גינה",
-    "open": 7
+    "open": 6
    },
    {
     "name": "קניות",
-    "open": 2
+    "open": 0
    }
   ]
  }
