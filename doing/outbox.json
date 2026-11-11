@@ -1,40 +1,58 @@
 {
- "generated": "2026-11-11T08:38:24.975Z",
+ "generated": "2026-11-11T20:20:13.721Z",
  "app": "0.31",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-11T08:27:52.643Z",
+ "since_last_sync": "2026-11-11T08:38:30.855Z",
  "events_since_last_sync": [
   {
-   "ts": "2026-11-11T08:37:51.651Z",
+   "ts": "2026-11-11T17:47:15.194Z",
    "type": "done",
-   "id": "mw7p7i5pruk6r",
+   "id": "mw7p7i5pegm4p",
    "device": "טלפון",
-   "extId": "cl-nyc-20261108-3",
-   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+   "extId": "cl-nyc-20261108-4",
+   "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
    "list": "נסיעות",
-   "date": "2026-11-11"
+   "date": "2026-11-12"
   },
   {
-   "ts": "2026-11-11T08:37:52.275Z",
+   "ts": "2026-11-11T17:47:16.154Z",
    "type": "done",
-   "id": "mw7p7i5ovefmo",
+   "id": "mw7p7i5qk9pps",
    "device": "טלפון",
-   "extId": "cl-nyc-20261108-2",
-   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+   "extId": "cl-nyc-20261108-5",
+   "title": "לבדוק תוקף דרכונים (רחל ואני) ואישור ESTA לכניסה לארה\"ב",
    "list": "נסיעות",
-   "date": "2026-11-11"
+   "date": "2026-11-12"
   },
   {
-   "ts": "2026-11-11T08:38:04.335Z",
-   "type": "snoozed",
-   "id": "mw4xrlqxwnm4u",
+   "ts": "2026-11-11T17:47:29.694Z",
+   "type": "done",
+   "id": "mw89796madu2m",
    "device": "טלפון",
-   "extId": "tt-6ae616c08f08415c287f05c7",
-   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
+   "extId": null,
+   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
    "list": null,
-   "date": "2026-11-18",
-   "from": "2026-11-11",
-   "to": "2026-11-18"
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-11T20:18:02.470Z",
+   "type": "added",
+   "id": "mwck9o4k1gmg8",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק ה",
+   "list": null,
+   "date": null
+  },
+  {
+   "ts": "2026-11-11T20:19:47.782Z",
+   "type": "dup",
+   "id": "mwck9o4k1gmg8",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק ה",
+   "dupOf": "לבדוק ה",
+   "how": "quick"
   }
  ],
  "recent_events": [
@@ -643,6 +661,56 @@
    "date": "2026-11-18",
    "from": "2026-11-11",
    "to": "2026-11-18"
+  },
+  {
+   "ts": "2026-11-11T17:47:15.194Z",
+   "type": "done",
+   "id": "mw7p7i5pegm4p",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-4",
+   "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
+   "list": "נסיעות",
+   "date": "2026-11-12"
+  },
+  {
+   "ts": "2026-11-11T17:47:16.154Z",
+   "type": "done",
+   "id": "mw7p7i5qk9pps",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-5",
+   "title": "לבדוק תוקף דרכונים (רחל ואני) ואישור ESTA לכניסה לארה\"ב",
+   "list": "נסיעות",
+   "date": "2026-11-12"
+  },
+  {
+   "ts": "2026-11-11T17:47:29.694Z",
+   "type": "done",
+   "id": "mw89796madu2m",
+   "device": "טלפון",
+   "extId": null,
+   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "list": null,
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-11T20:18:02.470Z",
+   "type": "added",
+   "id": "mwck9o4k1gmg8",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק ה",
+   "list": null,
+   "date": null
+  },
+  {
+   "ts": "2026-11-11T20:19:47.782Z",
+   "type": "dup",
+   "id": "mwck9o4k1gmg8",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק ה",
+   "dupOf": "לבדוק ה",
+   "how": "quick"
   }
  ],
  "open_tasks": [
@@ -764,24 +832,6 @@
    "overdue": false
   },
   {
-   "id": "mw7p7i5pegm4p",
-   "extId": "cl-nyc-20261108-4",
-   "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
-   "date": "2026-11-12",
-   "list": "נסיעות",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw7p7i5qk9pps",
-   "extId": "cl-nyc-20261108-5",
-   "title": "לבדוק תוקף דרכונים (רחל ואני) ואישור ESTA לכניסה לארה\"ב",
-   "date": "2026-11-12",
-   "list": "נסיעות",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
    "id": "mw7p7i5qondot",
    "extId": "cl-nyc-20261108-6",
    "title": "ביטוח נסיעות לחו\"ל 15–30.12, לרחל ולי",
@@ -836,15 +886,6 @@
    "overdue": false
   },
   {
-   "id": "mw89796madu2m",
-   "extId": null,
-   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
-   "date": "2026-11-11",
-   "list": null,
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
    "id": "mwaemyqxph0wy",
    "extId": "cl-garden-20261110-2",
    "title": "לימון (מכל 1) – בדיקה חוזרת: כנימות לבנות ושבילים חדשים",
@@ -870,6 +911,15 @@
    "list": null,
    "rollovers": 0,
    "overdue": false
+  },
+  {
+   "id": "mwck9o4k1gmg8",
+   "extId": null,
+   "title": "לבדוק ה",
+   "date": null,
+   "list": null,
+   "rollovers": 0,
+   "overdue": false
   }
  ],
  "done_last_14_days": [
@@ -882,16 +932,40 @@
    "list": "נסיעות"
   },
   {
+   "id": "mw7p7i5pegm4p",
+   "extId": "cl-nyc-20261108-4",
+   "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
+   "status": "done",
+   "doneAt": "2026-11-11T17:47:10.186Z",
+   "list": "נסיעות"
+  },
+  {
    "id": "mw7p7i5pruk6r",
    "extId": "cl-nyc-20261108-3",
    "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
    "status": "done",
    "doneAt": "2026-11-11T08:37:46.646Z",
    "list": "נסיעות"
+  },
+  {
+   "id": "mw7p7i5qk9pps",
+   "extId": "cl-nyc-20261108-5",
+   "title": "לבדוק תוקף דרכונים (רחל ואני) ואישור ESTA לכניסה לארה\"ב",
+   "status": "done",
+   "doneAt": "2026-11-11T17:47:11.150Z",
+   "list": "נסיעות"
+  },
+  {
+   "id": "mw89796madu2m",
+   "extId": null,
+   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
+   "status": "done",
+   "doneAt": "2026-11-11T17:47:24.686Z",
+   "list": null
   }
  ],
  "stats": {
-  "open": 25,
+  "open": 23,
   "overdue": 0,
   "stuck": 3,
   "lists": [
@@ -905,7 +979,7 @@
    },
    {
     "name": "נסיעות",
-    "open": 8
+    "open": 6
    },
    {
     "name": "טיפולים",
