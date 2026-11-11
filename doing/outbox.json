@@ -1,9 +1,42 @@
 {
- "generated": "2026-11-11T08:27:48.127Z",
+ "generated": "2026-11-11T08:38:24.975Z",
  "app": "0.31",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-11T08:27:37.771Z",
- "events_since_last_sync": [],
+ "since_last_sync": "2026-11-11T08:27:52.643Z",
+ "events_since_last_sync": [
+  {
+   "ts": "2026-11-11T08:37:51.651Z",
+   "type": "done",
+   "id": "mw7p7i5pruk6r",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-3",
+   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+   "list": "נסיעות",
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-11T08:37:52.275Z",
+   "type": "done",
+   "id": "mw7p7i5ovefmo",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-2",
+   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+   "list": "נסיעות",
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-11T08:38:04.335Z",
+   "type": "snoozed",
+   "id": "mw4xrlqxwnm4u",
+   "device": "טלפון",
+   "extId": "tt-6ae616c08f08415c287f05c7",
+   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
+   "list": null,
+   "date": "2026-11-18",
+   "from": "2026-11-11",
+   "to": "2026-11-18"
+  }
+ ],
  "recent_events": [
   {
    "ts": "2026-11-08T13:17:51.564Z",
@@ -578,6 +611,38 @@
    "date": "2026-11-17",
    "from": "2026-11-10",
    "to": "2026-11-17"
+  },
+  {
+   "ts": "2026-11-11T08:37:51.651Z",
+   "type": "done",
+   "id": "mw7p7i5pruk6r",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-3",
+   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+   "list": "נסיעות",
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-11T08:37:52.275Z",
+   "type": "done",
+   "id": "mw7p7i5ovefmo",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-2",
+   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+   "list": "נסיעות",
+   "date": "2026-11-11"
+  },
+  {
+   "ts": "2026-11-11T08:38:04.335Z",
+   "type": "snoozed",
+   "id": "mw4xrlqxwnm4u",
+   "device": "טלפון",
+   "extId": "tt-6ae616c08f08415c287f05c7",
+   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
+   "list": null,
+   "date": "2026-11-18",
+   "from": "2026-11-11",
+   "to": "2026-11-18"
   }
  ],
  "open_tasks": [
@@ -690,15 +755,6 @@
    "overdue": false
   },
   {
-   "id": "mw7p7i5ovefmo",
-   "extId": "cl-nyc-20261108-2",
-   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
-   "date": "2026-11-11",
-   "list": "נסיעות",
-   "rollovers": 1,
-   "overdue": false
-  },
-  {
    "id": "mw7p7i5oxf2t3",
    "extId": "cl-garden-20261108-6",
    "title": "לדווח לקלוד: שליפת הכורכום ושתילת 4.1 בוצעו – לעדכון ספר הגינה",
@@ -714,15 +770,6 @@
    "date": "2026-11-12",
    "list": "נסיעות",
    "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw7p7i5pruk6r",
-   "extId": "cl-nyc-20261108-3",
-   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
-   "date": "2026-11-11",
-   "list": "נסיעות",
-   "rollovers": 1,
    "overdue": false
   },
   {
@@ -825,9 +872,26 @@
    "overdue": false
   }
  ],
- "done_last_14_days": [],
+ "done_last_14_days": [
+  {
+   "id": "mw7p7i5ovefmo",
+   "extId": "cl-nyc-20261108-2",
+   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+   "status": "done",
+   "doneAt": "2026-11-11T08:37:47.269Z",
+   "list": "נסיעות"
+  },
+  {
+   "id": "mw7p7i5pruk6r",
+   "extId": "cl-nyc-20261108-3",
+   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+   "status": "done",
+   "doneAt": "2026-11-11T08:37:46.646Z",
+   "list": "נסיעות"
+  }
+ ],
  "stats": {
-  "open": 27,
+  "open": 25,
   "overdue": 0,
   "stuck": 3,
   "lists": [
@@ -841,7 +905,7 @@
    },
    {
     "name": "נסיעות",
-    "open": 10
+    "open": 8
    },
    {
     "name": "טיפולים",
