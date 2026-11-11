@@ -1,60 +1,9 @@
 {
- "generated": "2026-11-11T20:20:13.721Z",
+ "generated": "2026-11-11T20:20:25.039Z",
  "app": "0.31",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-11T08:38:30.855Z",
- "events_since_last_sync": [
-  {
-   "ts": "2026-11-11T17:47:15.194Z",
-   "type": "done",
-   "id": "mw7p7i5pegm4p",
-   "device": "טלפון",
-   "extId": "cl-nyc-20261108-4",
-   "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
-   "list": "נסיעות",
-   "date": "2026-11-12"
-  },
-  {
-   "ts": "2026-11-11T17:47:16.154Z",
-   "type": "done",
-   "id": "mw7p7i5qk9pps",
-   "device": "טלפון",
-   "extId": "cl-nyc-20261108-5",
-   "title": "לבדוק תוקף דרכונים (רחל ואני) ואישור ESTA לכניסה לארה\"ב",
-   "list": "נסיעות",
-   "date": "2026-11-12"
-  },
-  {
-   "ts": "2026-11-11T17:47:29.694Z",
-   "type": "done",
-   "id": "mw89796madu2m",
-   "device": "טלפון",
-   "extId": null,
-   "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
-   "list": null,
-   "date": "2026-11-11"
-  },
-  {
-   "ts": "2026-11-11T20:18:02.470Z",
-   "type": "added",
-   "id": "mwck9o4k1gmg8",
-   "device": "טלפון",
-   "extId": null,
-   "title": "לבדוק ה",
-   "list": null,
-   "date": null
-  },
-  {
-   "ts": "2026-11-11T20:19:47.782Z",
-   "type": "dup",
-   "id": "mwck9o4k1gmg8",
-   "device": "טלפון",
-   "extId": null,
-   "title": "לבדוק ה",
-   "dupOf": "לבדוק ה",
-   "how": "quick"
-  }
- ],
+ "since_last_sync": "2026-11-11T20:20:20.529Z",
+ "events_since_last_sync": [],
  "recent_events": [
   {
    "ts": "2026-11-08T13:17:51.564Z",
