@@ -333,7 +333,7 @@ function parseHebrew(text){
   // topic reminder
   let m=cut(/ תזכיר(?:י)? לי (?:על|לגבי|בקשר ל) /);if(m)r.topic=true;
   // condition
-  m=t.match(/[,،]?\s*(אם |במידה ש|במקרה ש)(.+?)(?=[,،]| אז |$)/);if(m){r.condition=(m[1]+m[2]).trim();t=t.replace(m[0],' ');}
+  m=t.match(/(?:[,،]\s*|\s)(אם |במידה ש|במקרה ש)(.+?)(?=[,،]| אז |$)/);if(m){r.condition=(m[1]+m[2]).trim();t=t.replace(m[0],' ');} // 0.32: only a standalone word — not the "אם" inside "האם"
   // repeat
   m=cut(/ כל (\d+|[א-ת]+) (ימים|יום|שבועות|שבוע|חודשים|חודש) /);
   if(m){const n=parseInt(m[1])||NUMW[m[1]]||1;const u=m[2].startsWith('שבוע')?'week':m[2].startsWith('חודש')?'month':'day';r.repeat={every:n,unit:u,weekdays:[],skipSat:true};}
@@ -554,6 +554,11 @@ function repeatLabel(rep){if(!rep)return '';let s=rep.unit==='day'?(rep.every===
 async function maintenance(){
   const T=today();let changed=0;
   for(const it of items){
+    if(it.status==='open'&&it.type==='cond'){ // 0.32 repair: "האם…" was misread as a condition and the item saved with no date (hidden)
+      const p=it.raw?parseHebrew(it.raw):null;
+      if(p&&!p.condition){it.type='task';it.title=p.title||it.raw;it.condition='';it.windowEnd=null;if(!it.date)it.date=T;await save(it);changed++;continue;}
+      if(!it.date){it.date=T;await save(it);changed++;continue;}
+    }
     if(it.status==='trash'&&it.deletedAt&&Date.now()-it.deletedAt>7*864e5){await purgeItem(it.id);continue;}
     if(it.status!=='open'||!it.date)continue;
     if(it.date<T){
@@ -1156,6 +1161,7 @@ function buildFromText(raw,source){
   if(p.topic){it.type='topic';const l=lists.find(x=>p.title.includes(x.name));if(l)it.list=l.id;}
   if(source==='manual'||source==='voice'){const tl=quickTargetList();if(tl&&!it.list&&it.type==='task'){it.list=tl.id;if(!p.date)it.date=null;}} // 0.22: typed while a list is open → into that list, undated
   if(!it.date&&it.type==='task'&&!it.list)it.date=today();
+  if(!it.date&&it.type==='cond')it.date=today(); // 0.32: an undated conditional reminder was never shown anywhere
   return it;
 }
 
@@ -1665,7 +1671,7 @@ function handleShare(){
 }
 
 /* ===================== Update check ===================== */
-const APP_VER='0.31';
+const APP_VER='0.32';
 async function checkUpdate(manual){
   try{const r=await fetch('version.txt?ts='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();
     if(/^\d+(\.\d+)*$/.test(v)&&v!==APP_VER){toast('יש גרסה חדשה ('+v+')','עדכן עכשיו',async()=>{if('serviceWorker' in navigator){const regs=await navigator.serviceWorker.getRegistrations();for(const g of regs)await g.unregister();}if(window.caches){for(const k of await caches.keys())await caches.delete(k);}location.replace(location.pathname+'?u='+Date.now());});}
