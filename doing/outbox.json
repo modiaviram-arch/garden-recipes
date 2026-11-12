@@ -1,9 +1,20 @@
 {
- "generated": "2026-11-11T20:20:34.649Z",
+ "generated": "2026-11-12T06:12:49.067Z",
  "app": "0.31",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-11T20:20:30.398Z",
- "events_since_last_sync": [],
+ "since_last_sync": "2026-11-11T20:20:40.429Z",
+ "events_since_last_sync": [
+  {
+   "ts": "2026-11-12T06:11:44.308Z",
+   "type": "dup",
+   "id": "mwck9o4k1gmg8",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק ה",
+   "dupOf": "לבדוק ה",
+   "how": "quick"
+  }
+ ],
  "recent_events": [
   {
    "ts": "2026-11-08T13:17:51.564Z",
@@ -660,6 +671,16 @@
    "title": "לבדוק ה",
    "dupOf": "לבדוק ה",
    "how": "quick"
+  },
+  {
+   "ts": "2026-11-12T06:11:44.308Z",
+   "type": "dup",
+   "id": "mwck9o4k1gmg8",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק ה",
+   "dupOf": "לבדוק ה",
+   "how": "quick"
   }
  ],
  "open_tasks": [
@@ -667,18 +688,18 @@
    "id": "mw4xrlqwtt5xg",
    "extId": "tt-6ade36175a56b43b4e289e09",
    "title": "להתחיל לעשות תרגילי כח",
-   "date": "2026-11-11",
+   "date": "2026-11-12",
    "list": null,
-   "rollovers": 6,
+   "rollovers": 7,
    "overdue": false
   },
   {
    "id": "mw4xrlqwtx2bd",
    "extId": "tt-6ade35ea5a56b43b4e289dfa",
    "title": "להוסיף שיעור פלדנקרייז מהאינטרנט",
-   "date": "2026-11-11",
+   "date": "2026-11-12",
    "list": null,
-   "rollovers": 6,
+   "rollovers": 7,
    "overdue": false
   },
   {
@@ -694,9 +715,9 @@
    "id": "mw4zcw9f2gf9w",
    "extId": null,
    "title": "לבדוק לורד מפריז תוכניות בניין עיר",
-   "date": "2026-11-11",
+   "date": "2026-11-12",
    "list": null,
-   "rollovers": 5,
+   "rollovers": 6,
    "overdue": false
   },
   {
