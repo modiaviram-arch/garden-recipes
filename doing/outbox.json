@@ -1,30 +1,9 @@
 {
- "generated": "2026-11-13T07:28:47.804Z",
+ "generated": "2026-11-13T07:28:58.009Z",
  "app": "0.32",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-13T05:32:56.070Z",
- "events_since_last_sync": [
-  {
-   "ts": "2026-11-13T05:33:09.254Z",
-   "type": "done",
-   "id": "mw4xrlqx8dpkj",
-   "device": "טלפון",
-   "extId": "tt-6aeacb06e05889cee943c20c",
-   "title": "בדיקה לרחל",
-   "list": null,
-   "date": "2026-11-13"
-  },
-  {
-   "ts": "2026-11-13T07:20:58.335Z",
-   "type": "done",
-   "id": "mwahr7dy1i507",
-   "device": "טלפון",
-   "extId": "cl-rachel-ct-20261113",
-   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
-   "list": null,
-   "date": "2026-11-13"
-  }
- ],
+ "since_last_sync": "2026-11-13T07:28:54.052Z",
+ "events_since_last_sync": [],
  "recent_events": [
   {
    "ts": "2026-11-08T13:17:51.564Z",
