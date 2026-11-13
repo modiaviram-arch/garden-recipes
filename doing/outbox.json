@@ -1,78 +1,26 @@
 {
- "generated": "2026-11-13T05:32:49.177Z",
+ "generated": "2026-11-13T07:28:47.804Z",
  "app": "0.32",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-12T06:13:15.174Z",
+ "since_last_sync": "2026-11-13T05:32:56.070Z",
  "events_since_last_sync": [
   {
-   "ts": "2026-11-12T06:14:14.208Z",
-   "type": "dup",
-   "id": "mwck9o4k1gmg8",
-   "device": "טלפון",
-   "extId": null,
-   "title": "לבדוק ה",
-   "dupOf": "לבדוק ה",
-   "how": "quick"
-  },
-  {
-   "ts": "2026-11-12T06:23:06.727Z",
-   "type": "snoozed",
-   "id": "mwck9o4k1gmg8",
-   "device": "טלפון",
-   "extId": null,
-   "title": "לבדוק האם נדרש לפתוח את ההשקייה",
-   "list": null,
-   "date": "2026-11-12",
-   "from": null,
-   "to": "2026-11-12"
-  },
-  {
-   "ts": "2026-11-12T06:23:19.527Z",
+   "ts": "2026-11-13T05:33:09.254Z",
    "type": "done",
-   "id": "mwck9o4k1gmg8",
+   "id": "mw4xrlqx8dpkj",
    "device": "טלפון",
-   "extId": null,
-   "title": "לבדוק האם נדרש לפתוח את ההשקייה",
-   "list": null,
-   "date": "2026-11-12"
-  },
-  {
-   "ts": "2026-11-12T06:38:23.052Z",
-   "type": "added",
-   "id": "mwd6eowzzxpg1",
-   "device": "טלפון",
-   "extId": null,
-   "title": "לעבור במשרד לקחת את המחשב המתוקן",
-   "list": null,
-   "date": "2026-11-12"
-  },
-  {
-   "ts": "2026-11-12T07:48:26.828Z",
-   "type": "done",
-   "id": "mwd6eowzzxpg1",
-   "device": "טלפון",
-   "extId": null,
-   "title": "לעבור במשרד לקחת את המחשב המתוקן",
-   "list": null,
-   "date": "2026-11-12"
-  },
-  {
-   "ts": "2026-11-12T07:49:03.215Z",
-   "type": "added",
-   "id": "mwd8ybfy0658s",
-   "device": "טלפון",
-   "extId": null,
-   "title": "לבדוק באם לפתוח השקייה",
+   "extId": "tt-6aeacb06e05889cee943c20c",
+   "title": "בדיקה לרחל",
    "list": null,
    "date": "2026-11-13"
   },
   {
-   "ts": "2026-11-12T17:59:15.192Z",
+   "ts": "2026-11-13T07:20:58.335Z",
    "type": "done",
-   "id": "mwd8ybfy0658s",
+   "id": "mwahr7dy1i507",
    "device": "טלפון",
-   "extId": null,
-   "title": "לבדוק באם לפתוח השקייה",
+   "extId": "cl-rachel-ct-20261113",
+   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
    "list": null,
    "date": "2026-11-13"
   }
@@ -815,6 +763,26 @@
    "title": "לבדוק באם לפתוח השקייה",
    "list": null,
    "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T05:33:09.254Z",
+   "type": "done",
+   "id": "mw4xrlqx8dpkj",
+   "device": "טלפון",
+   "extId": "tt-6aeacb06e05889cee943c20c",
+   "title": "בדיקה לרחל",
+   "list": null,
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T07:20:58.335Z",
+   "type": "done",
+   "id": "mwahr7dy1i507",
+   "device": "טלפון",
+   "extId": "cl-rachel-ct-20261113",
+   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
+   "list": null,
+   "date": "2026-11-13"
   }
  ],
  "open_tasks": [
@@ -834,15 +802,6 @@
    "date": "2026-11-13",
    "list": null,
    "rollovers": 8,
-   "overdue": false
-  },
-  {
-   "id": "mw4xrlqx8dpkj",
-   "extId": "tt-6aeacb06e05889cee943c20c",
-   "title": "בדיקה לרחל",
-   "date": "2026-11-13",
-   "list": null,
-   "rollovers": 0,
    "overdue": false
   },
   {
@@ -999,15 +958,6 @@
    "overdue": false
   },
   {
-   "id": "mwahr7dy1i507",
-   "extId": "cl-rachel-ct-20261113",
-   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
-   "date": "2026-11-13",
-   "list": null,
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
    "id": "mwauy7hh717bc",
    "extId": null,
    "title": "המשך מחר",
@@ -1018,6 +968,14 @@
   }
  ],
  "done_last_14_days": [
+  {
+   "id": "mw4xrlqx8dpkj",
+   "extId": "tt-6aeacb06e05889cee943c20c",
+   "title": "בדיקה לרחל",
+   "status": "done",
+   "doneAt": "2026-11-13T05:33:04.250Z",
+   "list": null
+  },
   {
    "id": "mw7p7i5ovefmo",
    "extId": "cl-nyc-20261108-2",
@@ -1059,6 +1017,14 @@
    "list": null
   },
   {
+   "id": "mwahr7dy1i507",
+   "extId": "cl-rachel-ct-20261113",
+   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
+   "status": "done",
+   "doneAt": "2026-11-13T07:20:53.329Z",
+   "list": null
+  },
+  {
    "id": "mwck9o4k1gmg8",
    "extId": null,
    "title": "לבדוק האם נדרש לפתוח את ההשקייה",
@@ -1084,7 +1050,7 @@
   }
  ],
  "stats": {
-  "open": 22,
+  "open": 20,
   "overdue": 0,
   "stuck": 3,
   "lists": [
