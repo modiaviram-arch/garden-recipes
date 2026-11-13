@@ -1,9 +1,40 @@
 {
- "generated": "2026-11-13T17:17:37.587Z",
+ "generated": "2026-11-13T17:43:50.710Z",
  "app": "0.32",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-13T17:17:33.716Z",
- "events_since_last_sync": [],
+ "since_last_sync": "2026-11-12T11:24:29.557Z",
+ "events_since_last_sync": [
+  {
+   "ts": "2026-11-12T17:59:15.192Z",
+   "type": "done",
+   "id": "mwd8ybfy0658s",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לבדוק באם לפתוח השקייה",
+   "list": null,
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T05:33:09.254Z",
+   "type": "done",
+   "id": "mw4xrlqx8dpkj",
+   "device": "טלפון",
+   "extId": "tt-6aeacb06e05889cee943c20c",
+   "title": "בדיקה לרחל",
+   "list": null,
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T07:20:58.335Z",
+   "type": "done",
+   "id": "mwahr7dy1i507",
+   "device": "טלפון",
+   "extId": "cl-rachel-ct-20261113",
+   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
+   "list": null,
+   "date": "2026-11-13"
+  }
+ ],
  "recent_events": [
   {
    "ts": "2026-11-08T13:17:51.564Z",
@@ -734,6 +765,46 @@
    "date": "2026-11-13"
   },
   {
+   "ts": "2026-11-12T11:24:21.398Z",
+   "type": "dup",
+   "id": "mw6c94crzvgfv",
+   "device": "מחשב",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "dupOf": "לקבוע טיפול עם באטריס",
+   "how": "cleanup"
+  },
+  {
+   "ts": "2026-11-12T11:24:21.399Z",
+   "type": "deleted",
+   "id": "mw6fatzjplfn0",
+   "device": "מחשב",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-12"
+  },
+  {
+   "ts": "2026-11-12T11:24:21.404Z",
+   "type": "dup",
+   "id": "mw7p7i5juh0zu",
+   "device": "מחשב",
+   "extId": "cl-garden-20261108-5",
+   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "dupOf": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "how": "cleanup"
+  },
+  {
+   "ts": "2026-11-12T11:24:21.406Z",
+   "type": "deleted",
+   "id": "mw7p7i5nif2cf",
+   "device": "מחשב",
+   "extId": "cl-garden-20261108-5",
+   "title": "מכל 4.1 – שתילת חסה, תרד ומנגולד",
+   "list": "גינה",
+   "date": "2026-12-01"
+  },
+  {
    "ts": "2026-11-12T17:59:15.192Z",
    "type": "done",
    "id": "mwd8ybfy0658s",
@@ -766,6 +837,15 @@
  ],
  "open_tasks": [
   {
+   "id": "mw4xrlqvathde",
+   "extId": "tt-6ae98ca648f474e51ba5a3f3",
+   "title": "לנסות לתקן מחשב קטן",
+   "date": "2026-11-13",
+   "list": null,
+   "rollovers": 6,
+   "overdue": false
+  },
+  {
    "id": "mw4xrlqwtt5xg",
    "extId": "tt-6ade36175a56b43b4e289e09",
    "title": "להתחיל לעשות תרגילי כח",
@@ -790,6 +870,15 @@
    "date": "2026-11-13",
    "list": null,
    "rollovers": 7,
+   "overdue": false
+  },
+  {
+   "id": "mw6c94crzvgfv",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "date": "2026-11-13",
+   "list": null,
+   "rollovers": 3,
    "overdue": false
   },
   {
@@ -865,12 +954,39 @@
    "overdue": false
   },
   {
+   "id": "mw7p7i5ofnmiq",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "date": "2026-11-13",
+   "list": "נסיעות",
+   "rollovers": 2,
+   "overdue": false
+  },
+  {
+   "id": "mw7p7i5ovefmo",
+   "extId": "cl-nyc-20261108-2",
+   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+   "date": "2026-11-13",
+   "list": "נסיעות",
+   "rollovers": 2,
+   "overdue": false
+  },
+  {
    "id": "mw7p7i5oxf2t3",
    "extId": "cl-garden-20261108-6",
    "title": "לדווח לקלוד: שליפת הכורכום ושתילת 4.1 בוצעו – לעדכון ספר הגינה",
    "date": "2026-12-02",
    "list": "גינה",
    "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mw7p7i5pruk6r",
+   "extId": "cl-nyc-20261108-3",
+   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+   "date": "2026-11-13",
+   "list": "נסיעות",
+   "rollovers": 2,
    "overdue": false
   },
   {
@@ -928,20 +1044,29 @@
    "overdue": false
   },
   {
-   "id": "mwaemyqxph0wy",
-   "extId": "cl-garden-20261110-2",
-   "title": "לימון (מכל 1) – בדיקה חוזרת: כנימות לבנות ושבילים חדשים",
-   "date": "2026-11-20",
-   "list": "גינה",
-   "rollovers": 0,
-   "overdue": false
-  },
-  {
    "id": "mwauy7hh717bc",
    "extId": null,
    "title": "המשך מחר",
    "date": "2026-11-17",
    "list": null,
+   "rollovers": 0,
+   "overdue": false
+  },
+  {
+   "id": "mwdgn7ee69r54",
+   "extId": "cl-garden-20261110-1",
+   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
+   "date": "2026-11-13",
+   "list": "גינה",
+   "rollovers": 2,
+   "overdue": false
+  },
+  {
+   "id": "mwdgn7efrco6b",
+   "extId": "cl-garden-20261110-2",
+   "title": "לימון (מכל 1) – בדיקה חוזרת: כנימות לבנות ושבילים חדשים",
+   "date": "2026-11-20",
+   "list": "גינה",
    "rollovers": 0,
    "overdue": false
   }
@@ -956,27 +1081,11 @@
    "list": null
   },
   {
-   "id": "mw7p7i5ovefmo",
-   "extId": "cl-nyc-20261108-2",
-   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
-   "status": "done",
-   "doneAt": "2026-11-11T08:37:47.269Z",
-   "list": "נסיעות"
-  },
-  {
    "id": "mw7p7i5pegm4p",
    "extId": "cl-nyc-20261108-4",
    "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
    "status": "done",
    "doneAt": "2026-11-11T17:47:10.186Z",
-   "list": "נסיעות"
-  },
-  {
-   "id": "mw7p7i5pruk6r",
-   "extId": "cl-nyc-20261108-3",
-   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
-   "status": "done",
-   "doneAt": "2026-11-11T08:37:46.646Z",
    "list": "נסיעות"
   },
   {
@@ -993,14 +1102,6 @@
    "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
    "status": "done",
    "doneAt": "2026-11-11T17:47:24.686Z",
-   "list": null
-  },
-  {
-   "id": "mwahr7dy1i507",
-   "extId": "cl-rachel-ct-20261113",
-   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
-   "status": "done",
-   "doneAt": "2026-11-13T07:20:53.329Z",
    "list": null
   },
   {
@@ -1026,12 +1127,20 @@
    "status": "done",
    "doneAt": "2026-11-12T17:59:10.184Z",
    "list": null
+  },
+  {
+   "id": "mwahr7dy1i507",
+   "extId": "cl-rachel-ct-20261113",
+   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
+   "status": "done",
+   "doneAt": "2026-11-13T07:20:53.329Z",
+   "list": null
   }
  ],
  "stats": {
-  "open": 20,
+  "open": 26,
   "overdue": 0,
-  "stuck": 3,
+  "stuck": 5,
   "lists": [
    {
     "name": "רעיונות",
@@ -1043,7 +1152,7 @@
    },
    {
     "name": "נסיעות",
-    "open": 6
+    "open": 9
    },
    {
     "name": "טיפולים",
@@ -1051,7 +1160,7 @@
    },
    {
     "name": "גינה",
-    "open": 6
+    "open": 7
    },
    {
     "name": "קניות",
