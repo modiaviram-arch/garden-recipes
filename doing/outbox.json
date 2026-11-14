@@ -1,38 +1,20 @@
 {
- "generated": "2026-11-13T17:43:50.710Z",
+ "generated": "2026-11-14T06:19:55.365Z",
  "app": "0.32",
  "note": "נכתב על ידי My Doing בטלפון — קריאה בלבד עבור Claude",
- "since_last_sync": "2026-11-12T11:24:29.557Z",
+ "since_last_sync": "2026-11-13T19:16:49.102Z",
  "events_since_last_sync": [
   {
-   "ts": "2026-11-12T17:59:15.192Z",
-   "type": "done",
-   "id": "mwd8ybfy0658s",
+   "ts": "2026-11-13T19:17:09.151Z",
+   "type": "snoozed",
+   "id": "mw4xrlqxwnm4u",
    "device": "טלפון",
-   "extId": null,
-   "title": "לבדוק באם לפתוח השקייה",
+   "extId": "tt-6ae616c08f08415c287f05c7",
+   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
    "list": null,
-   "date": "2026-11-13"
-  },
-  {
-   "ts": "2026-11-13T05:33:09.254Z",
-   "type": "done",
-   "id": "mw4xrlqx8dpkj",
-   "device": "טלפון",
-   "extId": "tt-6aeacb06e05889cee943c20c",
-   "title": "בדיקה לרחל",
-   "list": null,
-   "date": "2026-11-13"
-  },
-  {
-   "ts": "2026-11-13T07:20:58.335Z",
-   "type": "done",
-   "id": "mwahr7dy1i507",
-   "device": "טלפון",
-   "extId": "cl-rachel-ct-20261113",
-   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
-   "list": null,
-   "date": "2026-11-13"
+   "date": "2026-11-20",
+   "from": "2026-11-13",
+   "to": "2026-11-20"
   }
  ],
  "recent_events": [
@@ -833,52 +815,106 @@
    "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
    "list": null,
    "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T18:18:47.454Z",
+   "type": "done",
+   "id": "mw4xrlqvathde",
+   "device": "טלפון",
+   "extId": "tt-6ae98ca648f474e51ba5a3f3",
+   "title": "לנסות לתקן מחשב קטן",
+   "list": null,
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T18:18:49.161Z",
+   "type": "done",
+   "id": "mw6c94crzvgfv",
+   "device": "טלפון",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "list": null,
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T18:18:52.302Z",
+   "type": "done",
+   "id": "mwdgn7ee69r54",
+   "device": "טלפון",
+   "extId": "cl-garden-20261110-1",
+   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
+   "list": "גינה",
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T18:18:54.843Z",
+   "type": "done",
+   "id": "mw7p7i5pruk6r",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-3",
+   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+   "list": "נסיעות",
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T18:18:55.536Z",
+   "type": "done",
+   "id": "mw7p7i5ovefmo",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-2",
+   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+   "list": "נסיעות",
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T18:19:02.649Z",
+   "type": "done",
+   "id": "mw7p7i5ofnmiq",
+   "device": "טלפון",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "list": "נסיעות",
+   "date": "2026-11-13"
+  },
+  {
+   "ts": "2026-11-13T19:17:09.151Z",
+   "type": "snoozed",
+   "id": "mw4xrlqxwnm4u",
+   "device": "טלפון",
+   "extId": "tt-6ae616c08f08415c287f05c7",
+   "title": "לימון (מכל 1) – בדיקה חוזרת אחרי טיפול נים",
+   "list": null,
+   "date": "2026-11-20",
+   "from": "2026-11-13",
+   "to": "2026-11-20"
   }
  ],
  "open_tasks": [
   {
-   "id": "mw4xrlqvathde",
-   "extId": "tt-6ae98ca648f474e51ba5a3f3",
-   "title": "לנסות לתקן מחשב קטן",
-   "date": "2026-11-13",
-   "list": null,
-   "rollovers": 6,
-   "overdue": false
-  },
-  {
    "id": "mw4xrlqwtt5xg",
    "extId": "tt-6ade36175a56b43b4e289e09",
    "title": "להתחיל לעשות תרגילי כח",
-   "date": "2026-11-13",
+   "date": "2026-11-14",
    "list": null,
-   "rollovers": 8,
+   "rollovers": 9,
    "overdue": false
   },
   {
    "id": "mw4xrlqwtx2bd",
    "extId": "tt-6ade35ea5a56b43b4e289dfa",
    "title": "להוסיף שיעור פלדנקרייז מהאינטרנט",
-   "date": "2026-11-13",
+   "date": "2026-11-14",
    "list": null,
-   "rollovers": 8,
+   "rollovers": 9,
    "overdue": false
   },
   {
    "id": "mw4zcw9f2gf9w",
    "extId": null,
    "title": "לבדוק לורד מפריז תוכניות בניין עיר",
-   "date": "2026-11-13",
+   "date": "2026-11-14",
    "list": null,
-   "rollovers": 7,
-   "overdue": false
-  },
-  {
-   "id": "mw6c94crzvgfv",
-   "extId": null,
-   "title": "לקבוע טיפול עם באטריס",
-   "date": "2026-11-13",
-   "list": null,
-   "rollovers": 3,
+   "rollovers": 8,
    "overdue": false
   },
   {
@@ -954,39 +990,12 @@
    "overdue": false
   },
   {
-   "id": "mw7p7i5ofnmiq",
-   "extId": "cl-nyc-20261108-1",
-   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
-   "date": "2026-11-13",
-   "list": "נסיעות",
-   "rollovers": 2,
-   "overdue": false
-  },
-  {
-   "id": "mw7p7i5ovefmo",
-   "extId": "cl-nyc-20261108-2",
-   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
-   "date": "2026-11-13",
-   "list": "נסיעות",
-   "rollovers": 2,
-   "overdue": false
-  },
-  {
    "id": "mw7p7i5oxf2t3",
    "extId": "cl-garden-20261108-6",
    "title": "לדווח לקלוד: שליפת הכורכום ושתילת 4.1 בוצעו – לעדכון ספר הגינה",
    "date": "2026-12-02",
    "list": "גינה",
    "rollovers": 0,
-   "overdue": false
-  },
-  {
-   "id": "mw7p7i5pruk6r",
-   "extId": "cl-nyc-20261108-3",
-   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
-   "date": "2026-11-13",
-   "list": "נסיעות",
-   "rollovers": 2,
    "overdue": false
   },
   {
@@ -1053,15 +1062,6 @@
    "overdue": false
   },
   {
-   "id": "mwdgn7ee69r54",
-   "extId": "cl-garden-20261110-1",
-   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
-   "date": "2026-11-13",
-   "list": "גינה",
-   "rollovers": 2,
-   "overdue": false
-  },
-  {
    "id": "mwdgn7efrco6b",
    "extId": "cl-garden-20261110-2",
    "title": "לימון (מכל 1) – בדיקה חוזרת: כנימות לבנות ושבילים חדשים",
@@ -1073,6 +1073,14 @@
  ],
  "done_last_14_days": [
   {
+   "id": "mw4xrlqvathde",
+   "extId": "tt-6ae98ca648f474e51ba5a3f3",
+   "title": "לנסות לתקן מחשב קטן",
+   "status": "done",
+   "doneAt": "2026-11-13T18:18:42.451Z",
+   "list": null
+  },
+  {
    "id": "mw4xrlqx8dpkj",
    "extId": "tt-6aeacb06e05889cee943c20c",
    "title": "בדיקה לרחל",
@@ -1081,11 +1089,43 @@
    "list": null
   },
   {
+   "id": "mw6c94crzvgfv",
+   "extId": null,
+   "title": "לקבוע טיפול עם באטריס",
+   "status": "done",
+   "doneAt": "2026-11-13T18:18:44.155Z",
+   "list": null
+  },
+  {
+   "id": "mw7p7i5ofnmiq",
+   "extId": "cl-nyc-20261108-1",
+   "title": "נעמה – לאשר: פנויה בערב שלישי 22.12 (Rocky Horror)? ומתי מתחילה חופשת החורף של גל ואדם",
+   "status": "done",
+   "doneAt": "2026-11-13T18:18:57.641Z",
+   "list": "נסיעות"
+  },
+  {
+   "id": "mw7p7i5ovefmo",
+   "extId": "cl-nyc-20261108-2",
+   "title": "להזמין כרטיסים: The Rocky Horror Show – שלישי 22.12, 19:00, Studio 54",
+   "status": "done",
+   "doneAt": "2026-11-13T18:18:50.528Z",
+   "list": "נסיעות"
+  },
+  {
    "id": "mw7p7i5pegm4p",
    "extId": "cl-nyc-20261108-4",
    "title": "להזמין: Big Band Holidays, Jazz at Lincoln Center – חמישי 17.12",
    "status": "done",
    "doneAt": "2026-11-11T17:47:10.186Z",
+   "list": "נסיעות"
+  },
+  {
+   "id": "mw7p7i5pruk6r",
+   "extId": "cl-nyc-20261108-3",
+   "title": "להזמין כרטיסים: Buena Vista Social Club – מטינה רביעי 23.12, 14:00",
+   "status": "done",
+   "doneAt": "2026-11-13T18:18:49.837Z",
    "list": "נסיעות"
   },
   {
@@ -1102,6 +1142,14 @@
    "title": "פגישה ב-12:15 עם אפרת נהרי אברהם",
    "status": "done",
    "doneAt": "2026-11-11T17:47:24.686Z",
+   "list": null
+  },
+  {
+   "id": "mwahr7dy1i507",
+   "extId": "cl-rachel-ct-20261113",
+   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
+   "status": "done",
+   "doneAt": "2026-11-13T07:20:53.329Z",
    "list": null
   },
   {
@@ -1129,18 +1177,18 @@
    "list": null
   },
   {
-   "id": "mwahr7dy1i507",
-   "extId": "cl-rachel-ct-20261113",
-   "title": "CT קלציום סקור לרחל — אסותא חיפה (שד' ההסתדרות 55, קומה 3)",
+   "id": "mwdgn7ee69r54",
+   "extId": "cl-garden-20261110-1",
+   "title": "לימון (מכל 1) – ריסוס נים 2 נגד הכנימות הלבנות, הערב",
    "status": "done",
-   "doneAt": "2026-11-13T07:20:53.329Z",
-   "list": null
+   "doneAt": "2026-11-13T18:18:47.299Z",
+   "list": "גינה"
   }
  ],
  "stats": {
-  "open": 26,
+  "open": 20,
   "overdue": 0,
-  "stuck": 5,
+  "stuck": 3,
   "lists": [
    {
     "name": "רעיונות",
@@ -1152,7 +1200,7 @@
    },
    {
     "name": "נסיעות",
-    "open": 9
+    "open": 6
    },
    {
     "name": "טיפולים",
@@ -1160,7 +1208,7 @@
    },
    {
     "name": "גינה",
-    "open": 7
+    "open": 6
    },
    {
     "name": "קניות",
