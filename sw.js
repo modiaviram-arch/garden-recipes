@@ -1,4 +1,4 @@
-const CACHE = 'sefer-hagina-v2026-11-23b';
+const CACHE = 'sefer-hagina-v2026-11-26a';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(u => new Request(u, {cache: 'reload'})))).then(() => self.skipWaiting()));
